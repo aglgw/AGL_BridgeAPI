@@ -74,7 +74,7 @@ namespace AGL.Api.ApplicationCore.Interfaces
         {
             if (UserId == 0)
             {
-                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.비로그인, "Not Allowed User");
+                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.UNAUTHORIZED, "Not Allowed User");
             }
 
         }

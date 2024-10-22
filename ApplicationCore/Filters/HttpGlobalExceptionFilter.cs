@@ -53,7 +53,7 @@ namespace AGL.Api.ApplicationCore.Filters
             {
                 var json = new Failure
                 {
-                    Code = ResultCode.시스템오류,
+                    Code = ResultCode.SERVER_ERROR,
                     RstMsg = context.Exception.Message
                 };
 

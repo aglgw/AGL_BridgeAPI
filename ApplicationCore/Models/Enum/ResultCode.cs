@@ -5,14 +5,16 @@ namespace AGL.Api.ApplicationCore.Models.Enum
     public enum ResultCode
     {
         [Description("SC00")]
-        성공 = 0,
-        [Description("FL00")]
-        데이터없음,
+        SUCCESS = 200, //성공
         [Description("FL01")]
-        잘못된요청,
+        INVALID_INPUT = 400, //잘못된요청
+        [Description("FL00")]
+        UNAUTHORIZED = 401, //비승인
         [Description("FL02")]
-        비로그인,
+        Forbidden = 403, //금지
+        [Description("FL02")]
+        NOT_FOUND = 404, //못찾음
         [Description("ET00")]
-        시스템오류
+        SERVER_ERROR = 500 //시스템오류
     }
 }

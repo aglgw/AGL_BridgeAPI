@@ -8,7 +8,7 @@ namespace AGL.Api.ApplicationCore.Models
     {
         public Success()
         {
-            Code = ResultCode.성공;
+            Code = ResultCode.SUCCESS;
         }
         [JsonProperty(Order = 3)]
         public T Data { get; set; }
