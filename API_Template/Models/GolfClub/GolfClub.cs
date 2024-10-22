@@ -92,6 +92,9 @@
             public string TokenSupplierToAgl { get; set; } // 공급자 발급토큰
             public string AglCode { get; set; } // AGL 코드
             public string TokenAglToSupplier { get; set; } // AGL 발급토큰
+            public string EndPointDev { get; set; } // 개발 엔드포인트
+            public string EndPointProd { get; set; } // 상용 엔드포인트
+
             public DateTime CreatedDate { get; set; } // 생성일
         }
 
