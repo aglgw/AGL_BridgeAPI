@@ -140,7 +140,7 @@ namespace AGL.Api.API_Template.Services
             }
             catch (Exception ex)
             {
-                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.시스템오류, ex.Message);
+                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.SERVER_ERROR, ex.Message);
             }
 
 
@@ -209,7 +209,7 @@ namespace AGL.Api.API_Template.Services
             }
             catch (Exception ex)
             {
-                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.시스템오류, ex.Message);
+                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.SERVER_ERROR, ex.Message);
             }
 
 
@@ -261,7 +261,7 @@ namespace AGL.Api.API_Template.Services
             }
             catch (Exception ex)
             {
-                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.시스템오류, ex.Message);
+                throw new DomainException(ApplicationCore.Models.Enum.ResultCode.SERVER_ERROR, ex.Message);
             }
 
 

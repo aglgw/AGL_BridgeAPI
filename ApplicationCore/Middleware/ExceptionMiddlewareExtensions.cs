@@ -24,7 +24,7 @@ namespace AGL.Api.ApplicationCore.Middleware
                     {
                         var jsonResult = JsonConvert.SerializeObject(new Failure
                         {
-                            Code = ResultCode.잘못된요청,
+                            Code = ResultCode.Forbidden,
                             RstMsg = contextFeature.Error.Message
                         });
 

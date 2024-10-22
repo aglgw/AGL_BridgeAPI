@@ -1,6 +1,7 @@
 using AGL.Api.API_Template.Interfaces;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
+using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.ApplicationCore.Models.Queries;
 using AGL.Api.ApplicationCore.Utilities;
 using Microsoft.AspNetCore.Mvc;
@@ -256,10 +257,102 @@ namespace AGL.Api.API_Template.Controllers
 
         }
 
+        /// <summary>
+        /// RquestTest_SUCCESS
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> RquestTest_SUCCESS()
+        {
 
+            return Ok();
+        }
 
+        /// <summary>
+        /// ExceptionTest
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> RquestTest_Exception_UNAUTHORIZED()
+        {
+            var testint = 1;
+            if (testint == 1)
+            {
+                throw new DomainException(ResultCode.UNAUTHORIZED, "Unauthorized(StatusCode:401) 테스트 123");
+            }
 
+            return Ok();
+        }
 
+        /// <summary>
+        /// ExceptionTest
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> RquestTest_Exception_INVALID_INPUT()
+        {
+            var testint = 1;
+            if (testint == 1)
+            {
+                throw new DomainException(ResultCode.INVALID_INPUT, "INVALID_INPUT(StatusCode:400) 테스트 456");
+            }
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// ExceptionTest
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> RquestTest_Exception_Forbidden()
+        {
+            var testint = 1;
+            if (testint == 1)
+            {
+                throw new DomainException(ResultCode.Forbidden, "Forbidden(StatusCode:403) 테스트 789");
+            }
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// ExceptionTest
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> RquestTest_Exception_NOT_FOUND()
+        {
+            var testint = 1;
+            if (testint == 1)
+            {
+                throw new DomainException(ResultCode.NOT_FOUND, "NOT_FOUND(StatusCode:404) 테스트 0");
+            }
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// ExceptionTest
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> RquestTest_Exception_SERVER_ERROR()
+        {
+            var testint = 1;
+            if (testint == 1)
+            {
+                throw new DomainException(ResultCode.SERVER_ERROR, "SERVER_ERROR(StatusCode:500) 테스트 1");
+            }
+
+            return Ok();
+        }
     }
 
 }
