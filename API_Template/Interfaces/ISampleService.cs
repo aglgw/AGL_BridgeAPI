@@ -10,28 +10,7 @@ namespace AGL.Api.API_Template.Interfaces
     {
         Task<IDataResult> GetCheckInTeeTimeList();
         Task<IDataResult> CallSp(string fieldId);
-        Task<IDataResult> GetMaria();
         Task<IDataResult> GetHTT();
-
-
-        Task<IDataResult> SetMariaInsertTest(CancellationToken cancellationToken);
-        Task<IDataResult> SetMariaUpdateTest(CancellationToken cancellationToken);
-
-        Task<IDataResult> DelMariaDeleteTest(CancellationToken cancellationToken);
-        Task<IDataResult> GetMariaMultiSelectSample();
-
-        Task<IDataResult> GetMariaSubEntitySelectSample();
-        Task<IDataResult> GetMariaJoinSelectSample();
-
-        Task<IDataResult> GetMariaSelectExpressionSample();
-
-
-        Task<IDataResult> GetMariaSelectQueryFilterSample();
-
-        Task<IDataResult> GetMariaSelectPagingSample(DomainQuery query);
-
-
-        Task<IDataResult> SetMariaBulkSample();
 
         Task MigNation();
 
