@@ -34,13 +34,13 @@ namespace AGL.Api.Infrastructure
 
 
 
-            services.AddDbContext<AdminContext>(options => options.UseMySql(configuration["ADM.Application.ConnectionString"],
-                ServerVersion.AutoDetect(configuration["ADM.Application.ConnectionString"]),
-                mySqlOptionsAction: sqlOptions =>
-                {
-                    //DB 연결에 실패할 경우 재시도 설정            
-                    sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
-                }));
+            //services.AddDbContext<AdminContext>(options => options.UseMySql(configuration["ADM.Application.ConnectionString"],
+            //    ServerVersion.AutoDetect(configuration["ADM.Application.ConnectionString"]),
+            //    mySqlOptionsAction: sqlOptions =>
+            //    {
+            //        //DB 연결에 실패할 경우 재시도 설정            
+            //        sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+            //    }));
 
 
                 return services;

@@ -18,7 +18,7 @@ namespace AGL.Api.ApplicationCore.Extensions
                 case HttpStatusCode.BadRequest:
                 case HttpStatusCode.MethodNotAllowed:
                 case HttpStatusCode.Unauthorized:
-                    throw new DomainException(Models.Enum.ResultCode.잘못된요청, "Unauthorized(StatusCode:401)" + responseString);
+                    throw new DomainException(Models.Enum.ResultCode.UNAUTHORIZED, "Unauthorized(StatusCode:401)" + responseString);
                 default:
                     throw new Exception(responseString);
             }
