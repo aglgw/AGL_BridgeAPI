@@ -192,26 +192,33 @@ namespace AGL.Api.API_Template.Controllers
         }
 
         /// <summary>
-        /// ExceptionTest
+        /// LogTestWrite
         /// </summary>
         /// <returns></returns>
         [HttpGet]
         [Route("[action]")]
         public async Task<IActionResult> LogTestWrite(
-            [FromHeader(Name = "logName")][Required] string logName,
+            [FromHeader(Name = "folderName")][Required] string folderName,
+            [FromHeader(Name = "fileName")][Required] string fileName,
             [FromHeader(Name = "logTitle")][Required] string logTitle,
             [FromHeader(Name = "logTxt")] string logTxt
             )
         {
-            Utils.UtilLogs.LogReg(logName, logTitle, logTxt);
+            Utils.UtilLogs.LogRegHour(folderName, fileName, logTitle, logTxt);
 
-            Utils.UtilLogs.LogReg(logName, "Error: "+logTitle, "Error: "+logTxt, true);
+            Utils.UtilLogs.LogRegHour(folderName, fileName, "Error: " +logTitle,  "Error: " +logTxt, true);
+
+            Utils.UtilLogs.LogRegDay(folderName, fileName, logTitle, logTxt);
+
+            Utils.UtilLogs.LogRegDay(folderName, fileName,  "Error: " + logTitle, "Error: " + logTxt, true);
+
+            await Task.CompletedTask;
 
             return Ok();
         }
 
         /// <summary>
-        /// ExceptionTest
+        /// LogTestDelete
         /// </summary>
         /// <returns></returns>
         [HttpGet]
@@ -222,6 +229,8 @@ namespace AGL.Api.API_Template.Controllers
             )
         {
             Utils.UtilLogs.LogDelete(logName, limitDays);
+
+            await Task.CompletedTask;
 
             return Ok();
         }

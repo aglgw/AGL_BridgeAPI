@@ -10,25 +10,50 @@ namespace AGL.Api.API_Template.Utils
     public class UtilLogs
     {
         /// <summary>
-        /// 유틸로그
+        /// 시간별로그
         /// </summary>
-        /// <param name="logName"></param>
+        /// <param name="folderName"></param>
+        /// <param name="fileName"></param>
         /// <param name="logTitle"></param>
         /// <param name="logTxt"></param>
         /// <param name="isError"></param>
         /// <param name="file"></param>
         /// <param name="line"></param>
         /// <param name="member"></param>
-        public static void LogReg(string logName, string logTitle, string logTxt, bool isError = false, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0, [CallerMemberName] string member = "")
+        public static void LogRegHour(string folderName, string fileName, string logTitle, string logTxt, bool isError = false, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0, [CallerMemberName] string member = "")
         {
             try
             {
                 logTitle = $"File: {file} (Line: {line}) {member} : {logTitle}";
-                Logs.LogReg(GetProjectName(), logName, logTitle, logTxt, isError);
+                Logs.LogRegHour(GetProjectName(), folderName, fileName, logTitle, logTxt, isError);
             }
             catch (Exception ex)
             {
-                LogService.logInformation($"로그실패[LogReg]({logName}):{ex.Message}");
+                LogService.logInformation($"로그실패[LogRegHour]({folderName}):{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 일자별로그
+        /// </summary>
+        /// <param name="folderName"></param>
+        /// <param name="fileName"></param>
+        /// <param name="logTitle"></param>
+        /// <param name="logTxt"></param>
+        /// <param name="isError"></param>
+        /// <param name="file"></param>
+        /// <param name="line"></param>
+        /// <param name="member"></param>
+        public static void LogRegDay(string folderName, string fileName, string logTitle, string logTxt, bool isError = false, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0, [CallerMemberName] string member = "")
+        {
+            try
+            {
+                logTitle = $"File: {file} (Line: {line}) {member} : {logTitle}";
+                Logs.LogRegDay(GetProjectName(), folderName, fileName, logTitle, logTxt, isError);
+            }
+            catch (Exception ex)
+            {
+                LogService.logInformation($"로그실패[LogRegDay]({fileName}):{ex.Message}");
             }
         }
 

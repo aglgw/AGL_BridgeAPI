@@ -80,26 +80,28 @@ namespace AGL.Api.ApplicationCore.Utilities
         private static readonly object lockObject = new object();
         private static readonly string logBasePath = @$"C:\AGL\Logs\";
         /// <summary>
-        /// 일반유틸로그(티타임수집)
+        /// 시간별로그
         /// </summary>
-        /// <param name="logName"></param>
+        /// <param name="projectName"></param>
+        /// <param name="folderName"></param>
+        /// <param name="fileName"></param>
         /// <param name="logTitle"></param>
         /// <param name="logTxt"></param>
         /// <param name="isError"></param>
-        public static void LogReg(string projectName, string logName, string logTitle, string logTxt, bool isError = false)
+        public static void LogRegHour(string projectName, string folderName, string fileName, string logTitle, string logTxt, bool isError = false)
         {
             try
             {
                 DateTime kstTime = DateTime.UtcNow.AddHours(9);
 
-                string fullPath = Path.Combine(logBasePath + projectName, logName);
-                string fileName = Path.Combine(fullPath, $"{kstTime:yyyyMMddHH}.log");
+                string fullPath = Path.Combine(logBasePath + projectName, folderName);
+                string logfileName = Path.Combine(fullPath, $"{fileName}_{kstTime:yyyyMMddHH}.log");
 
                 Directory.CreateDirectory(fullPath);
 
                 lock (lockObject)
                 {
-                    using (StreamWriter sw = File.AppendText(fileName))
+                    using (StreamWriter sw = File.AppendText(logfileName))
                     {
                         sw.WriteLine($"KST {kstTime:G} {logTitle}");
                         if (logTxt != "")
@@ -112,32 +114,33 @@ namespace AGL.Api.ApplicationCore.Utilities
 
                 if (isError)
                 {
-                    logName += "\\Error";
-                    LogReg(projectName, logName, logTitle, logTxt, false);
+                    folderName += "\\Error";
+                    LogRegHour(projectName, folderName, fileName, logTitle, logTxt, false);
                 }
             }
             catch (Exception ex)
             {
                 // 예외 처리는 필요한 경우에 맞게 수정해주세요.
-                LogService.logInformation($"로그실패[LogReg]({logName}):{ex.Message}");
+                LogService.logInformation($"로그실패[LogRegHour]({folderName}):{ex.Message}");
             }
         }
 
         /// <summary>
-        /// 로그(예약/예약취소)
+        /// 일자별로그
         /// </summary>
-        /// <param name="pathName"></param>
+        /// <param name="projectName"></param>
+        /// <param name="folderName"></param>
         /// <param name="fileName"></param>
         /// <param name="logTitle"></param>
         /// <param name="logTxt"></param>
         /// <param name="isError"></param>
-        public static void ReserveLogReg(string pathName, string projectName, string fileName, string logTitle, string logTxt, bool isError = false)
+        public static void LogRegDay(string projectName, string folderName, string fileName, string logTitle, string logTxt, bool isError = false)
         {
             try
             {
                 DateTime kstTime = DateTime.UtcNow.AddHours(9);
 
-                string fullPath = Path.Combine(logBasePath + projectName, pathName);
+                string fullPath = Path.Combine(logBasePath + projectName, folderName);
                 string logfileName = Path.Combine(fullPath, $"{fileName}_{kstTime:yyyyMMdd}.log");
 
                 Directory.CreateDirectory(fullPath);
@@ -157,14 +160,14 @@ namespace AGL.Api.ApplicationCore.Utilities
 
                 if (isError)
                 {
-                    fileName += "\\Error";
-                    ReserveLogReg(pathName, projectName, fileName, logTitle, logTxt, false);
+                    folderName += "\\Error";
+                    LogRegDay(projectName, folderName, fileName, logTitle, logTxt, false);
                 }
             }
             catch (Exception ex)
             {
                 // 예외 처리는 필요한 경우에 맞게 수정해주세요.
-                LogService.logInformation($"로그실패[LogReg]({fileName}):{ex.Message}");
+                LogService.logInformation($"로그실패[LogRegDay]({folderName}):{ex.Message}");
             }
         }
 
