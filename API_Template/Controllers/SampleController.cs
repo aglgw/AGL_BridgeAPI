@@ -6,6 +6,7 @@ using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.ApplicationCore.Models.Queries;
 using AGL.Api.ApplicationCore.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AGL.Api.API_Template.Controllers
@@ -186,6 +187,41 @@ namespace AGL.Api.API_Template.Controllers
             {
                 throw new DomainException(ResultCode.SERVER_ERROR, "SERVER_ERROR(StatusCode:500) Å×½ºÆ® 1");
             }
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// ExceptionTest
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> LogTestWrite(
+            [FromHeader(Name = "logName")][Required] string logName,
+            [FromHeader(Name = "logTitle")][Required] string logTitle,
+            [FromHeader(Name = "logTxt")] string logTxt
+            )
+        {
+            Utils.UtilLogs.LogReg(logName, logTitle, logTxt);
+
+            Utils.UtilLogs.LogReg(logName, "Error: "+logTitle, "Error: "+logTxt, true);
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// ExceptionTest
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> LogTestDelete(
+            [FromHeader(Name = "logName")][Required] string logName,
+            [FromHeader(Name = "limitDays")][Required] int limitDays
+            )
+        {
+            Utils.UtilLogs.LogDelete(logName, limitDays);
 
             return Ok();
         }
