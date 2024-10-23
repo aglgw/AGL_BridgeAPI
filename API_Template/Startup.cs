@@ -1,11 +1,13 @@
 using AGL.Api.ApplicationCore;
 using AGL.Api.ApplicationCore.Filters;
+using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Middleware;
 using AGL.Api.ApplicationCore.Models;
 using AGL.Api.Infrastructure;
-
+using AGL.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,6 +34,10 @@ namespace AGL.Api.API_Template
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // 인증 미들웨어
+            services.AddDbContext<OAPI_DbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("OAPI.Application.ConnectionString")));
+            services.AddScoped<IOAPIDbContext, OAPI_DbContext>();
+
             services.AddApplicationCore();
             services.AddInfrastructure(Configuration);
             services.AddCustomIntegrations();
