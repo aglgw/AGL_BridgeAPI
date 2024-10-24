@@ -44,7 +44,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public virtual OAPI_GolfClubCourse GolfClubCourse { get; set; }
 
         [JsonIgnore]
-        public virtual ICollection<OAPI_DateTimeMapping> DateTimeMappings { get; set; } = new List<OAPI_DateTimeMapping>();
+        public virtual ICollection<OAPI_TeeTimeMapping> TeeTimeMappings { get; set; } = new List<OAPI_TeeTimeMapping>();
 
     }
 }

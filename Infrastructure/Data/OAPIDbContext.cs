@@ -29,7 +29,7 @@ namespace AGL.Api.Infrastructure.Data
         public DbSet<OAPI_DateSlot> DateSlots { get; set; } // 날짜
         public DbSet<OAPI_TimeSlot> TimeSlots { get; set; } // 시간
         public DbSet<OAPI_TeeTime> TeeTimes { get; set; } // 티타임
-        public DbSet<OAPI_DateTimeMapping> DateTimeMappings { get; set; } // 티타임 날짜시간정보
+        public DbSet<OAPI_TeeTimeMapping> TeeTimeMappings { get; set; } // 티타임 날짜시간정보
         public DbSet<OAPI_TeetimePriceMapping> TeetimePriceMappings { get; set; } // 티타임 가격
         public DbSet<OAPI_TeetimeRefundMapping> TeetimeRefundMappings { get; set; } // 티타임 환불
         public DbSet<OAPI_TeetimeRefundPolicy> TeetimeRefundPolicies { get; set; } // 환불 정책
@@ -73,7 +73,7 @@ namespace AGL.Api.Infrastructure.Data
             builder.Entity<OAPI_TeetimePriceMapping>()
                 .HasOne(tp => tp.DateTimeMapping)
                 .WithMany(dm => dm.TeetimePriceMappings)
-                .HasForeignKey(tp => tp.DateTimeMappingId);
+                .HasForeignKey(tp => tp.TeeTimeMappingId);
 
             builder.Entity<OAPI_TeetimePriceMapping>()
                 .HasOne(tp => tp.PricePolicy)
@@ -81,16 +81,16 @@ namespace AGL.Api.Infrastructure.Data
                 .HasForeignKey(tp => tp.PricePolicyId);
 
             builder.Entity<OAPI_TeetimePriceMapping>()
-                .HasKey(t => new { t.DateTimeMappingId, t.PricePolicyId });
+                .HasKey(t => new { t.TeeTimeMappingId, t.PricePolicyId });
 
             // OAPI_TeetimeRefundMapping
             builder.Entity<OAPI_TeetimeRefundMapping>()
-                .HasKey(t => new { t.DateTimeMappingId, t.RefundPolicyId });
+                .HasKey(t => new { t.TeeTimeMappingId, t.RefundPolicyId });
 
             builder.Entity<OAPI_TeetimeRefundMapping>()
                 .HasOne(tr => tr.DateTimeMapping)
                 .WithMany(dm => dm.TeetimeRefundMappings)
-                .HasForeignKey(tr => tr.DateTimeMappingId);
+                .HasForeignKey(tr => tr.TeeTimeMappingId);
 
             builder.Entity<OAPI_TeetimeRefundMapping>()
                 .HasOne(tr => tr.TeetimeRefundPolicy)
@@ -98,19 +98,19 @@ namespace AGL.Api.Infrastructure.Data
                 .HasForeignKey(tr => tr.RefundPolicyId);
 
             // OAPI_DateTimeMapping
-            builder.Entity<OAPI_DateTimeMapping>()
+            builder.Entity<OAPI_TeeTimeMapping>()
                 .HasOne(d => d.TeeTime)
-                .WithMany(t => t.DateTimeMappings)
+                .WithMany(t => t.TeeTimeMappings)
                 .HasForeignKey(d => d.TeetimeId);
 
-            builder.Entity<OAPI_DateTimeMapping>()
+            builder.Entity<OAPI_TeeTimeMapping>()
                 .HasOne(d => d.DateSlot)
-                .WithMany(ds => ds.DateTimeMappings)
+                .WithMany(ds => ds.TeeTimeMappings)
                 .HasForeignKey(d => d.DateSlotId);
 
-            builder.Entity<OAPI_DateTimeMapping>()
+            builder.Entity<OAPI_TeeTimeMapping>()
                 .HasOne(d => d.TimeSlot)
-                .WithMany(ts => ts.DateTimeMappings)
+                .WithMany(ts => ts.TeeTimeMappings)
                 .HasForeignKey(d => d.TimeSlotId);
 
             // OAPI_PricePolicy

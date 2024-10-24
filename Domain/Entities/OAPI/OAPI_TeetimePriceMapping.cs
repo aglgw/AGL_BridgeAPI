@@ -8,7 +8,7 @@ namespace AGL.Api.Domain.Entities.OAPI
     {
         [Required]
         [ForeignKey("OAPI_DateTimeMapping")]
-        public int DateTimeMappingId { get; set; }
+        public int TeeTimeMappingId { get; set; }
 
         [Required]
         [ForeignKey("OAPI_PricePolicy")]
@@ -16,7 +16,7 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         //네비게이션 속성
         [JsonIgnore]
-        public virtual OAPI_DateTimeMapping DateTimeMapping { get; set; }
+        public virtual OAPI_TeeTimeMapping DateTimeMapping { get; set; }
 
         [JsonIgnore]
         public virtual OAPI_PricePolicy PricePolicy { get; set; }

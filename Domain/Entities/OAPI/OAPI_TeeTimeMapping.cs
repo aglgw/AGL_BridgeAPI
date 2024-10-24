@@ -4,11 +4,11 @@ using Newtonsoft.Json;
 
 namespace AGL.Api.Domain.Entities.OAPI
 {
-    public class OAPI_DateTimeMapping
+    public class OAPI_TeeTimeMapping
     {
         [Key]
         [Required]
-        public int DateTimeMappingId { get; set; }
+        public int TeeTimeMappingId { get; set; }
 
         [Required]
         [ForeignKey("OAPI_TeeTime")]
