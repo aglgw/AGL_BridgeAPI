@@ -35,8 +35,10 @@ namespace AGL.Api.API_Template
         public void ConfigureServices(IServiceCollection services)
         {
             // 인증 미들웨어
-            services.AddDbContext<OAPI_DbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("OAPI.Application.ConnectionString")));
-            services.AddScoped<IOAPIDbContext, OAPI_DbContext>();
+            services.AddScoped<IMyDatabaseService, MyDatabaseService>();
+            services.AddScoped<IOAPIDbContext, ApplicationCore.Interfaces.OAPI_DbContext>();
+            //services.AddDbContext<OAPI_DbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("OAPI.Application.ConnectionString")));
+            //services.AddScoped<OAPI_DbContext>();
 
             services.AddApplicationCore();
             services.AddInfrastructure(Configuration);
@@ -72,7 +74,7 @@ namespace AGL.Api.API_Template
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             // 미들웨어를 사용전 등록
-            app.UseMiddleware<SupplierAuthorizationMiddleware>();
+            app.UseAuthenticationMiddleware();
 
             var openApi = Configuration.GetSection("OpenApi").Get<OpenApiConfiguration>();
 

@@ -5,9 +5,10 @@ using AGL.Api.ApplicationCore.Interfaces;
 
 namespace AGL.Api.Infrastructure.Data
 {
-    public class OAPI_DbContext : DbContext, IOAPIDbContext
+    public class OAPI_DbContext : DbContext
     {
         private readonly ILogger<OAPI_DbContext> _logger;
+
         public OAPI_DbContext(
             DbContextOptions<OAPI_DbContext> options,
 
@@ -16,8 +17,6 @@ namespace AGL.Api.Infrastructure.Data
 
             _logger = logger;
         }
-
-        public OAPI_DbContext(DbContextOptions<OAPI_DbContext> options) : base(options) { }
 
         public DbSet<OAPI_Supplier> Suppliers { get; set; } // 공급사
         public DbSet<OAPI_GolfClub> GolfClubs { get; set; } // 골프장
