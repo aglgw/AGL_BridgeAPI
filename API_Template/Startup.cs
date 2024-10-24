@@ -71,6 +71,9 @@ namespace AGL.Api.API_Template
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            // 미들웨어를 사용전 등록 
+            app.UseMiddleware<SupplierAuthorizationMiddleware>();
+
             var openApi = Configuration.GetSection("OpenApi").Get<OpenApiConfiguration>();
 
             app.ExceptionHandler();
