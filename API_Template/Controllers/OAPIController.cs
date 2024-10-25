@@ -5,6 +5,7 @@ using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.API_Template.Controllers
@@ -24,19 +25,14 @@ namespace AGL.Api.API_Template.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="Exception"></exception>
         [Route("teetime/{golfclubCode}")]
         [HttpPost]
-        public async Task<IDataResult> PostTeeTime(OAPITeeTimePostRequest request)
+        public async Task<IDataResult> PostTeeTime(
+            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code,
+            [FromHeader(Name = "Authorization")][Required] string Authorization,
+            OAPITeeTimePostRequest request)
         {
-            // 인증
-            AuthorizeRequest();
-
-            // 헤더에서 공급사 코드 가져오기
-            string supplierCode = Request.Headers["X-Supplier-Code"];
-
-            var result = await _oapiService.PostTeeTime(request, supplierCode);
+            var result = await _oapiService.PostTeeTime(request, X_Supplier_Code);
 
             return result;
         }
@@ -49,15 +45,12 @@ namespace AGL.Api.API_Template.Controllers
         /// <exception cref="Exception"></exception>
         [Route("teetime")]
         [HttpPut]
-        public async Task<IDataResult> UpdateTeeTime(string golfclubCode, OAPITeeTimePutRequest request)
+        public async Task<IDataResult> UpdateTeeTime(
+            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code,
+            [FromHeader(Name = "Authorization")][Required] string Authorization,
+            string golfclubCode, OAPITeeTimePutRequest request)
         {
-            // 인증
-            AuthorizeRequest();
-
-            // 헤더에서 공급사 코드 가져오기
-            string supplierCode = Request.Headers["X-Supplier-Code"];
-
-            var result = await _oapiService.UpdateTeeTime(golfclubCode, request, supplierCode);
+            var result = await _oapiService.UpdateTeeTime(golfclubCode, request, X_Supplier_Code);
 
             return result;
         }
