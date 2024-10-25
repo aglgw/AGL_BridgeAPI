@@ -1,5 +1,6 @@
 ﻿using AGL.Api.Domain.Entities.OAPI;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +13,9 @@ namespace AGL.Api.ApplicationCore.Interfaces
     {
         DbSet<OAPI_Supplier> Suppliers { get; set; }
     }
-    public class OAPI_DbContext : DbContext, IOAPIDbContext
+    public class OAPI_DbContext_GetSupplier : DbContext, IOAPIDbContext
     {
-        public OAPI_DbContext(DbContextOptions<OAPI_DbContext> options) : base(options) { }
+        public OAPI_DbContext_GetSupplier(DbContextOptions<OAPI_DbContext_GetSupplier> options) : base(options) { }
 
         public DbSet<OAPI_Supplier> Suppliers { get; set; }
     }
@@ -27,10 +28,12 @@ namespace AGL.Api.ApplicationCore.Interfaces
     public class MyDatabaseService : IMyDatabaseService
     {
         private readonly IOAPIDbContext _context;
+        private readonly string _connectionString;
 
-        public MyDatabaseService(IOAPIDbContext context)
+        public MyDatabaseService(IOAPIDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _connectionString = configuration.GetConnectionString("OAPI.Application.ConnectionString");
         }
 
         public async Task<OAPI_Supplier> GetSupplierByCodeAsync(string supplierCode)

@@ -32,7 +32,7 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 날짜적용방법 - 특정 공휴일이 있을시 2번 사용 ( 1 기간 , 2 적용일 )
         /// </summary>
         [DataMember]
-        public string dateApplyType { get; set; }
+        public int dateApplyType { get; set; }
         /// <summary>
         /// 기간 시작일 
         /// </summary>

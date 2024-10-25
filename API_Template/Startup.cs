@@ -34,12 +34,6 @@ namespace AGL.Api.API_Template
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // 인증 미들웨어
-            services.AddScoped<IMyDatabaseService, MyDatabaseService>();
-            services.AddScoped<IOAPIDbContext, ApplicationCore.Interfaces.OAPI_DbContext>();
-            //services.AddDbContext<OAPI_DbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("OAPI.Application.ConnectionString")));
-            //services.AddScoped<OAPI_DbContext>();
-
             services.AddApplicationCore();
             services.AddInfrastructure(Configuration);
             services.AddCustomIntegrations();
@@ -73,9 +67,6 @@ namespace AGL.Api.API_Template
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            // 미들웨어를 사용전 등록
-            app.UseAuthenticationMiddleware();
-
             var openApi = Configuration.GetSection("OpenApi").Get<OpenApiConfiguration>();
 
             app.ExceptionHandler();

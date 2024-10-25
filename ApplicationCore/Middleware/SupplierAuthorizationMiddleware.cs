@@ -36,7 +36,7 @@ namespace AGL.Api.ApplicationCore.Middleware
             // IServiceScopeFactory를 사용하여 스코프 생성 후 OAPI_DbContext 사용
             using (var scope = _scopeFactory.CreateScope())
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<OAPI_DbContext>();
+                var dbContext = scope.ServiceProvider.GetRequiredService<OAPI_DbContext_GetSupplier>();
                 //var dbContext = context.RequestServices.GetRequiredService<OAPI_DbContext>();
 
                 // DB에서 SupplierCode를 조회합니다.
