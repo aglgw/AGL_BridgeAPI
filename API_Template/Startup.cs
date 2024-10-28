@@ -34,12 +34,14 @@ namespace AGL.Api.API_Template
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // 인증 미들웨어
-            //services.AddDbContext<OAPI_DbContext_GetSupplier>(options =>options.UseSqlServer(Configuration.GetConnectionString("OAPI.Application.ConnectionString")));
-            //services.AddScoped<IMyDatabaseService, MyDatabaseService>();
-            //services.AddScoped<IOAPIDbContext, OAPI_DbContext_GetSupplier>();
-
             services.AddApplicationCore();
+            // 인증 미들웨어1
+            services.AddDbContext<OAPI_DbContext_GetSupplier>(options =>
+                options.UseSqlServer(Configuration["OAPI.Application.ConnectionString"]));
+
+            services.AddScoped<IOAPIDbContext, OAPI_DbContext_GetSupplier>();
+            services.AddScoped<IMyDatabaseService, MyDatabaseService>();
+
             services.AddInfrastructure(Configuration);
             services.AddCustomIntegrations();
             services.AddCustomMvc(Logger);
@@ -64,17 +66,37 @@ namespace AGL.Api.API_Template
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
 
-                
+                // Authorization 헤더 정의 추가
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter JWT with Bearer into field",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
 
+                // Authorization 요구사항 설정
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
             });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            // 미들웨어를 사용전 등록
-            //app.UseAuthenticationMiddleware();
-
             var openApi = Configuration.GetSection("OpenApi").Get<OpenApiConfiguration>();
 
             app.ExceptionHandler();
@@ -91,7 +113,11 @@ namespace AGL.Api.API_Template
 
             app.UseCors("default");
 
+            app.UseMiddleware<AuthenticationMiddleware>();
             app.UseRouting();
+
+            //app.UseAuthenticationMiddleware();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

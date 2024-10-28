@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using AGL.Api.ApplicationCore.Interfaces;
+using System.Reflection;
 
 namespace AGL.Api.Infrastructure.Data
 {
@@ -36,94 +37,103 @@ namespace AGL.Api.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
+            foreach (var foreignKey in builder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+            {
+                foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+            }
 
-            // OAPI_GolfClub
-            builder.Entity<OAPI_GolfClub>()
-                .HasOne(g => g.Supplier)
-                .WithMany(s => s.GolfClubs)
-                .HasForeignKey(g => g.SupplierId);
-
-            // OAPI_GolfClubImage
-            builder.Entity<OAPI_GolfClubImage>()
-                .HasOne(i => i.GolfClub)
-                .WithMany(g => g.GolfClubImages)
-                .HasForeignKey(i => i.GolfClubId);
-
-            // OAPI_GolfClubRefundPolicy
-            builder.Entity<OAPI_GolfClubRefundPolicy>()
-                .HasOne(r => r.GolfClub)
-                .WithMany(g => g.RefundPolicies)
-                .HasForeignKey(r => r.GolfClubId);
-
-            // OAPI_GolfClubCourse
-            builder.Entity<OAPI_GolfClubCourse>()
-                .HasOne(c => c.GolfClub)
-                .WithMany(g => g.Courses)
-                .HasForeignKey(c => c.GolfClubId);
-
-            // OAPI_GolfClubHole
-            builder.Entity<OAPI_GolfClubHole>()
-                .HasOne(h => h.GolfClub)
-                .WithMany(g => g.Holes)
-                .HasForeignKey(h => h.GolfClubId);
-
-            // OAPI_TeetimePriceMapping
-            builder.Entity<OAPI_TeetimePriceMapping>()
-                .HasOne(tp => tp.DateTimeMapping)
-                .WithMany(dm => dm.TeetimePriceMappings)
-                .HasForeignKey(tp => tp.TeeTimeMappingId);
-
-            builder.Entity<OAPI_TeetimePriceMapping>()
-                .HasOne(tp => tp.PricePolicy)
-                .WithMany(p => p.TeetimePriceMappings)
-                .HasForeignKey(tp => tp.PricePolicyId);
-
-            builder.Entity<OAPI_TeetimePriceMapping>()
-                .HasKey(t => new { t.TeeTimeMappingId, t.PricePolicyId });
-
-            // OAPI_TeetimeRefundMapping
-            builder.Entity<OAPI_TeetimeRefundMapping>()
-                .HasKey(t => new { t.TeeTimeMappingId, t.RefundPolicyId });
-
-            builder.Entity<OAPI_TeetimeRefundMapping>()
-                .HasOne(tr => tr.DateTimeMapping)
-                .WithMany(dm => dm.TeetimeRefundMappings)
-                .HasForeignKey(tr => tr.TeeTimeMappingId);
-
-            builder.Entity<OAPI_TeetimeRefundMapping>()
-                .HasOne(tr => tr.TeetimeRefundPolicy)
-                .WithMany(tp => tp.TeetimeRefundMappings)
-                .HasForeignKey(tr => tr.RefundPolicyId);
-
-            // OAPI_DateTimeMapping
-            builder.Entity<OAPI_TeeTimeMapping>()
-                .HasOne(d => d.TeeTime)
-                .WithMany(t => t.TeeTimeMappings)
-                .HasForeignKey(d => d.TeetimeId);
-
-            builder.Entity<OAPI_TeeTimeMapping>()
-                .HasOne(d => d.DateSlot)
-                .WithMany(ds => ds.TeeTimeMappings)
-                .HasForeignKey(d => d.DateSlotId);
-
-            builder.Entity<OAPI_TeeTimeMapping>()
-                .HasOne(d => d.TimeSlot)
-                .WithMany(ts => ts.TeeTimeMappings)
-                .HasForeignKey(d => d.TimeSlotId);
-
-            // OAPI_PricePolicy
-            builder.Entity<OAPI_PricePolicy>()
-                .HasMany(p => p.TeetimePriceMappings)
-                .WithOne(tp => tp.PricePolicy)
-                .HasForeignKey(tp => tp.PricePolicyId);
-
-            // OAPI_TeetimeRefundPolicy
-            builder.Entity<OAPI_TeetimeRefundPolicy>()
-                .HasMany(t => t.TeetimeRefundMappings)
-                .WithOne(tr => tr.TeetimeRefundPolicy)
-                .HasForeignKey(tr => tr.RefundPolicyId);
-
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
+        //protected override void OnModelCreating(ModelBuilder builder)
+        //{
+        //    base.OnModelCreating(builder);
+
+        //    // OAPI_GolfClub
+        //    builder.Entity<OAPI_GolfClub>()
+        //        .HasOne(g => g.Supplier)
+        //        .WithMany(s => s.GolfClubs)
+        //        .HasForeignKey(g => g.SupplierId);
+
+        //    // OAPI_GolfClubImage
+        //    builder.Entity<OAPI_GolfClubImage>()
+        //        .HasOne(i => i.GolfClub)
+        //        .WithMany(g => g.GolfClubImages)
+        //        .HasForeignKey(i => i.GolfClubId);
+
+        //    // OAPI_GolfClubRefundPolicy
+        //    builder.Entity<OAPI_GolfClubRefundPolicy>()
+        //        .HasOne(r => r.GolfClub)
+        //        .WithMany(g => g.RefundPolicies)
+        //        .HasForeignKey(r => r.GolfClubId);
+
+        //    // OAPI_GolfClubCourse
+        //    builder.Entity<OAPI_GolfClubCourse>()
+        //        .HasOne(c => c.GolfClub)
+        //        .WithMany(g => g.Courses)
+        //        .HasForeignKey(c => c.GolfClubId);
+
+        //    // OAPI_GolfClubHole
+        //    builder.Entity<OAPI_GolfClubHole>()
+        //        .HasOne(h => h.GolfClub)
+        //        .WithMany(g => g.Holes)
+        //        .HasForeignKey(h => h.GolfClubId);
+
+        //    // OAPI_TeetimePriceMapping
+        //    builder.Entity<OAPI_TeetimePriceMapping>()
+        //        .HasOne(tp => tp.DateTimeMapping)
+        //        .WithMany(dm => dm.TeetimePriceMappings)
+        //        .HasForeignKey(tp => tp.TeeTimeMappingId);
+
+        //    builder.Entity<OAPI_TeetimePriceMapping>()
+        //        .HasOne(tp => tp.PricePolicy)
+        //        .WithMany(p => p.TeetimePriceMappings)
+        //        .HasForeignKey(tp => tp.PricePolicyId);
+
+        //    builder.Entity<OAPI_TeetimePriceMapping>()
+        //        .HasKey(t => new { t.TeeTimeMappingId, t.PricePolicyId });
+
+        //    // OAPI_TeetimeRefundMapping
+        //    builder.Entity<OAPI_TeetimeRefundMapping>()
+        //        .HasKey(t => new { t.TeeTimeMappingId, t.RefundPolicyId });
+
+        //    builder.Entity<OAPI_TeetimeRefundMapping>()
+        //        .HasOne(tr => tr.DateTimeMapping)
+        //        .WithMany(dm => dm.TeetimeRefundMappings)
+        //        .HasForeignKey(tr => tr.TeeTimeMappingId);
+
+        //    builder.Entity<OAPI_TeetimeRefundMapping>()
+        //        .HasOne(tr => tr.TeetimeRefundPolicy)
+        //        .WithMany(tp => tp.TeetimeRefundMappings)
+        //        .HasForeignKey(tr => tr.RefundPolicyId);
+
+        //    // OAPI_DateTimeMapping
+        //    builder.Entity<OAPI_TeeTimeMapping>()
+        //        .HasOne(d => d.TeeTime)
+        //        .WithMany(t => t.TeeTimeMappings)
+        //        .HasForeignKey(d => d.TeetimeId);
+
+        //    builder.Entity<OAPI_TeeTimeMapping>()
+        //        .HasOne(d => d.DateSlot)
+        //        .WithMany(ds => ds.TeeTimeMappings)
+        //        .HasForeignKey(d => d.DateSlotId);
+
+        //    builder.Entity<OAPI_TeeTimeMapping>()
+        //        .HasOne(d => d.TimeSlot)
+        //        .WithMany(ts => ts.TeeTimeMappings)
+        //        .HasForeignKey(d => d.TimeSlotId);
+
+        //    // OAPI_PricePolicy
+        //    builder.Entity<OAPI_PricePolicy>()
+        //        .HasMany(p => p.TeetimePriceMappings)
+        //        .WithOne(tp => tp.PricePolicy)
+        //        .HasForeignKey(tp => tp.PricePolicyId);
+
+        //    // OAPI_TeetimeRefundPolicy
+        //    builder.Entity<OAPI_TeetimeRefundPolicy>()
+        //        .HasMany(t => t.TeetimeRefundMappings)
+        //        .WithOne(tr => tr.TeetimeRefundPolicy)
+        //        .HasForeignKey(tr => tr.RefundPolicyId);
+
+        //}
     }
 }
