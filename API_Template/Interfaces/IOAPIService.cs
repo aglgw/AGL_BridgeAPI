@@ -15,12 +15,12 @@ namespace AGL.Api.API_Template.Interfaces
         /// 티타임 등록
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> PostTeeTime(OAPITeeTimePostRequest request, string supplierCode);
+        Task<IDataResult> PostTeeTime(OAPITeeTimeRequest request, string supplierCode);
         /// <summary>
         /// 티타임 수정
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> UpdateTeeTime(string golfclubCode, OAPITeeTimePutRequest request, string supplierCode);
+        Task<IDataResult> UpdateTeeTime(OAPITeeTimeRequest request, string supplierCode);
         /// <summary>
         /// 티타임 조회
         /// </summary>

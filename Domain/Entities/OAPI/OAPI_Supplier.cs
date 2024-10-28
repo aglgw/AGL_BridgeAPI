@@ -36,6 +36,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         // 네비게이션 속성
         [JsonIgnore]
         public virtual ICollection<OAPI_GolfClub> GolfClubs { get; set; } = new List<OAPI_GolfClub>();
-
+        [JsonIgnore]
+        public virtual ICollection<OAPI_TeeTime> TeeTimes { get; set; } = new List<OAPI_TeeTime>();
     }
 }

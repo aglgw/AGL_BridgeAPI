@@ -28,14 +28,14 @@ namespace AGL.Api.API_Template.Services
         }
 
 
-        public async Task<IDataResult> PostTeeTime(OAPITeeTimePostRequest request, string supplierCode)
+        public async Task<IDataResult> PostTeeTime(OAPITeeTimeRequest request, string supplierCode)
         {
-            return await ProcessTeeTime(request.OAPITeeTimePutRequest, supplierCode, request.golfclubCode);
+            return await ProcessTeeTime(request, supplierCode, request.golfclubCode);
         }
 
-        public async Task<IDataResult> UpdateTeeTime(string golfclubCode, OAPITeeTimePutRequest request, string supplierCode)
+        public async Task<IDataResult> UpdateTeeTime(OAPITeeTimeRequest request, string supplierCode)
         {
-            return await ProcessTeeTime(request, supplierCode, golfclubCode);
+            return await ProcessTeeTime(request, supplierCode, request.golfclubCode);
         }
 
         public Task<IDataResult> GetTeeTime(OAPITeeTimeGetRequest request, string supplierCode)
@@ -54,7 +54,7 @@ namespace AGL.Api.API_Template.Services
             throw new NotImplementedException();
         }
 
-        private async Task<IDataResult> ProcessTeeTime(OAPITeeTimePutRequest request, string supplierCode, string golfclubCode)
+        private async Task<IDataResult> ProcessTeeTime(OAPITeeTimeRequest request, string supplierCode, string golfclubCode)
         {
             OAPIResponseBase response = new OAPIResponseBase();
 
@@ -66,6 +66,17 @@ namespace AGL.Api.API_Template.Services
                     var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
 
                     int supplierId = supplier.SupplierId;
+
+                    var existingGolfclub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfclubCode);
+
+                    if (existingGolfclub == null)
+                    {
+                        // 골프장이 유효하지 않을때 처리
+                        response.IsSuccess = false;
+                        response.RstCd = ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT);
+                        response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT)}(StatusCode:{ResultCode.INVALID_INPUT}) golfclubCode";
+                        response.StatusCode = (int)ResultCode.INVALID_INPUT;
+                    }
 
                     // 1. 기존 요금 정책, 날짜 슬롯, 시간 슬롯, 티타임 정보를 모두 조회
                     var existingPricePolicies = await _context.PricePolicies.ToListAsync();

@@ -25,13 +25,20 @@ namespace AGL.Api.API_Template.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        [Route("teetime/{golfclubCode}")]
+        [Route("teetime")]
         [HttpPost]
         public async Task<IDataResult> PostTeeTime(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code,
-            [FromHeader(Name = "Authorization")][Required] string Authorization,
-            OAPITeeTimePostRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeRequest request)
         {
+            OAPIResponseBase response = new OAPIResponseBase();
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
+                return response;
+
+            }
+
             var result = await _oapiService.PostTeeTime(request, X_Supplier_Code);
 
             return result;
@@ -43,14 +50,21 @@ namespace AGL.Api.API_Template.Controllers
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
         /// <exception cref="Exception"></exception>
-        [Route("teetime")]
+        [Route("teetime/update")]
         [HttpPut]
         public async Task<IDataResult> UpdateTeeTime(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code,
-            [FromHeader(Name = "Authorization")][Required] string Authorization,
-            string golfclubCode, OAPITeeTimePutRequest request)
-        {
-            var result = await _oapiService.UpdateTeeTime(golfclubCode, request, X_Supplier_Code);
+        [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeRequest request)
+            {
+            OAPIResponseBase response = new OAPIResponseBase();
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
+                return response;
+
+            }
+
+            var result = await _oapiService.UpdateTeeTime(request, X_Supplier_Code);
 
             return result;
         }
