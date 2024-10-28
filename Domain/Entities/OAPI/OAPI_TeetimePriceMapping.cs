@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
-using Microsoft.EntityFrameworkCore;
 
 namespace AGL.Api.Domain.Entities.OAPI
 {
-    //[Keyless]
+
     public class OAPI_TeetimePriceMapping
     {
         [Required]
