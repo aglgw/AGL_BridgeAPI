@@ -33,6 +33,8 @@ namespace AGL.Api.ApplicationCore.Interfaces
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
             base.OnModelCreating(builder);
 
+            builder.Entity<OAPI_Supplier>().ToTable("OAPI_Supplier");
+
             builder.Entity<OAPI_TeetimePriceMapping>().HasNoKey();
             builder.Entity<OAPI_TeetimeRefundMapping>().HasNoKey();
 
