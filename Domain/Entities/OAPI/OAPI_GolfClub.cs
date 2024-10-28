@@ -83,7 +83,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         [JsonIgnore]
         public virtual ICollection<OAPI_GolfClubHole> Holes { get; set; } = new List<OAPI_GolfClubHole>();
 
-        [JsonIgnore]
+        //[JsonIgnore]
         //public virtual ICollection<OAPI_TeetimeRefundPolicy> TeetimeRefundPolicies { get; set; } = new List<OAPI_TeetimeRefundPolicy>();
 
         //[JsonIgnore]
