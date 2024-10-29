@@ -3,6 +3,7 @@ using static AGL.Api.API_Template.Models.OAPI.OAPI;
 
 namespace AGL.Api.API_Template.Models.OAPI
 {
+    [DataContract]
     public class OAPITeeTimeBaseRequest
     {
         [DataMember]
@@ -13,8 +14,13 @@ namespace AGL.Api.API_Template.Models.OAPI
     /// 골프장 수정
     /// </summary>
     [DataContract]
-    public class OAPITeeTimeRequest : OAPITeeTimeBaseRequest
+    public class OAPITeeTimeRequest
     {
+        /// <summary>
+        /// 골프장 코드
+        /// </summary>
+        [DataMember]
+        public string? golfclubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
         /// <summary>
         /// 날짜적용방법 - 특정 공휴일이 있을시 2번 사용 ( 1 기간 , 2 적용일 )
         /// </summary>

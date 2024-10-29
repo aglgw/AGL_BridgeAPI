@@ -36,6 +36,9 @@ namespace AGL.Api.Domain.Entities.OAPI
         public bool IncludeCaddie { get; set; } // 캐디포함여부
 
         [Required]
+        public int ReservationType { get; set; } // 예약 종류 ( 0 즉시예약 1이상 시 대기시간 )
+
+        [Required]
         public DateTime CreatedDate { get; set; }
 
         public DateTime? UpdatedDate { get; set; }

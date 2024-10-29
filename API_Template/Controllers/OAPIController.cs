@@ -88,5 +88,50 @@ namespace AGL.Api.API_Template.Controllers
 
             return result;
         }
+
+        /// <summary>
+        /// 티타임 조회
+        /// </summary>
+        /// <returns></returns>
+        [Route("teetimeList")]
+        [HttpGet]
+        public async Task<IDataResult> GetTeeTime(
+            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeGetRequest request)
+        {
+            //OAPIResponseBase response = new OAPIResponseBase();
+
+            //if (!ModelState.IsValid)
+            //{
+            //    _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
+            //    return response;
+            //}
+
+            var result = await _oapiService.GetTeeTime(request, X_Supplier_Code);
+
+            return result;
+        }
+
+        /// <summary>
+        /// 티타임 상태 수정
+        /// </summary>
+        /// <returns></returns>
+        [Route("teetimeList")]
+        [HttpPut]
+        public async Task<IDataResult> PutTeeTimeAvailability(
+            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimetAvailabilityRequest request)
+        {
+            //OAPIResponseBase response = new OAPIResponseBase();
+
+            //if (!ModelState.IsValid)
+            //{
+            //    _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
+            //    return response;
+            //}
+
+            var result = await _oapiService.PutTeeTimeAvailability(request, X_Supplier_Code);
+
+            return result;
+        }
+        
     }
 }

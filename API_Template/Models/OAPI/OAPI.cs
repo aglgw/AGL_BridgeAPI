@@ -97,22 +97,22 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 카트피
             /// </summary>
             [DataMember]
-            public decimal CartFee { get; set; }
+            public decimal? CartFee { get; set; }
             /// <summary>
             /// 캐디피
             /// </summary>
             [DataMember]
-            public decimal CaddyFee { get; set; }
+            public decimal? CaddyFee { get; set; }
             /// <summary>
             /// 세금
             /// </summary>
             [DataMember]
-            public decimal Tax { get; set; }
+            public decimal? Tax { get; set; }
             /// <summary>
             /// 추가세금
             /// </summary>
             [DataMember]
-            public decimal AdditionalTax { get; set; }
+            public decimal? AdditionalTax { get; set; }
             /// <summary>
             /// 1인 총 요금 (greenFee + cartFee + caddyFee + tax + additionalTax)
             /// </summary>

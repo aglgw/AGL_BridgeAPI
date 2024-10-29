@@ -9,11 +9,14 @@ using AGL.Api.Domain.Entities.OAPI;
 using AGL.Api.Infrastructure.Data;
 using Azure;
 using Azure.Core;
+using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using static AGL.Api.API_Template.Models.OAPI.OAPI;
 using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AGL.Api.API_Template.Services
 {
@@ -41,30 +44,89 @@ namespace AGL.Api.API_Template.Services
 
         public async Task<IDataResult> GetTeeTime(OAPITeeTimeGetRequest request, string supplierCode)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(request.startDate) || string.IsNullOrEmpty(request.endDate))
+            {
+                return CreateResponse(false, ResultCode.INVALID_INPUT, "startDate or ) is invalid", null);
+            }
+
+            try
+            {
+                var startDateParsed = request.startDate;
+                var endDateParsed = request.endDate;
+
+                var teeTimeList = await _context.TeeTimes
+                        .Include(t => t.TeeTimeMappings)
+                            .ThenInclude(tm => tm.TeetimePriceMappings)
+                        .Include(t => t.TeeTimeMappings)
+                            .ThenInclude(tm => tm.TeetimeRefundMappings)
+                        .Include(t => t.GolfClub)
+                        .Where(t => t.GolfClub.Supplier.SupplierCode == supplierCode && t.TeeTimeMappings.Any(tm => string.Compare(tm.DateSlot.PlayDate, startDateParsed) >= 0 && string.Compare(tm.DateSlot.PlayDate, endDateParsed) <= 0))
+                        .ToListAsync();
+
+                var teeTimeData = teeTimeList.GroupBy(t => t.GolfClub.GolfClubId)
+                    .ToDictionary(g => g.Key.ToString(), g => g.Select(t => new TeeTimeInfo
+                    {
+                        CourseCode = t.GolfClub.Courses.Select(c => c.CourseCode).ToList(),
+                        MinMembers = t.MinMembers,
+                        MaxMembers = t.MaxMembers,
+                        IncludeCart = t.IncludeCart,
+                        IncludeCaddie = t.IncludeCaddie,
+                        ReservationType = t.ReservationType,
+                        Time = t.TeeTimeMappings.Select(tm => new TimeInfo
+                        {
+                            StartTime = tm.TimeSlot.StartTime,
+                            TeeTimeCode = new List<string> { tm.SupplierTeetimeCode }
+                        }).ToList(),
+                        Price = t.TeeTimeMappings.SelectMany(tm => tm.TeetimePriceMappings).Select(tp => new PriceInfo
+                        {
+                            PlayerCount = tp.PricePolicy.PlayerCount,
+                            GreenFee = tp.PricePolicy.GreenFee,
+                            CartFee = tp.PricePolicy.CartFee,
+                            CaddyFee = tp.PricePolicy.CaddyFee,
+                            Tax = tp.PricePolicy.Tax,
+                            AdditionalTax = tp.PricePolicy.AdditionalTax,
+                            UnitPrice = tp.PricePolicy.UnitPrice
+                        }).ToList(),
+                        RefundPolicy = t.TeeTimeMappings.SelectMany(tm => tm.TeetimeRefundMappings).Select(tr => new RefundPolicy
+                        {
+                            RefundDate = tr.TeetimeRefundPolicy.RefundDate,
+                            RefundFee = tr.TeetimeRefundPolicy.RefundFee,
+                            RefundUnit = tr.TeetimeRefundPolicy.RefundUnit
+                        }).ToList(),
+                    }).ToList());
+
+                return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully", teeTimeData);
+            }
+            catch (Exception ex)
+            {
+                return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            }
+
         }
 
         public async Task<IDataResult> PostReservatioConfirm(OAPIReservationRequest request, string supplierCode)
         {
             var reservationId = request.reservationId;
 
+            // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
             {
-                return CreateResponse(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid");
+                return CreateResponse(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid", null);
             }
 
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
+                    // 공급자 정보 조회 - supplierCode에 해당하는 공급자를 데이터베이스에서 검색
                     var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
                     if (supplier == null)
                     {
-                        return CreateResponse(false, ResultCode.INVALID_INPUT, "Supplier not found");
+                        return CreateResponse(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
                     }
                     int supplierId = supplier.SupplierId;
 
-                    // 예약관리 DB에 추가하기
+                    // 예약관리 DB에서 예약 조회 - 예약 번호, 상태, 공급자 ID를 기준으로 예약 검색
                     var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 1 && r.SupplierId == supplierId);
 
                     if (reservation != null)
@@ -76,28 +138,80 @@ namespace AGL.Api.API_Template.Services
                     }
                     else
                     {
-                        return CreateResponse(false, ResultCode.NOT_FOUND, "Reservation not found");
+                        return CreateResponse(false, ResultCode.NOT_FOUND, "Reservation not found", null);
                     }
 
                     // 트랜잭션 커밋
                     await transaction.CommitAsync();
 
-                    return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully");
+                    return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
                 }
                 catch (Exception ex)
                 {
                     // 오류 발생 시 트랜잭션 롤백
                     await transaction.RollbackAsync();
 
-                    return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message);
+                    return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message, null);
                 }
             }
-
         }
 
-        public Task<IDataResult> PostTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode)
+        public async Task<IDataResult> PutTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode)
         {
-            throw new NotImplementedException();
+            var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.golfclubCode);
+
+            if (golfClub == null)
+            {
+                return CreateResponse(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
+            }
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // 요청에서 제공된 티타임 코드 목록을 가져옴
+                    var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.TeeTimeCode).ToList() : [];
+
+                    // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
+                    var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
+                        .Include(tm => tm.TeeTime)
+                            .ThenInclude(t => t.GolfClubCourse)
+                        .Include(tm => tm.DateSlot)
+                        .Where(tm => tm.TeeTime.GolfClubCourse.GolfClubId == golfClub.GolfClubId &&
+                                    request.courseCode.Contains(tm.SupplierTeetimeCode) &&
+                                    tm.DateSlot.PlayDate == request.playDate);
+
+                    // 티타임 코드 목록이 있을 경우 해당 코드들에 대한 조건 추가
+                    if (teeTimeCodes.Count != 0)
+                    {
+                        existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => teeTimeCodes.Contains(tm.SupplierTeetimeCode));
+                    }
+
+                    // 조건에 맞는 TeeTimePriceMappings 목록을 조회
+                    var existingTeeTimeMappings = await existingTeeTimeMappingsQuery.ToListAsync();
+
+                    // 조회된 티타임 가격 매핑에 대해 가용성 및 수정 날짜 업데이트를 벌크 업데이트로 수행
+                    existingTeeTimeMappings.ForEach(teeTimeMapping =>
+                    {
+                        teeTimeMapping.IsAvailable = request.available;
+                        teeTimeMapping.UpdatedDate = DateTime.UtcNow;
+                    });
+
+                    // 벌크 업데이트 수행
+                    await _context.BulkUpdateAsync(existingTeeTimeMappings);
+
+                    await transaction.CommitAsync();
+
+                    return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
+                }
+                catch (Exception ex)
+                {
+                    // 오류 발생 시 트랜잭션 롤백
+                    await transaction.RollbackAsync();
+
+                    return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                }
+            }
         }
 
         private async Task<IDataResult> ProcessTeeTime(OAPITeeTimeRequest request, string supplierCode, string golfclubCode)
@@ -117,7 +231,7 @@ namespace AGL.Api.API_Template.Services
                     if (existingGolfclub == null)
                     {
                         // 골프장이 유효하지 않을때 처리
-                        return CreateResponse(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid");
+                        return CreateResponse(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid", null);
                     }
 
                     // 1. 기존 요금 정책, 날짜 슬롯, 시간 슬롯, 티타임 정보를 모두 조회
@@ -143,7 +257,7 @@ namespace AGL.Api.API_Template.Services
                             var golfClubCourse = golfClubCourses.FirstOrDefault(gc => gc.CourseCode == courseCode);
                             if (golfClubCourse == null) //골프장 코스 없을시
                             {
-                                return CreateResponse(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid");
+                                return CreateResponse(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
                             }
 
                             var teeTime = teeTimes.FirstOrDefault(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId && tt.MinMembers == teeTimeInfo.MinMembers && tt.MaxMembers == teeTimeInfo.MaxMembers);
@@ -311,14 +425,14 @@ namespace AGL.Api.API_Template.Services
                     // 트랜잭션 커밋
                     await transaction.CommitAsync();
 
-                    return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully");
+                    return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
                 }
                 catch (Exception ex)
                 {
                     // 오류 발생 시 트랜잭션 롤백
                     await transaction.RollbackAsync();
 
-                    return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message);
+                    return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message, null);
                 }
 
 
@@ -326,15 +440,23 @@ namespace AGL.Api.API_Template.Services
 
         }
 
-        private OAPIResponseBase CreateResponse(bool isSuccess, ResultCode resultCode, string message)
+
+        private OAPIResponseBase CreateResponse(bool isSuccess, ResultCode resultCode, string message, Dictionary<string, List<TeeTimeInfo>>? data)
         {
-            return new OAPIResponseBase
+            var response = new OAPITeeTimeGetResponse
             {
                 IsSuccess = isSuccess,
                 RstCd = ExtensionMethods.GetDescription(resultCode),
                 RstMsg = $"{ExtensionMethods.GetDescription(resultCode)} (StatusCode: {(int)resultCode}) {message}",
                 StatusCode = (int)resultCode
             };
+
+            if (data != null)
+            {
+                response.Data = data;
+            }
+
+            return response;
         }
 
     }

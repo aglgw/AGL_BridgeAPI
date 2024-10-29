@@ -11,7 +11,7 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         [Required]
         [StringLength(8)]
-        public string RefundDate { get; set; }
+        public int RefundDate { get; set; }
 
         [StringLength(4)]
         public string RefundHour { get; set; }

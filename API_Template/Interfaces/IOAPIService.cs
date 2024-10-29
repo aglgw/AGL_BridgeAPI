@@ -30,7 +30,7 @@ namespace AGL.Api.API_Template.Interfaces
         /// 티타임 상태수정
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> PostTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode);
+        Task<IDataResult> PutTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode);
         /// <summary>
         /// 예약확정
         /// </summary>
