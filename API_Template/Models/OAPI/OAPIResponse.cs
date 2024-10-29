@@ -33,27 +33,18 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// </summary>
             [DataMember]
             public string RstMsg { get; set; }
-
         }
 
-        /// <summary>
-        /// 조회 응답
-        /// </summary>
         [DataContract]
-        public class OAPITeeTimeGetResponse
+        public class OAPITeeTimeGetResponse : OAPIResponseBase
         {
-            /// <summary>
-            /// 조회 응답
-            /// </summary>
-            [DataMember]
-            public OAPIResponseBase OAPIResponseBase { get; set; }
             /// <summary>
             /// 데이타
             /// </summary>
             [DataMember]
-            public Dictionary<string, List<TeeTimeInfo>> Data { get; set; }
-
+            public Dictionary<string, List<TeeTimeInfo>>? Data { get; set; }
         }
+
 
     }
 }

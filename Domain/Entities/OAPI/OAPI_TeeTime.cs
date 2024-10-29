@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
 
 namespace AGL.Api.Domain.Entities.OAPI
 {
@@ -27,6 +28,12 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         [Required]
         public int MaxMembers { get; set; }
+
+        [Required]
+        public bool IncludeCart { get; set; } // 카트포함여부
+
+        [Required]
+        public bool IncludeCaddie { get; set; } // 캐디포함여부
 
         [Required]
         public DateTime CreatedDate { get; set; }
