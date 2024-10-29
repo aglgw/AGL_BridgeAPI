@@ -19,8 +19,18 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
             builder.HasMany(e => e.GolfClubs)
                    .WithOne(g => g.Supplier)
-                   .HasForeignKey(g => g.SupplierId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .HasForeignKey(g => g.SupplierId);
+            //.OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.ReservationManagements)
+                   .WithOne(m => m.Supplier)
+                   .HasPrincipalKey(m => m.SupplierId);
+            //.OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.TeeTimes)
+                   .WithOne(t => t.Supplier)
+                   .HasPrincipalKey(t => t.SupplierId);
+                   //.OnDelete(DeleteBehavior.Cascade);
         }
     }
 
@@ -219,7 +229,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
         }
     }
-        public class OAPITeetimeRefundPolicyConfiguration : IEntityTypeConfiguration<OAPI_TeetimeRefundPolicy>
+
+    public class OAPITeetimeRefundPolicyConfiguration : IEntityTypeConfiguration<OAPI_TeetimeRefundPolicy>
     {
         public void Configure(EntityTypeBuilder<OAPI_TeetimeRefundPolicy> builder)
         {
@@ -231,6 +242,19 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithOne(tr => tr.TeetimeRefundPolicy) // 각 TeetimeRefundMapping은 하나의 TeetimeRefundPolicy와 관계를 가짐
                    .HasForeignKey(tr => tr.RefundPolicyId) // 외래 키 설정
                    .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
+        }
+    }
+
+    public class OAPIReservationManagementConfiguration : IEntityTypeConfiguration<OAPI_ReservationManagement>
+    {
+        public void Configure(EntityTypeBuilder<OAPI_ReservationManagement> builder)
+        {
+            builder.ToTable("OAPI_ReservationManagement");
+            builder.HasKey(e => e.ReservationManagementId);
+
+            builder.HasOne(e => e.Supplier)
+                   .WithMany(s => s.ReservationManagements)
+                   .HasForeignKey(s => s.SupplierId);
         }
     }
 

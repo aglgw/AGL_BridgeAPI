@@ -38,5 +38,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public virtual ICollection<OAPI_GolfClub> GolfClubs { get; set; } = new List<OAPI_GolfClub>();
         [JsonIgnore]
         public virtual ICollection<OAPI_TeeTime> TeeTimes { get; set; } = new List<OAPI_TeeTime>();
+        [JsonIgnore]
+        public virtual ICollection<OAPI_ReservationManagement> ReservationManagements { get; set; } = new List<OAPI_ReservationManagement>();
     }
 }
