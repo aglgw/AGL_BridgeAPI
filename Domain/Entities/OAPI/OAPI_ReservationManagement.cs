@@ -22,12 +22,13 @@ namespace AGL.Api.Domain.Entities.OAPI
         public string ReservationId { get; set; } // 공급사 예약 번호
 
         [StringLength(50)]
-        public string SalesChannel { get; set; } // 판매 채널
+        public string? SalesChannel { get; set; } // 판매 채널
 
         [StringLength(100)]
-        public string Endpoint { get; set; } // 판매 채널 경로?
+        public string? Endpoint { get; set; } // 판매 채널 경로?
 
-        public byte? ReservationStatus { get; set; } // 1: 예약요청, 2: 예약확정, 3: 예약취소
+        [Required]
+        public byte ReservationStatus { get; set; } // 1: 예약요청, 2: 예약확정, 3: 예약취소
 
         [Required]
         public DateTime CreatedDate { get; set; }

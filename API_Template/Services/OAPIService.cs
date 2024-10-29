@@ -47,24 +47,21 @@ namespace AGL.Api.API_Template.Services
         public async Task<IDataResult> PostReservatioConfirm(OAPIReservationRequest request, string supplierCode)
         {
             var reservationId = request.reservationId;
-            OAPIResponseBase response = new OAPIResponseBase();
 
-            if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(reservationId))
+            if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
             {
-                response.IsSuccess = false;
-                response.RstCd = ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT);
-                response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT)}(StatusCode:{ResultCode.INVALID_INPUT}) reservationId";
-                response.StatusCode = (int)ResultCode.INVALID_INPUT;
-                return response;
+                return CreateResponse(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid");
             }
 
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    //var reservationList = await _context.Reservations.ToListAsync();
                     var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
-
+                    if (supplier == null)
+                    {
+                        return CreateResponse(false, ResultCode.INVALID_INPUT, "Supplier not found");
+                    }
                     int supplierId = supplier.SupplierId;
 
                     // 예약관리 DB에 추가하기
@@ -79,31 +76,23 @@ namespace AGL.Api.API_Template.Services
                     }
                     else
                     {
-                        throw new Exception("Reservation not found.");
+                        return CreateResponse(false, ResultCode.NOT_FOUND, "Reservation not found");
                     }
 
                     // 트랜잭션 커밋
                     await transaction.CommitAsync();
 
-                    response.IsSuccess = true;
-                    response.RstCd = ExtensionMethods.GetDescription(ResultCode.SUCCESS);
-                    response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.SUCCESS)}(StatusCode:{ResultCode.SUCCESS})";
-                    response.StatusCode = (int)ResultCode.SUCCESS;
+                    return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully");
                 }
                 catch (Exception ex)
                 {
                     // 오류 발생 시 트랜잭션 롤백
                     await transaction.RollbackAsync();
 
-                    response.IsSuccess = false;
-                    response.RstCd = ExtensionMethods.GetDescription(ResultCode.SERVER_ERROR);
-                    response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.SERVER_ERROR)}(StatusCode:{ResultCode.SERVER_ERROR}) {ex.Message} ";
-                    response.StatusCode = (int)ResultCode.SERVER_ERROR;
-                    return response;
-                    //throw new DomainException(ResultCode.SERVER_ERROR, $"Unauthorized(StatusCode:{ResultCode.SERVER_ERROR}) Missing golfclubCode Code");
+                    return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message);
                 }
             }
-            return response;
+
         }
 
         public Task<IDataResult> PostTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode)
@@ -113,7 +102,6 @@ namespace AGL.Api.API_Template.Services
 
         private async Task<IDataResult> ProcessTeeTime(OAPITeeTimeRequest request, string supplierCode, string golfclubCode)
         {
-            OAPIResponseBase response = new OAPIResponseBase();
 
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
@@ -129,11 +117,7 @@ namespace AGL.Api.API_Template.Services
                     if (existingGolfclub == null)
                     {
                         // 골프장이 유효하지 않을때 처리
-                        response.IsSuccess = false;
-                        response.RstCd = ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT);
-                        response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT)}(StatusCode:{ResultCode.INVALID_INPUT}) golfclubCode";
-                        response.StatusCode = (int)ResultCode.INVALID_INPUT;
-                        return response;
+                        return CreateResponse(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid");
                     }
 
                     // 1. 기존 요금 정책, 날짜 슬롯, 시간 슬롯, 티타임 정보를 모두 조회
@@ -159,7 +143,7 @@ namespace AGL.Api.API_Template.Services
                             var golfClubCourse = golfClubCourses.FirstOrDefault(gc => gc.CourseCode == courseCode);
                             if (golfClubCourse == null) //골프장 코스 없을시
                             {
-                                continue;
+                                return CreateResponse(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid");
                             }
 
                             var teeTime = teeTimes.FirstOrDefault(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId && tt.MinMembers == teeTimeInfo.MinMembers && tt.MaxMembers == teeTimeInfo.MaxMembers);
@@ -237,6 +221,7 @@ namespace AGL.Api.API_Template.Services
                                 var dateSlot = dateSlots.FirstOrDefault(ds => ds.PlayDate == date);
                                 if (dateSlot == null)
                                 {
+                                    // 날짜 DB에 없을시 처리 ( 날짜슬롯에 날짜 추가 )
                                     continue;
                                 }
 
@@ -256,6 +241,7 @@ namespace AGL.Api.API_Template.Services
                                     var timeSlot = timeSlots.FirstOrDefault(ts => ts.StartTime == time.StartTime);
                                     if (timeSlot == null)
                                     {
+                                        // 시간 DB에 없을시 처리 ( 시간슬롯에 시간 추가 )
                                         continue;
                                     }
 
@@ -325,27 +311,31 @@ namespace AGL.Api.API_Template.Services
                     // 트랜잭션 커밋
                     await transaction.CommitAsync();
 
-                    response.IsSuccess = true;
-                    response.RstCd = ExtensionMethods.GetDescription(ResultCode.SUCCESS);
-                    response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.SUCCESS)}(StatusCode:{ResultCode.SUCCESS})";
-                    response.StatusCode = (int)ResultCode.SUCCESS;
+                    return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully");
                 }
                 catch (Exception ex)
                 {
                     // 오류 발생 시 트랜잭션 롤백
                     await transaction.RollbackAsync();
 
-                    response.IsSuccess = false;
-                    response.RstCd = ExtensionMethods.GetDescription(ResultCode.SERVER_ERROR);
-                    response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.SERVER_ERROR)}(StatusCode:{ResultCode.SERVER_ERROR}) ";
-                    response.StatusCode = (int)ResultCode.SERVER_ERROR;
-                    return response;
-                    //throw new DomainException(ResultCode.SERVER_ERROR, $"Unauthorized(StatusCode:{ResultCode.SERVER_ERROR}) Missing golfclubCode Code");
+                    return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message);
                 }
 
 
             }
-            return response;
+
         }
+
+        private OAPIResponseBase CreateResponse(bool isSuccess, ResultCode resultCode, string message)
+        {
+            return new OAPIResponseBase
+            {
+                IsSuccess = isSuccess,
+                RstCd = ExtensionMethods.GetDescription(resultCode),
+                RstMsg = $"{ExtensionMethods.GetDescription(resultCode)} (StatusCode: {(int)resultCode}) {message}",
+                StatusCode = (int)resultCode
+            };
+        }
+
     }
 }
