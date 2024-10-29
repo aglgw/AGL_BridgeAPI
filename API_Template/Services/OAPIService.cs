@@ -12,6 +12,7 @@ using Azure.Core;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.API_Template.Services
@@ -38,18 +39,74 @@ namespace AGL.Api.API_Template.Services
             return await ProcessTeeTime(request, supplierCode, request.golfclubCode);
         }
 
-        public Task<IDataResult> GetTeeTime(OAPITeeTimeGetRequest request, string supplierCode)
+        public async Task<IDataResult> GetTeeTime(OAPITeeTimeGetRequest request, string supplierCode)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IDataResult> PostReservatioConfirm(OAPIReservationRequest request)
+        public async Task<IDataResult> PostReservatioConfirm(OAPIReservationRequest request, string supplierCode)
         {
-            throw new NotImplementedException();
+            var reservationId = request.reservationId;
+            OAPIResponseBase response = new OAPIResponseBase();
+
+            if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(reservationId))
+            {
+                response.IsSuccess = false;
+                response.RstCd = ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT);
+                response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT)}(StatusCode:{ResultCode.INVALID_INPUT}) reservationId";
+                response.StatusCode = (int)ResultCode.INVALID_INPUT;
+                return response;
+            }
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    //var reservationList = await _context.Reservations.ToListAsync();
+                    var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
+
+                    int supplierId = supplier.SupplierId;
+
+                    // 예약관리 DB에 추가하기
+                    var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 1 && r.SupplierId == supplierId);
+
+                    if (reservation != null)
+                    {
+                        reservation.ReservationStatus = 2; // 1 예약요청 2 예약확정 3 예약취소
+                        reservation.UpdatedDate = DateTime.Now;
+
+                        _context.SaveChanges();
+                    }
+                    else
+                    {
+                        throw new Exception("Reservation not found.");
+                    }
+
+                    // 트랜잭션 커밋
+                    await transaction.CommitAsync();
+
+                    response.IsSuccess = true;
+                    response.RstCd = ExtensionMethods.GetDescription(ResultCode.SUCCESS);
+                    response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.SUCCESS)}(StatusCode:{ResultCode.SUCCESS})";
+                    response.StatusCode = (int)ResultCode.SUCCESS;
+                }
+                catch (Exception ex)
+                {
+                    // 오류 발생 시 트랜잭션 롤백
+                    await transaction.RollbackAsync();
+
+                    response.IsSuccess = false;
+                    response.RstCd = ExtensionMethods.GetDescription(ResultCode.SERVER_ERROR);
+                    response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.SERVER_ERROR)}(StatusCode:{ResultCode.SERVER_ERROR}) {ex.Message} ";
+                    response.StatusCode = (int)ResultCode.SERVER_ERROR;
+                    return response;
+                    //throw new DomainException(ResultCode.SERVER_ERROR, $"Unauthorized(StatusCode:{ResultCode.SERVER_ERROR}) Missing golfclubCode Code");
+                }
+            }
+            return response;
         }
 
-
-        public Task<IDataResult> PostTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request)
+        public Task<IDataResult> PostTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode)
         {
             throw new NotImplementedException();
         }
@@ -76,6 +133,7 @@ namespace AGL.Api.API_Template.Services
                         response.RstCd = ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT);
                         response.RstMsg = $"{ExtensionMethods.GetDescription(ResultCode.INVALID_INPUT)}(StatusCode:{ResultCode.INVALID_INPUT}) golfclubCode";
                         response.StatusCode = (int)ResultCode.INVALID_INPUT;
+                        return response;
                     }
 
                     // 1. 기존 요금 정책, 날짜 슬롯, 시간 슬롯, 티타임 정보를 모두 조회
@@ -99,7 +157,7 @@ namespace AGL.Api.API_Template.Services
                         foreach (var courseCode in teeTimeInfo.CourseCode)
                         {
                             var golfClubCourse = golfClubCourses.FirstOrDefault(gc => gc.CourseCode == courseCode);
-                            if (golfClubCourse == null)
+                            if (golfClubCourse == null) //골프장 코스 없을시
                             {
                                 continue;
                             }

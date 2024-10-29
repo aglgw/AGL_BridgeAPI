@@ -34,6 +34,7 @@ namespace AGL.Api.Infrastructure.Data
         public DbSet<OAPI_TeetimeRefundMapping> TeetimeRefundMappings { get; set; } // 티타임 환불
         public DbSet<OAPI_TeetimeRefundPolicy> TeetimeRefundPolicies { get; set; } // 환불 정책
         public DbSet<OAPI_PricePolicy> PricePolicies { get; set; } // 가격 정책
+        public DbSet<OAPI_ReservationManagement> ReservationManagements { get; set; } // 가격 정책
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
