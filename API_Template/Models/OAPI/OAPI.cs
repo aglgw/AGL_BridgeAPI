@@ -226,5 +226,106 @@ namespace AGL.Api.API_Template.Models.OAPI
             [DataMember]
             public int distance { get; set; }
         }
+
+
+
+        [DataContract]
+        public class BookingInfo
+        {
+            /// <summary>
+            /// Booking ID
+            /// </summary>
+            public string reservationId { get; set; } = string.Empty;
+            /// <summary>
+            /// Golf Club Code
+            /// </summary>
+            public string golfclubCode { get; set; } = string.Empty;
+            /// <summary>
+            /// Play Date
+            /// </summary>
+            public string playDate { get; set; } = string.Empty;
+            /// <summary>
+            /// Tee-off Time
+            /// </summary>
+            public string startTime { get; set; } = string.Empty;
+            /// <summary>
+            /// Number of Players
+            /// </summary>
+            public int playerCount { get; set; }
+            /// <summary>
+            /// Booking Status
+            /// 1 예약요청
+            /// 2 예약확정
+            /// 3 예약취소
+            /// </summary>
+            public int status { get; set; }
+            /// <summary>
+            /// Booking Status
+            /// </summary>
+            public string orderDate { get; set; } = string.Empty;
+            /// <summary>
+            /// currency
+            /// </summary>
+            public string? currency { get; set; }
+            /// <summary>
+            /// Penalty Amount
+            /// </summary>
+            public decimal cancelPenaltyAmount { get; set; }
+
+
+        }
+
+        [DataContract]
+        public class ConfirmBookingInfo
+        {
+            /// <summary>
+            /// Booking ID
+            /// </summary>
+            public string reservationId { get; set; } = string.Empty;
+            /// <summary>
+            /// Golf Club Code
+            /// </summary>
+            public string golfclubCode { get; set; } = string.Empty;
+            /// <summary>
+            /// Play Date
+            /// </summary>
+            public string playDate { get; set; } = string.Empty;
+            /// <summary>
+            /// Tee-off Time
+            /// </summary>
+            public string startTime { get; set; } = string.Empty;
+           
+            /// <summary>
+            /// Booking Status
+            /// 1 예약요청
+            /// 2 예약확정
+            /// 3 예약취소
+            /// </summary>
+            public int status { get; set; }
+            /// <summary>
+            /// reservationDate
+            /// </summary>
+            public string reservationDate { get; set; } = string.Empty;
+
+
+        }
+
+        [DataContract]
+        public class CancelBookingInfo
+        {
+            /// <summary>
+            /// cancelDate
+            /// </summary>
+            public string cancelDate { get; set; } = string.Empty;
+            /// <summary>
+            /// cancelPenaltyAmount
+            /// </summary>
+            public decimal cancelPenaltyAmount { get; set; } = 0;
+            /// <summary>
+            /// currency
+            /// </summary>
+            public string currency { get; set; } = string.Empty;
+
+        }
     }
 }

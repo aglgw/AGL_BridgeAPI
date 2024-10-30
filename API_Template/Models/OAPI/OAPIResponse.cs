@@ -46,5 +46,26 @@ namespace AGL.Api.API_Template.Models.OAPI
         }
 
 
+        [DataContract]
+        public class OAPICommonListResponse<T> : OAPIResponseBase
+        {
+            /// <summary>
+            /// 데이타
+            /// </summary>
+            [DataMember]
+            public List<T>? data { get; set; }
+        }
+
+        [DataContract]
+        public class OAPICommonResponse<T> : OAPIResponseBase
+        {
+            /// <summary>
+            /// 데이타
+            /// </summary>
+            [DataMember]
+            public T? data { get; set; }
+        }
+
+
     }
 }

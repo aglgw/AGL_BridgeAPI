@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using static AGL.Api.API_Template.Models.OAPI.OAPI;
 
 namespace AGL.Api.API_Template.Models.OAPI
@@ -127,4 +128,38 @@ namespace AGL.Api.API_Template.Models.OAPI
         public string reservationId { get; set; }
     }
 
+
+
+    /// <summary>
+    ///예약 목록 조회
+    /// </summary>
+    public class ReqBookingInquiry: OAPITeeTimeBaseRequest
+    {
+        /// <summary>
+        /// 시작일 YYYY-MM-DD
+        /// </summary>
+        [DataMember, Required]
+        public string startDate { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 종료일 YYYY-MM-DD
+        /// </summary>
+        [DataMember, Required]
+        public string endtDate { get; set; } = string.Empty;
+
+
+        /// <summary>
+        /// Booking ID
+        /// </summary>
+        [DataMember]
+        public string? reservationId { get; set; }
+
+        /// <summary>
+        /// Booking Status
+        /// </summary>
+        [DataMember]
+        public int? status { get; set; }
+
+
+    }
 }
