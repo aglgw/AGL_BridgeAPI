@@ -8,7 +8,7 @@ namespace AGL.Api.Domain.Entities.OAPI
     {
         [Key]
         [Required]
-        public int TeeTimeMappingId { get; set; }
+        public int TeetimeMappingid { get; set; }
 
         [Required]
         [ForeignKey("OAPI_TeeTime")]
@@ -21,6 +21,14 @@ namespace AGL.Api.Domain.Entities.OAPI
         [Required]
         [ForeignKey("OAPI_TimeSlot")]
         public int TimeSlotId { get; set; }
+
+        [Required]
+        [ForeignKey("OAPI_TeetimePricePolicy")]
+        public int PricePolicyId { get; set; }
+
+        [Required]
+        [ForeignKey("OAPI_TeetimeRefundPolicy")]
+        public int RefundPolicyId { get; set; }
 
         [StringLength(100)]
         public string SupplierTeetimeCode { get; set; }
@@ -39,6 +47,13 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         public DateTime? UpdatedDate { get; set; }
 
+
+        // 새로운 읽기 전용 속성으로 PlayDate 추가
+        [NotMapped] // 데이터베이스에 저장하지 않음
+        public string? PlayDate => DateSlot?.PlayDate;
+        [NotMapped] // 데이터베이스에 저장하지 않음
+        public string? StartTime => TimeSlot?.StartTime;
+
         //네비게이션 설정
         [JsonIgnore]
         public virtual OAPI_TeeTime TeeTime { get; set; }
@@ -47,8 +62,8 @@ namespace AGL.Api.Domain.Entities.OAPI
         [JsonIgnore]
         public virtual OAPI_TimeSlot TimeSlot { get; set; }
         [JsonIgnore]
-        public virtual ICollection<OAPI_TeetimePriceMapping> TeetimePriceMappings { get; set; } = new List<OAPI_TeetimePriceMapping>();
+        public virtual OAPI_TeetimePricePolicy TeetimePricePolicy { get; set; }
         [JsonIgnore]
-        public virtual ICollection<OAPI_TeetimeRefundMapping> TeetimeRefundMappings { get; set; } = new List<OAPI_TeetimeRefundMapping>();
+        public virtual OAPI_TeetimeRefundPolicy TeetimeRefundPolicy { get; set; }
     }
 }

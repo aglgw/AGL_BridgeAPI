@@ -67,6 +67,10 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         public DateTime? UpdatedDate { get; set; } // 수정일
 
+        // 새로운 읽기 전용 속성으로 PlayDate 추가
+        [NotMapped] // 데이터베이스에 저장하지 않음
+        public string? SupplierCode => Supplier?.SupplierCode;
+
         // 네비게이션 속성
         [JsonIgnore]
         public virtual OAPI_Supplier Supplier { get; set; }
@@ -82,12 +86,6 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         [JsonIgnore]
         public virtual ICollection<OAPI_GolfClubHole> Holes { get; set; } = new List<OAPI_GolfClubHole>();
-
-        //[JsonIgnore]
-        //public virtual ICollection<OAPI_TeetimeRefundPolicy> TeetimeRefundPolicies { get; set; } = new List<OAPI_TeetimeRefundPolicy>();
-
-        //[JsonIgnore]
-        //public virtual ICollection<OAPI_TeetimePriceMapping> TeetimePriceMappings { get; set; } = new List<OAPI_TeetimePriceMapping>();
 
         [JsonIgnore]
         public virtual ICollection<OAPI_TeeTime> TeeTimes { get; set; } = new List<OAPI_TeeTime>();

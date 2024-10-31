@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AGL.Api.Domain.Entities.OAPI;
+using AGL.Api.Infrastructure.Data;
 
 namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 {
@@ -56,6 +57,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasMany(e => e.Holes)
                    .WithOne(h => h.GolfClub)
                    .HasForeignKey(h => h.GolfClubId);
+
+            builder.Property(e => e.IsResidentGuestRequired).HasColumnType("TINYINT");
         }
     }
 
@@ -150,13 +153,13 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithMany(t => t.TeeTimeMappings)
                    .HasForeignKey(e => e.TimeSlotId);
 
-            builder.HasMany(e => e.TeetimePriceMappings)
-                   .WithOne(tp => tp.TeeTimeMapping)
-                   .HasForeignKey(tp => tp.TeeTimeMappingId);
+            builder.HasOne(e => e.TeetimePricePolicy)
+                    .WithMany(t => t.TeeTimeMappings)
+                    .HasForeignKey(e => e.PricePolicyId);
 
-            builder.HasMany(e => e.TeetimeRefundMappings)
-                   .WithOne(tr => tr.TeeTimeMapping)
-                   .HasForeignKey(tr => tr.TeeTimeMappingId);
+            builder.HasOne(e => e.TeetimeRefundPolicy)
+                    .WithMany(t => t.TeeTimeMappings)
+                    .HasForeignKey(e => e.RefundPolicyId);
         }
     }
 
@@ -179,57 +182,6 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
         }
     }
 
-    public class OAPITeetimePriceMappingConfiguration : IEntityTypeConfiguration<OAPI_TeetimePriceMapping>
-    {
-        public void Configure(EntityTypeBuilder<OAPI_TeetimePriceMapping> builder)
-        {
-            builder.ToTable("OAPI_TeetimePriceMapping");
-            //builder.HasNoKey();
-            builder.HasKey(e => new { e.TeeTimeMappingId, e.PricePolicyId });
-
-            builder.HasOne(e => e.TeeTimeMapping)
-                   .WithMany(d => d.TeetimePriceMappings)
-                   .HasForeignKey(e => e.TeeTimeMappingId);
-
-            builder.HasOne(e => e.PricePolicy)
-                   .WithMany(p => p.TeetimePriceMappings)
-                   .HasForeignKey(e => e.PricePolicyId);
-        }
-    }
-
-    public class OAPIPricePolicyConfiguration : IEntityTypeConfiguration<OAPI_PricePolicy>
-    {
-        public void Configure(EntityTypeBuilder<OAPI_PricePolicy> builder)
-        {
-            builder.ToTable("OAPI_PricePolicy");
-            builder.HasKey(e => e.PricePolicyId);
-
-            // OAPI_PricePolicy와 OAPI_TeetimePriceMapping 간의 관계 설정
-            builder.HasMany(p => p.TeetimePriceMappings) // OAPI_PricePolicy는 여러 개의 TeetimePriceMapping과 관계를 가짐
-                   .WithOne(tp => tp.PricePolicy) // 각 TeetimePriceMapping은 하나의 PricePolicy와 관계를 가짐
-                   .HasForeignKey(tp => tp.PricePolicyId) // 외래 키 설정
-                   .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
-        }
-    }
-
-    public class OAPITeetimeRefundMappingConfiguration : IEntityTypeConfiguration<OAPI_TeetimeRefundMapping>
-    {
-        public void Configure(EntityTypeBuilder<OAPI_TeetimeRefundMapping> builder)
-        {
-            builder.ToTable("OAPI_TeetimeRefundMapping");
-            builder.HasKey(e => new { e.TeeTimeMappingId, e.RefundPolicyId });
-
-            builder.HasOne(e => e.TeeTimeMapping)
-                   .WithMany(d => d.TeetimeRefundMappings)
-                   .HasForeignKey(e => e.TeeTimeMappingId);
-
-            builder.HasOne(e => e.TeetimeRefundPolicy)
-                   .WithMany(r => r.TeetimeRefundMappings)
-                   .HasForeignKey(e => e.RefundPolicyId);
-
-        }
-    }
-
     public class OAPITeetimeRefundPolicyConfiguration : IEntityTypeConfiguration<OAPI_TeetimeRefundPolicy>
     {
         public void Configure(EntityTypeBuilder<OAPI_TeetimeRefundPolicy> builder)
@@ -238,8 +190,33 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasKey(e => e.RefundPolicyId);
 
             // OAPI_TeetimeRefundPolicy와 OAPI_TeetimeRefundMapping 간의 관계 설정
-            builder.HasMany(rp => rp.TeetimeRefundMappings) // OAPI_TeetimeRefundPolicy는 여러 개의 TeetimeRefundMapping과 관계를 가짐
-                   .WithOne(tr => tr.TeetimeRefundPolicy) // 각 TeetimeRefundMapping은 하나의 TeetimeRefundPolicy와 관계를 가짐
+            builder.HasMany(rp => rp.TeeTimeMappings) // OAPI_TeetimeRefundPolicy는 여러 개의 OAPI_TeeTimeMapping과 관계를 가짐
+                   .WithOne(tr => tr.TeetimeRefundPolicy) // 각 OAPI_TeeTimeMapping은 하나의 TeetimeRefundPolicy와 관계를 가짐
+                   .HasForeignKey(tr => tr.RefundPolicyId) // 외래 키 설정
+                   .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
+
+            builder.Property(e => e.RefundUnit_1).HasColumnType("TINYINT");
+            builder.Property(e => e.RefundUnit_2).HasColumnType("TINYINT");
+            builder.Property(e => e.RefundUnit_3).HasColumnType("TINYINT");
+            builder.Property(e => e.RefundUnit_4).HasColumnType("TINYINT");
+            builder.Property(e => e.RefundUnit_5).HasColumnType("TINYINT");
+            //builder.Property(e => e.RefundUnit_1)
+            //        .HasConversion(
+            //            v => (int?)v,         // byte? -> int?로 저장
+            //            v => (byte?)v);       // int? -> byte?로 읽어오기
+        }
+    }
+
+    public class OAPITeetimePricePolicyConfiguration : IEntityTypeConfiguration<OAPI_TeetimePricePolicy>
+    {
+        public void Configure(EntityTypeBuilder<OAPI_TeetimePricePolicy> builder)
+        {
+            builder.ToTable("OAPI_TeetimePricePolicy");
+            builder.HasKey(e => e.PricePolicyId);
+
+            // OAPI_TeetimeRefundPolicy와 OAPI_TeetimeRefundMapping 간의 관계 설정
+            builder.HasMany(rp => rp.TeeTimeMappings) // OAPI_TeetimePricePolicy는 여러 개의 OAPI_TeeTimeMapping과 관계를 가짐
+                   .WithOne(tr => tr.TeetimePricePolicy) // 각 OAPI_TeeTimeMapping은 하나의 TeetimePricePolicy와 관계를 가짐
                    .HasForeignKey(tr => tr.RefundPolicyId) // 외래 키 설정
                    .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
         }
@@ -255,6 +232,7 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasOne(e => e.Supplier)
                    .WithMany(s => s.ReservationManagements)
                    .HasForeignKey(s => s.SupplierId);
+            builder.Property(e => e.ReservationStatus).HasColumnType("TINYINT");
         }
     }
 

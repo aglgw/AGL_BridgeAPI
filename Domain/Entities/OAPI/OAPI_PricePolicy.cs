@@ -30,9 +30,5 @@ namespace AGL.Api.Domain.Entities.OAPI
         public DateTime CreatedDate { get; set; }
 
         public DateTime? UpdatedDate { get; set; }
-
-        //네비게이션 속성
-        [JsonIgnore]
-        public virtual ICollection<OAPI_TeetimePriceMapping> TeetimePriceMappings { get; set; } = new List<OAPI_TeetimePriceMapping>();
     }
 }
