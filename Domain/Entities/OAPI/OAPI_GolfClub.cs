@@ -39,10 +39,6 @@ namespace AGL.Api.Domain.Entities.OAPI
         [StringLength(16)]
         public string? Longitude { get; set; } // 경도
 
-        public int? HoleCount { get; set; } // 홀 갯수
-
-        public int? CourseCount { get; set; } // 코스 갯수
-
         [StringLength(32)]
         public string? Phone { get; set; } // 전화번호
 
@@ -55,12 +51,16 @@ namespace AGL.Api.Domain.Entities.OAPI
         [StringLength(200)]
         public string? Homepage { get; set; } // 홈페이지
 
-        public byte? IsResidentGuestRequired { get; set; } // 내장객 예약시 필수 여부
+        public int? TotalHoleCount { get; set; } // 홀 갯수
+
+        public int? TotalCourseCount { get; set; } // 코스 갯수
+
+        public bool? IsResidentGuestRequired { get; set; } // 내장객 예약시 필수 여부
 
         [Required]
         public int ReservationType { get; set; } // 예약종류
 
-        public bool? TeetimeCancelIsActive { get; set; } // 티타임 취소시 활성화여부
+        //public bool? TeetimeCancelIsActive { get; set; } // 티타임 취소시 활성화여부
 
         [Required]
         public DateTime CreatedDate { get; set; } // 생성일

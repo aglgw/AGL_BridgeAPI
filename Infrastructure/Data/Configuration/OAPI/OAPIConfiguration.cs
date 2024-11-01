@@ -58,7 +58,7 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithOne(h => h.GolfClub)
                    .HasForeignKey(h => h.GolfClubId);
 
-            builder.Property(e => e.IsResidentGuestRequired).HasColumnType("TINYINT");
+            builder.Property(e => e.IsResidentGuestRequired).HasColumnType("bit");
         }
     }
 

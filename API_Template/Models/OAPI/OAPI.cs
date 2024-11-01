@@ -12,6 +12,11 @@ namespace AGL.Api.API_Template.Models.OAPI
         public class TeeTimeInfo
         {
             /// <summary>
+            /// 날짜
+            /// </summary>
+            [DataMember]
+            public string? PlayDate { get; set; }
+            /// <summary>
             /// 코스 정보
             /// </summary>
             [DataMember]
@@ -87,12 +92,12 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 플레이어 수
             /// </summary>
             [DataMember]
-            public int PlayerCount { get; set; }
+            public int? PlayerCount { get; set; }
             /// <summary>
             /// 그린피
             /// </summary>
             [DataMember]
-            public decimal GreenFee { get; set; }
+            public decimal? GreenFee { get; set; }
             /// <summary>
             /// 카트피
             /// </summary>
@@ -117,7 +122,7 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 1인 총 요금 (greenFee + cartFee + caddyFee + tax + additionalTax)
             /// </summary>
             [DataMember]
-            public decimal UnitPrice { get; set; }
+            public decimal? UnitPrice { get; set; }
         }
 
         /// <summary>
@@ -130,30 +135,30 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 환불 가능한 남은 일자
             /// </summary>
             [DataMember]
-            public int RefundDate { get; set; }
+            public int? RefundDate { get; set; }
             /// <summary>
             /// 환불 수수료
             /// </summary>
             [DataMember]
-            public decimal RefundFee { get; set; }
+            public decimal? RefundFee { get; set; }
             /// <summary>
             /// 환불 단위 (1 비율 - 특정 비율에 따라 환불 , 2 고정액 – 정해진 금액으로 환불)
             /// </summary>
             [DataMember]
-            public int RefundUnit { get; set; }
+            public int? RefundUnit { get; set; }
         }
 
         /// <summary>
         /// 이미지
         /// </summary>
         [DataContract]
-        public class images
+        public class Images
         {
             /// <summary>
             /// 경로
             /// </summary>
             [DataMember]
-            public string url { get; set; }
+            public string Url { get; set; }
             /// <summary>
             /// 제목
             /// </summary>
@@ -170,61 +175,61 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 코스
         /// </summary>
         [DataContract]
-        public class course
+        public class Course
         {
             /// <summary>
             /// 코스 코드
             /// </summary>
             [DataMember]
-            public string courseCode { get; set; }
+            public string CourseCode { get; set; }
             /// <summary>
             /// 코스 명
             /// </summary>
             [DataMember]
-            public string courseName { get; set; }
+            public string CourseName { get; set; }
             /// <summary>
             /// 코스 홀 수
             /// </summary>
             [DataMember]
-            public int courseHoleCount { get; set; }
+            public int CourseHoleCount { get; set; }
             /// <summary>
             /// 시작 홀
             /// </summary>
             [DataMember]
-            public int startHole { get; set; }
+            public int StartHole { get; set; }
         }
 
         /// <summary>
         /// 홀정보
         /// </summary>
         [DataContract]
-        public class holeInfo
+        public class HoleInfo
         {
             /// <summary>
             /// 홀 번호
             /// </summary>
             [DataMember]
-            public string holeNumber { get; set; }
+            public string HoleNumber { get; set; }
             /// <summary>
             /// 홀 명
             /// </summary>
             [DataMember]
-            public string holeName { get; set; }
+            public string HoleName { get; set; }
             /// <summary>
             /// 파
             /// </summary>
             [DataMember]
-            public int par { get; set; }
+            public int Par { get; set; }
             /// <summary>
             /// 거리 단위 ( 1 yards , 2 meters )
             /// </summary>
             [DataMember]
-            public int distanceUnit { get; set; }
+            public int DistanceUnit { get; set; }
             /// <summary>
             /// 거리
             /// </summary>
             [DataMember]
-            public int distance { get; set; }
+            public int Distance { get; set; }
         }
 
 
@@ -235,42 +240,42 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// <summary>
             /// Booking ID
             /// </summary>
-            public string reservationId { get; set; } = string.Empty;
+            public string ReservationId { get; set; } = string.Empty;
             /// <summary>
             /// Golf Club Code
             /// </summary>
-            public string golfclubCode { get; set; } = string.Empty;
+            public string GolfclubCode { get; set; } = string.Empty;
             /// <summary>
             /// Play Date
             /// </summary>
-            public string playDate { get; set; } = string.Empty;
+            public string PlayDate { get; set; } = string.Empty;
             /// <summary>
             /// Tee-off Time
             /// </summary>
-            public string startTime { get; set; } = string.Empty;
+            public string StartTime { get; set; } = string.Empty;
             /// <summary>
             /// Number of Players
             /// </summary>
-            public int playerCount { get; set; }
+            public int PlayerCount { get; set; }
             /// <summary>
             /// Booking Status
             /// 1 예약요청
             /// 2 예약확정
             /// 3 예약취소
             /// </summary>
-            public int status { get; set; }
+            public int Status { get; set; }
             /// <summary>
             /// Booking Status
             /// </summary>
-            public string orderDate { get; set; } = string.Empty;
+            public string OrderDate { get; set; } = string.Empty;
             /// <summary>
             /// currency
             /// </summary>
-            public string? currency { get; set; }
+            public string? Currency { get; set; }
             /// <summary>
             /// Penalty Amount
             /// </summary>
-            public decimal cancelPenaltyAmount { get; set; }
+            public decimal CancelPenaltyAmount { get; set; }
 
 
         }
@@ -281,19 +286,19 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// <summary>
             /// Booking ID
             /// </summary>
-            public string reservationId { get; set; } = string.Empty;
+            public string ReservationId { get; set; } = string.Empty;
             /// <summary>
             /// Golf Club Code
             /// </summary>
-            public string golfclubCode { get; set; } = string.Empty;
+            public string GolfclubCode { get; set; } = string.Empty;
             /// <summary>
             /// Play Date
             /// </summary>
-            public string playDate { get; set; } = string.Empty;
+            public string PlayDate { get; set; } = string.Empty;
             /// <summary>
             /// Tee-off Time
             /// </summary>
-            public string startTime { get; set; } = string.Empty;
+            public string StartTime { get; set; } = string.Empty;
            
             /// <summary>
             /// Booking Status
@@ -301,11 +306,11 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 2 예약확정
             /// 3 예약취소
             /// </summary>
-            public int status { get; set; }
+            public int Status { get; set; }
             /// <summary>
             /// reservationDate
             /// </summary>
-            public string reservationDate { get; set; } = string.Empty;
+            public string ReservationDate { get; set; } = string.Empty;
 
 
         }
@@ -316,15 +321,15 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// <summary>
             /// cancelDate
             /// </summary>
-            public string cancelDate { get; set; } = string.Empty;
+            public string CancelDate { get; set; } = string.Empty;
             /// <summary>
             /// cancelPenaltyAmount
             /// </summary>
-            public decimal cancelPenaltyAmount { get; set; } = 0;
+            public decimal CancelPenaltyAmount { get; set; } = 0;
             /// <summary>
             /// currency
             /// </summary>
-            public string currency { get; set; } = string.Empty;
+            public string Currency { get; set; } = string.Empty;
 
         }
     }

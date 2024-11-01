@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AGL.Api.API_Template.Services
 {
-    public class CommonService : BaseService
+    public class CommonService : BaseService, ICommonService
     {
         private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
@@ -31,66 +31,68 @@ namespace AGL.Api.API_Template.Services
             _configuration = configuration;
         }
 
-
-        /// <summary>
-        /// 공통 함수_list 형 result
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="isSuccess"></param>
-        /// <param name="resultCode"></param>
-        /// <param name="message"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public async Task<OAPICommonListResponse<T>> CreateListResponse<T>(bool isSuccess, ResultCode resultCode, string message, List<T>? data = null)
+        public async Task<OAPIResponseBase> CreateResponse<T>(bool isSuccess, ResultCode resultCode, string message, T? data)
         {
             var description = ExtensionMethods.GetDescription(resultCode);
-            var response = new OAPICommonListResponse<T>
+
+            // 요청 데이터 타입에 따라 반환 타입 결정
+            if (data == null)
             {
-                IsSuccess = isSuccess,
-                RstCd = description,
-                RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                StatusCode = (int)resultCode,
-                
-            };
-
-            if (data != null)
-                response.data = data;
-
-
-            await Task.CompletedTask;
-
-            return response;
-        }
-
-        /// <summary>
-        /// 공통 함수_object 형 result
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="isSuccess"></param>
-        /// <param name="resultCode"></param>
-        /// <param name="message"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public async Task<OAPICommonResponse<T>> CreateListResponse<T>(bool isSuccess, ResultCode resultCode, string message, T? data)
-        {
-            var description = ExtensionMethods.GetDescription(resultCode);
-            var response = new OAPICommonResponse<T>
+                // 데이터가 없는 경우 기본 응답
+                return new OAPIResponseBase
+                {
+                    IsSuccess = isSuccess,
+                    RstCd = description,
+                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    StatusCode = (int)resultCode
+                };
+            }
+            else if (data is List<string> stringList)
             {
-                IsSuccess = isSuccess,
-                RstCd = description,
-                RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                StatusCode = (int)resultCode,
+                return new OAPICommonListResponse<string>
+                {
+                    IsSuccess = isSuccess,
+                    RstCd = description,
+                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    StatusCode = (int)resultCode,
+                    data = stringList
+                };
+            }
+            else if (data is Dictionary<string, List<TeeTimeInfo>> teeTimeDict)
+            {
+                return new OAPITeeTimeGetResponse
+                {
+                    IsSuccess = isSuccess,
+                    RstCd = description,
+                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    StatusCode = (int)resultCode,
+                    data = teeTimeDict
+                };
+            }
+            else if (data is string singleString)
+            {
+                return new OAPICommonResponse<string>
+                {
+                    IsSuccess = isSuccess,
+                    RstCd = description,
+                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    StatusCode = (int)resultCode,
+                    data = singleString
+                };
+            }
+            else
+            {
+                // 기타 타입에 대한 공통 응답
+                return new OAPICommonResponse<T>
+                {
+                    IsSuccess = isSuccess,
+                    RstCd = description,
+                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    StatusCode = (int)resultCode,
+                    data = data
+                };
+            }
 
-            };
-
-            if (data != null)
-                response.data = data;
-
-
-            await Task.CompletedTask;
-
-            return response;
         }
-
     }
 }

@@ -36,13 +36,15 @@ namespace AGL.Api.API_Template.Models.OAPI
         }
 
         [DataContract]
+        //public class OAPITeeTimeGetResponse<T> : OAPIResponseBase
         public class OAPITeeTimeGetResponse : OAPIResponseBase
         {
             /// <summary>
             /// 데이타
             /// </summary>
             [DataMember]
-            public Dictionary<string, List<TeeTimeInfo>>? Data { get; set; }
+            //public Dictionary<string, List<T>>? data { get; set; }
+            public Dictionary<string, List<TeeTimeInfo>>? data { get; set; }
         }
 
 

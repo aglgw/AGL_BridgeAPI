@@ -8,11 +8,11 @@ namespace AGL.Api.API_Template.Models.OAPI
     public class OAPITeeTimeBaseRequest
     {
         [DataMember]
-        public string? golfclubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
+        public string? GolfclubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
     }
 
     /// <summary>
-    /// 골프장 수정
+    /// 티타임 등록/수정 요청
     /// </summary>
     [DataContract]
     public class OAPITeeTimeRequest
@@ -21,37 +21,37 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 골프장 코드
         /// </summary>
         [DataMember]
-        public string? golfclubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
+        public string? GolfclubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
         /// <summary>
         /// 날짜적용방법 - 특정 공휴일이 있을시 2번 사용 ( 1 기간 , 2 적용일 )
         /// </summary>
         [DataMember]
-        public int dateApplyType { get; set; }
+        public int DateApplyType { get; set; }
         /// <summary>
         /// 기간 시작일 
         /// </summary>
         [DataMember]
-        public string startPlayDate { get; set; }
+        public string StartPlayDate { get; set; }
         /// <summary>
         /// 기간 종료일 
         /// </summary>
         [DataMember]
-        public string endPlayDate { get; set; }
+        public string EndPlayDate { get; set; }
         /// <summary>
         /// 예외일 ( 공휴일 적용 ) 
         /// </summary>
         [DataMember]
-        public List<string> exceptionDate { get; set; }
+        public List<string> ExceptionDate { get; set; }
         /// <summary>
         /// 기간 중 적용 요일 ( 1 월요일, 2 화요일, 3 수요일, 4 목요일, 5 금요일, 6 토요일, 7 일요일 )
         /// </summary>
         [DataMember]
-        public List<int> week { get; set; }
+        public List<int> Week { get; set; }
         /// <summary>
         /// 적용일
         /// </summary>
         [DataMember]
-        public List<string> effectiveDate { get; set; }
+        public List<string> EffectiveDate { get; set; }
         /// <summary>
         /// 티타임 정보 리스트
         /// </summary>
@@ -69,17 +69,17 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 시작일
         /// </summary>
         [DataMember]
-        public string startDate { get; set; }
+        public string StartDate { get; set; }
         /// <summary>
         /// 종료일
         /// </summary>
         [DataMember]
-        public string endDate { get; set; }
+        public string EndDate { get; set; }
         /// <summary>
         /// 골프장 코드
         /// </summary>
         [DataMember]
-        public string golfclubCode { get; set; }
+        public string GolfclubCode { get; set; }
     }
 
     /// <summary>
@@ -92,27 +92,27 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 골프장 코드
         /// </summary>
         [DataMember]
-        public string golfclubCode { get; set; }
+        public string GolfclubCode { get; set; }
         /// <summary>
         /// 시작일
         /// </summary>
         [DataMember]
-        public string playDate { get; set; }
+        public string PlayDate { get; set; }
         /// <summary>
         /// 코스 코드
         /// </summary>
         [DataMember]
-        public string courseCode { get; set; }
+        public string CourseCode { get; set; }
         /// <summary>
         /// 시간 정보
         /// </summary>
         [DataMember]
-        public List<TimeInfo> time { get; set; }
+        public List<TimeInfo> Time { get; set; }
         /// <summary>
         /// 판매여부 ( true  판매, false  판매안함 )
         /// </summary>
         [DataMember]
-        public bool available { get; set; }
+        public bool Available { get; set; }
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 부킹 IDE
         /// </summary>
         [DataMember]
-        public string reservationId { get; set; }
+        public string ReservationId { get; set; }
     }
 
 
@@ -139,26 +139,26 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 시작일 YYYY-MM-DD
         /// </summary>
         [DataMember, Required]
-        public string startDate { get; set; } = string.Empty;
+        public string StartDate { get; set; } = string.Empty;
 
         /// <summary>
         /// 종료일 YYYY-MM-DD
         /// </summary>
         [DataMember, Required]
-        public string endtDate { get; set; } = string.Empty;
+        public string EndtDate { get; set; } = string.Empty;
 
 
         /// <summary>
         /// Booking ID
         /// </summary>
         [DataMember]
-        public string? reservationId { get; set; }
+        public string? ReservationId { get; set; }
 
         /// <summary>
         /// Booking Status
         /// </summary>
         [DataMember]
-        public int? status { get; set; }
+        public int? Status { get; set; }
 
 
     }

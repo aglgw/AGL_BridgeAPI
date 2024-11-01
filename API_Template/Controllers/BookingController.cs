@@ -70,5 +70,18 @@ namespace AGL.Api.API_Template.Controllers
         }
 
 
+        /// <summary>
+        /// 예약 확정
+        /// </summary>
+        /// <returns></returns>
+        [Route("reservation/confirm")]
+        [HttpPost]
+        public async Task<IDataResult> PostBookingConfirm(
+            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPIReservationRequest request)
+        {
+            var result = await _bookingService.PostBookingConfirm(request, X_Supplier_Code);
+
+            return result;
+        }
     }
 }

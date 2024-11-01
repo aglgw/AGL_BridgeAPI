@@ -21,6 +21,6 @@ namespace AGL.Api.API_Template.Interfaces
         /// <param name="message"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        Task<OAPICommonResponse<T>> CreateResponse<T>(bool isSuccess, ResultCode resultCode, string message, List<T>? data = null);
+        Task<OAPIResponseBase> CreateResponse<T>(bool isSuccess, ResultCode resultCode, string message, T? data);
     }
 }

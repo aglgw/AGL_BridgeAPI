@@ -138,11 +138,11 @@ namespace AGL.Api.API_Template.Services
         public async Task<IDataResult> GetBookingCancel(OAPIReservationRequest Req)
         {
 
-            if(string.IsNullOrWhiteSpace(Req.reservationId))
+            if(string.IsNullOrWhiteSpace(Req.ReservationId))
                 return await _commonService.CreateResponse<object>(true, ResultCode.INVALID_INPUT, "reservationId is invalid", null);
 
 
-            if (await _context.ReservationManagements.AnyAsync(x => x.ReservationId == Req.reservationId))
+            if (await _context.ReservationManagements.AnyAsync(x => x.ReservationId == Req.ReservationId))
                 return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Reservation data does not exist", null);
 
 
@@ -182,6 +182,57 @@ namespace AGL.Api.API_Template.Services
         }
 
 
+        public async Task<IDataResult> PostBookingConfirm(OAPIReservationRequest request, string supplierCode)
+        {
+            var reservationId = request.ReservationId;
+
+            // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
+            if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
+            {
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid", null);
+            }
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // 공급자 정보 조회 - supplierCode에 해당하는 공급자를 데이터베이스에서 검색
+                    var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
+                    if (supplier == null)
+                    {
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
+                    }
+                    int supplierId = supplier.SupplierId;
+
+                    // 예약관리 DB에서 예약 조회 - 예약 번호, 상태, 공급자 ID를 기준으로 예약 검색
+                    var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 1 && r.SupplierId == supplierId);
+
+                    if (reservation != null)
+                    {
+                        reservation.ReservationStatus = 2; // 1 예약요청 2 예약확정 3 예약취소
+                        reservation.UpdatedDate = DateTime.Now;
+
+                        _context.SaveChanges();
+                    }
+                    else
+                    {
+                        return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
+                    }
+
+                    // 트랜잭션 커밋
+                    await transaction.CommitAsync();
+
+                    return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
+                }
+                catch (Exception ex)
+                {
+                    // 오류 발생 시 트랜잭션 롤백
+                    await transaction.RollbackAsync();
+
+                    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                }
+            }
+        }
 
     }
 }

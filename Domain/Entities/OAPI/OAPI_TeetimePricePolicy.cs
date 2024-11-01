@@ -50,6 +50,15 @@ namespace AGL.Api.Domain.Entities.OAPI
         public decimal? AdditionalTax_5 { get; set; } // 추가 세금_5
         public decimal? UnitPrice_5 { get; set; } // 1인 총요금_5
 
+
+        // 6인일 때 요금 정보
+        public decimal? GreenFee_6 { get; set; } // 그린피_5
+        public decimal? CartFee_6 { get; set; } // 카트피_5
+        public decimal? CaddyFee_6 { get; set; } // 캐디피_5
+        public decimal? Tax_6 { get; set; } // 세금_5
+        public decimal? AdditionalTax_6 { get; set; } // 추가 세금_5
+        public decimal? UnitPrice_6 { get; set; } // 1인 총요금_5
+
         [Required]
         public DateTime CreatedDate { get; set; }
 

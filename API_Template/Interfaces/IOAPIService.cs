@@ -31,10 +31,5 @@ namespace AGL.Api.API_Template.Interfaces
         /// </summary>
         /// <returns></returns>
         Task<IDataResult> PutTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode);
-        /// <summary>
-        /// 예약확정
-        /// </summary>
-        /// <returns></returns>
-        Task<IDataResult> PostReservatioConfirm(OAPIReservationRequest request, string supplierCode);
     }
 }

@@ -30,14 +30,6 @@ namespace AGL.Api.API_Template.Controllers
         public async Task<IDataResult> PostTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeRequest request)
         {
-            //OAPIResponseBase response = new OAPIResponseBase();
-
-            //if (!ModelState.IsValid)
-            //{
-            //    _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
-            //    return response;
-            //}
-
             var result = await _oapiService.PostTeeTime(request, X_Supplier_Code);
 
             return result;
@@ -47,44 +39,12 @@ namespace AGL.Api.API_Template.Controllers
         /// 티타임 수정
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="Exception"></exception>
         [Route("teetime/update")]
         [HttpPut]
         public async Task<IDataResult> UpdateTeeTime(
-        [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeRequest request)
-            {
-            //OAPIResponseBase response = new OAPIResponseBase();
-
-            //if (!ModelState.IsValid)
-            //{
-            //    _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
-            //    return response;
-            //}
-
-            var result = await _oapiService.UpdateTeeTime(request, X_Supplier_Code);
-
-            return result;
-        }
-
-        /// <summary>
-        /// 티타임 등록
-        /// </summary>
-        /// <returns></returns>
-        [Route("reservation/confirm")]
-        [HttpPost]
-        public async Task<IDataResult> PostReservatioConfirm(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPIReservationRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeRequest request)
         {
-            //OAPIResponseBase response = new OAPIResponseBase();
-
-            //if (!ModelState.IsValid)
-            //{
-            //    _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
-            //    return response;
-            //}
-
-            var result = await _oapiService.PostReservatioConfirm(request, X_Supplier_Code);
+            var result = await _oapiService.UpdateTeeTime(request, X_Supplier_Code);
 
             return result;
         }
@@ -98,14 +58,6 @@ namespace AGL.Api.API_Template.Controllers
         public async Task<IDataResult> GetTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeGetRequest request)
         {
-            //OAPIResponseBase response = new OAPIResponseBase();
-
-            //if (!ModelState.IsValid)
-            //{
-            //    _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
-            //    return response;
-            //}
-
             var result = await _oapiService.GetTeeTime(request, X_Supplier_Code);
 
             return result;
@@ -120,14 +72,6 @@ namespace AGL.Api.API_Template.Controllers
         public async Task<IDataResult> PutTeeTimeAvailability(
             [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimetAvailabilityRequest request)
         {
-            //OAPIResponseBase response = new OAPIResponseBase();
-
-            //if (!ModelState.IsValid)
-            //{
-            //    _logger.LogError("ModelState 오류: {@ModelState}", ModelState);
-            //    return response;
-            //}
-
             var result = await _oapiService.PutTeeTimeAvailability(request, X_Supplier_Code);
 
             return result;
