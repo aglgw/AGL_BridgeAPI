@@ -5,6 +5,7 @@ using AGL.Api.ApplicationCore.Extensions;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
@@ -20,6 +21,19 @@ namespace AGL.Api.API_Template.Controllers
         {
             _logger = logger;
             _bookingService = bookingService;
+        }
+
+        [AllowAnonymous]
+        [Route("test")]
+        [HttpGet]
+        public async Task<IDataResult> GetTest()
+        {
+
+
+            var result = await _bookingService.Test();
+
+
+            return result;
         }
 
         /// <summary>

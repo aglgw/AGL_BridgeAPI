@@ -36,5 +36,9 @@ namespace AGL.Api.API_Template.Interfaces
         /// </summary>
         /// <returns></returns>
         Task<IDataResult> PostBookingConfirm(OAPIReservationRequest request, string supplierCode);
+
+
+
+        Task<IDataResult> Test();
     }
 }

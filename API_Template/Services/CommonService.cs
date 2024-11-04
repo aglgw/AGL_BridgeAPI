@@ -31,7 +31,7 @@ namespace AGL.Api.API_Template.Services
             _configuration = configuration;
         }
 
-        public async Task<OAPIResponseBase> CreateResponse<T>(bool isSuccess, ResultCode resultCode, string message, T? data)
+        public async Task<dynamic> CreateResponse<T>(bool isSuccess, ResultCode resultCode, string message, T? data)
         {
             var description = ExtensionMethods.GetDescription(resultCode);
 

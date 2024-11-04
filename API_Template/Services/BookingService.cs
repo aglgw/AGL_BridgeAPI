@@ -234,5 +234,27 @@ namespace AGL.Api.API_Template.Services
             }
         }
 
+        public async Task<IDataResult> Test()
+        {
+
+            var rst = new BookingInfo
+            {
+                ReservationId = "",
+                GolfclubCode = "",
+                PlayDate = "",
+                StartTime = "",
+                PlayerCount = 0,
+                Status = 0,
+                OrderDate = "",
+                Currency = "s",
+                CancelPenaltyAmount = Convert.ToDecimal(1)
+            };
+
+            
+
+            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", rst);
+        }
+
+
     }
 }

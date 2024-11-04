@@ -234,12 +234,13 @@ namespace AGL.Api.API_Template.Models.OAPI
 
 
 
-        [DataContract]
+        
         public class BookingInfo
         {
             /// <summary>
             /// Booking ID
             /// </summary>
+            
             public string ReservationId { get; set; } = string.Empty;
             /// <summary>
             /// Golf Club Code
@@ -280,7 +281,6 @@ namespace AGL.Api.API_Template.Models.OAPI
 
         }
 
-        [DataContract]
         public class ConfirmBookingInfo
         {
             /// <summary>
@@ -315,7 +315,6 @@ namespace AGL.Api.API_Template.Models.OAPI
 
         }
 
-        [DataContract]
         public class CancelBookingInfo
         {
             /// <summary>
