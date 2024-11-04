@@ -66,126 +66,69 @@ namespace AGL.Api.API_Template.Services
                 var startDateParsed = request.StartDate;
                 var endDateParsed = request.EndDate;
 
+                // 공급자 코드에 따른 가격 정책 가져오기
                 var pricePolicies = await _context.TeetimePricePolicies
                     .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode))
                     .ToDictionaryAsync(pp => pp.PricePolicyId);
 
+                // 공급자 코드에 따른 환불 정책 가져오기
                 var refundPolicies = await _context.TeetimeRefundPolicies
                     .Where(rp => rp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode))
                     .ToDictionaryAsync(rp => rp.RefundPolicyId);
 
-                var teeTimeList = await _context.TeeTimes
-                    .Include(t => t.TeeTimeMappings)
-                        .ThenInclude(tm => tm.TimeSlot)
-                    .Include(t => t.TeeTimeMappings)
-                        .ThenInclude(tm => tm.DateSlot)
-                    .Include(t => t.GolfClub)
-                        .ThenInclude(g => g.Courses)
-                    .Where(t => t.GolfClub.Supplier.SupplierCode == supplierCode
-                                && t.TeeTimeMappings.Any(tm => string.Compare(tm.DateSlot.PlayDate, startDateParsed) >= 0 && string.Compare(tm.DateSlot.PlayDate, endDateParsed) <= 0))
+                // 주어진 골프장 코드와 날짜 범위에 해당하는 티타임 매핑 가져오기
+                var teeTimeMappings = await _context.TeeTimeMappings
+                    .Include(tm => tm.TeeTime).ThenInclude(t => t.GolfClub)
+                    .Include(tm => tm.TeeTime).ThenInclude(t => t.GolfClubCourse)
+                    .Include(tm => tm.TimeSlot)
+                    .Include(tm => tm.DateSlot)
+                    .Where(tm => tm.TeeTime.GolfClub.GolfClubCode == request.GolfclubCode && string.Compare(tm.DateSlot.PlayDate, startDateParsed) >= 0 && string.Compare(tm.DateSlot.PlayDate, endDateParsed) <= 0 && tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode)
                     .ToListAsync();
 
-                //var teeTimeData = teeTimeList.GroupBy(t => t.GolfClub.GolfClubId)
-                //    .ToDictionary(g => g.Key.ToString(), g => g.Select(t =>
-                //    {
-                //        var firstMapping = t.TeeTimeMappings.FirstOrDefault();
-
-                //        return new TeeTimeInfo
-                //        {
-                //            PlayDate = firstMapping?.PlayDate,
-                //            CourseCode = t.GolfClub.Courses.Select(c => c.CourseCode).Prepend(firstMapping?.PlayDate).ToList(),
-                //            MinMembers = t.MinMembers,
-                //            MaxMembers = t.MaxMembers,
-                //            IncludeCart = t.IncludeCart,
-                //            IncludeCaddie = t.IncludeCaddie,
-                //            ReservationType = t.ReservationType,
-                //            Time = t.TeeTimeMappings.Select(tm => new TimeInfo
-                //            {
-                //                StartTime = tm.StartTime,
-                //                TeeTimeCode = new List<string> { tm.SupplierTeetimeCode }
-                //            }).ToList(),
-                //            Price = t.TeeTimeMappings.SelectMany(tm =>
-                //            {
-                //                if (!pricePolicies.TryGetValue(tm.PricePolicyId, out var pricePolicy))
-                //                {
-                //                    return Enumerable.Empty<PriceInfo>();
-                //                }
-
-                //                return Enumerable.Range(1, 5).Select(playerCount =>
-                //                {
-                //                    var greenFee = (decimal?)pricePolicy.GetType().GetProperty($"GreenFee_{playerCount}")?.GetValue(pricePolicy);
-                //                    var cartFee = (decimal?)pricePolicy.GetType().GetProperty($"CartFee_{playerCount}")?.GetValue(pricePolicy);
-                //                    var caddyFee = (decimal?)pricePolicy.GetType().GetProperty($"CaddyFee_{playerCount}")?.GetValue(pricePolicy);
-                //                    var tax = (decimal?)pricePolicy.GetType().GetProperty($"Tax_{playerCount}")?.GetValue(pricePolicy);
-                //                    var additionalTax = (decimal?)pricePolicy.GetType().GetProperty($"AdditionalTax_{playerCount}")?.GetValue(pricePolicy);
-                //                    var unitPrice = (decimal?)pricePolicy.GetType().GetProperty($"UnitPrice_{playerCount}")?.GetValue(pricePolicy);
-
-                //                    if (new[] { greenFee, cartFee, caddyFee, tax, additionalTax, unitPrice }.All(v => v == null))
-                //                    {
-                //                        return null;
-                //                    }
-
-                //                    return new PriceInfo
-                //                    {
-                //                        PlayerCount = playerCount,
-                //                        GreenFee = greenFee,
-                //                        CartFee = cartFee,
-                //                        CaddyFee = caddyFee,
-                //                        Tax = tax,
-                //                        AdditionalTax = additionalTax,
-                //                        UnitPrice = unitPrice
-                //                    };
-                //                }).Where(p => p != null);
-                //            }).ToList(),
-                //            RefundPolicy = t.TeeTimeMappings.SelectMany(tm =>
-                //            {
-                //                if (!refundPolicies.TryGetValue(tm.RefundPolicyId, out var refundPolicy))
-                //                {
-                //                    return Enumerable.Empty<RefundPolicy>();
-                //                }
-
-                //                return Enumerable.Range(1, 5).Select(refundCount =>
-                //                {
-                //                    var refundDate = refundPolicy?.GetType().GetProperty($"RefundDate_{refundCount}")?.GetValue(refundPolicy) as int?;
-                //                    var refundFee = refundPolicy?.GetType().GetProperty($"RefundFee_{refundCount}")?.GetValue(refundPolicy) as decimal?;
-                //                    var refundUnit = refundPolicy?.GetType().GetProperty($"RefundUnit_{refundCount}")?.GetValue(refundPolicy) as byte?;
-
-                //                    if (new[] { refundDate, refundFee, refundUnit }.All(v => v == null))
-                //                    {
-                //                        return null;
-                //                    }
-
-                //                    return new RefundPolicy
-                //                    {
-                //                        RefundDate = refundDate,
-                //                        RefundFee = refundFee,
-                //                        RefundUnit = refundUnit
-                //                    };
-                //                }).Where(rp => rp != null);
-                //            }).ToList()
-                //        };
-                //    }).ToList());
-
-                //var teeTimeDataList = teeTimeData.ToList();
-
-                var teeTimeData = teeTimeList
-                    .SelectMany(t => t.TeeTimeMappings, (t, tm) => new { TeeTime = t, Mapping = tm })
-                    .GroupBy(x => new { x.Mapping.DateSlot.PlayDate, x.TeeTime.GolfClub.GolfClubId, x.TeeTime.MinMembers, x.TeeTime.MaxMembers, x.TeeTime.IncludeCart, x.TeeTime.IncludeCaddie, x.TeeTime.ReservationType })
-                    .Select(g => new TeeTimeInfo
+                // 특정 속성들(최소/최대 인원, 가격 정책, 환불 정책)으로 티타임 그룹화
+                var groupedTeeTimes = teeTimeMappings
+                    .GroupBy(tm => new { tm.TeeTime.MinMembers, tm.TeeTime.MaxMembers, tm.PricePolicyId, tm.RefundPolicyId })
+                    .Select(g => new
                     {
-                        PlayDate = g.Key.PlayDate,
-                        CourseCode = g.SelectMany(x => x.TeeTime.GolfClub.Courses.Select(c => c.CourseCode)).Distinct().ToList(),
-                        MinMembers = g.Key.MinMembers,
-                        MaxMembers = g.Key.MaxMembers,
-                        IncludeCart = g.Key.IncludeCart,
-                        IncludeCaddie = g.Key.IncludeCaddie,
-                        ReservationType = g.Key.ReservationType,
-                        Time = g.Select(x => new TimeInfo
+                        TeeTime = g.First().TeeTime,
+                        PlayDate = g.First().DateSlot.PlayDate,
+                        CourseCodes = g.Select(tm => tm.TeeTime.GolfClubCourse.CourseCode).Distinct().ToList(),
+                        Times = g.Select(tm => new { tm.TimeSlot.StartTime, tm.SupplierTeetimeCode }).OrderBy(t => t.StartTime).ToList(),
+                        PricePolicyId = g.Key.PricePolicyId,
+                        RefundPolicyId = g.Key.RefundPolicyId
+                    })
+                    .ToList();
+
+                // 응답 데이터 준비
+                var responseData = new Dictionary<string, List<TeeTimeInfo>>
+                {
+                    ["teeTimeInfo"] = new List<TeeTimeInfo>()
+                };
+
+                // 그룹화된 티타임을 순회하며 TeeTimeInfo 객체 생성
+                foreach (var groupedTeeTime in groupedTeeTimes)
+                {
+                    
+                    var teeTime = groupedTeeTime.TeeTime;
+                    var pricePolicy = pricePolicies.ContainsKey(groupedTeeTime.PricePolicyId) ? pricePolicies[groupedTeeTime.PricePolicyId] : null;
+                    var refundPolicy = refundPolicies.ContainsKey(groupedTeeTime.RefundPolicyId) ? refundPolicies[groupedTeeTime.RefundPolicyId] : null;
+
+                    // 상세 정보를 포함한 TeeTimeInfo 객체 생성
+                    var teeTimeInfo = new TeeTimeInfo
+                    {
+                        PlayDate = groupedTeeTime.PlayDate,
+                        CourseCode = groupedTeeTime.CourseCodes,
+                        MinMembers = teeTime.MinMembers,
+                        MaxMembers = teeTime.MaxMembers,
+                        IncludeCart = teeTime.IncludeCart,
+                        IncludeCaddie = teeTime.IncludeCaddie,
+                        ReservationType = teeTime.ReservationType,
+                        Time = groupedTeeTime.Times.GroupBy(t => t.StartTime).Select(g => new TimeInfo
                         {
-                            StartTime = x.Mapping.TimeSlot.StartTime,
-                            TeeTimeCode = new List<string> { x.Mapping.SupplierTeetimeCode }
+                            StartTime = g.Key,
+                            TeeTimeCode = g.Select(t => t.SupplierTeetimeCode).Distinct().ToList()
                         }).ToList(),
-                        Price = pricePolicies.TryGetValue(g.First().Mapping.PricePolicyId, out var pricePolicy) ?
+                        Price = pricePolicy != null ?
                             Enumerable.Range(1, 5).Select(playerCount =>
                             {
                                 var greenFee = (decimal?)pricePolicy.GetType().GetProperty($"GreenFee_{playerCount}")?.GetValue(pricePolicy);
@@ -211,7 +154,7 @@ namespace AGL.Api.API_Template.Services
                                     UnitPrice = unitPrice ?? 0
                                 };
                             }).Where(p => p != null).Cast<PriceInfo>().ToList() : new List<PriceInfo>(),
-                        RefundPolicy = refundPolicies.TryGetValue(g.First().Mapping.RefundPolicyId, out var refundPolicy) ?
+                        RefundPolicy = refundPolicy != null ?
                             Enumerable.Range(1, 5).Select(refundCount =>
                             {
                                 var refundDate = refundPolicy.GetType().GetProperty($"RefundDate_{refundCount}")?.GetValue(refundPolicy) as int?;
@@ -230,10 +173,12 @@ namespace AGL.Api.API_Template.Services
                                     RefundUnit = refundUnit ?? 0
                                 };
                             }).Where(rp => rp != null).Cast<RefundPolicy>().ToList() : new List<RefundPolicy>()
-                    }).ToList();
+                    };
 
+                    responseData["teeTimeInfo"].Add(teeTimeInfo);
+                }
 
-                return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime Listd successfully", teeTimeData);
+                return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime Listd successfully", responseData);
             }
             catch (Exception ex)
             {
@@ -248,7 +193,6 @@ namespace AGL.Api.API_Template.Services
             if (golfClub == null)
             {
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
-                //return CreateResponse(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
             }
 
             using (var transaction = await _context.Database.BeginTransactionAsync())
@@ -289,7 +233,6 @@ namespace AGL.Api.API_Template.Services
                     await transaction.CommitAsync();
 
                     return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
-                    //return CreateResponse(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
                 }
                 catch (Exception ex)
                 {
@@ -297,7 +240,6 @@ namespace AGL.Api.API_Template.Services
                     await transaction.RollbackAsync();
 
                     return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-                    //return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message, null);
                 }
             }
         }

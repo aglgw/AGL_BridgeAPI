@@ -94,6 +94,11 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasOne(c => c.GolfClub)
                    .WithMany(g => g.Courses)
                    .HasForeignKey(c => c.GolfClubId);
+
+            builder.HasMany(e => e.TeeTimes)
+                   .WithOne(c => c.GolfClubCourse)
+                   .HasForeignKey(c => c.GolfClubCourseId);
+
         }
     }
 
@@ -200,6 +205,12 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.Property(e => e.RefundUnit_3).HasColumnType("TINYINT");
             builder.Property(e => e.RefundUnit_4).HasColumnType("TINYINT");
             builder.Property(e => e.RefundUnit_5).HasColumnType("TINYINT");
+
+            builder.Property(e => e.RefundFee_1).HasColumnType("decimal(18,4)");
+            builder.Property(e => e.RefundFee_2).HasColumnType("decimal(18,4)");
+            builder.Property(e => e.RefundFee_3).HasColumnType("decimal(18,4)");
+            builder.Property(e => e.RefundFee_4).HasColumnType("decimal(18,4)");
+            builder.Property(e => e.RefundFee_5).HasColumnType("decimal(18,4)");
             //builder.Property(e => e.RefundUnit_1)
             //        .HasConversion(
             //            v => (int?)v,         // byte? -> int?로 저장
