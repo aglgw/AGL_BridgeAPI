@@ -200,16 +200,20 @@ namespace AGL.Api.API_Template.Services
                 try
                 {
                     // 요청에서 제공된 티타임 코드 목록을 가져옴
+                    var startTimes = request.Time != null ? request.Time.Select(t => t.StartTime).ToList() : new List<string>();
                     var teeTimeCodes = request.Time != null ? request.Time.SelectMany(t => t.TeeTimeCode).ToList() : [];
+                    var playDate = request.PlayDate.Replace("-", "");
 
                     // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
                     var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
-                        .Include(tm => tm.TeeTime)
-                            .ThenInclude(t => t.GolfClubCourse)
-                        .Include(tm => tm.DateSlot)
-                        .Where(tm => tm.TeeTime.GolfClubCourse.GolfClubId == golfClub.GolfClubId &&
-                                    request.CourseCode.Contains(tm.SupplierTeetimeCode) &&
-                                    tm.DateSlot.PlayDate == request.PlayDate);
+                        .Include(tm => tm.TeeTime) // TeeTime 엔터티 포함
+                            .ThenInclude(t => t.GolfClubCourse) // GolfClubCourse 엔터티 포함 (연관관계)
+                        .Include(tm => tm.DateSlot) // DateSlot 엔터티 포함 (연관관계)
+                        .Include(tm => tm.TimeSlot) // TimeSlot 엔터티 포함 (연관관계)
+                        .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.GolfclubCode && // 요청된 골프장 코드와 일치 확인
+                                     request.CourseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode) && // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
+                                     tm.DateSlot.PlayDate == playDate && // 요청된 플레이 날짜와 일치하는 DateSlot 확인
+                                     startTimes.Contains(tm.TimeSlot.StartTime.ToString()));  // 요청된 시작 시간과 일치하는지 확인
 
                     // 티타임 코드 목록이 있을 경우 해당 코드들에 대한 조건 추가
                     if (teeTimeCodes.Count != 0)

@@ -81,6 +81,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasOne(r => r.GolfClub)
                    .WithMany(g => g.RefundPolicies)
                    .HasForeignKey(r => r.GolfClubId);
+
+            builder.Property(e => e.RefundFee).HasColumnType("decimal(18,4)");
         }
     }
 
@@ -230,6 +232,20 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithOne(tr => tr.TeetimePricePolicy) // 각 OAPI_TeeTimeMapping은 하나의 TeetimePricePolicy와 관계를 가짐
                    .HasForeignKey(tr => tr.RefundPolicyId) // 외래 키 설정
                    .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
+
+            var decimalProperties = new[]
+            {
+                "GreenFee", "CartFee", "Tax", "AdditionalTax", "UnitPrice"
+            };
+
+            foreach (var property in decimalProperties)
+            {
+                for (int i = 1; i <= 6; i++)
+                {
+                    builder.Property(typeof(decimal?), $"{property}_{i}")
+                        .HasColumnType("decimal(18,4)");
+                }
+            }
         }
     }
 

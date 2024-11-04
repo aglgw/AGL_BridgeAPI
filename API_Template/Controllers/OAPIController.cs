@@ -67,7 +67,7 @@ namespace AGL.Api.API_Template.Controllers
         /// 티타임 상태 수정
         /// </summary>
         /// <returns></returns>
-        [Route("teetimeList")]
+        [Route("teeTime/availability")]
         [HttpPut]
         public async Task<IDataResult> PutTeeTimeAvailability(
             [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimetAvailabilityRequest request)

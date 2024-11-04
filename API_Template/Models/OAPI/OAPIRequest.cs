@@ -102,7 +102,7 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 코스 코드
         /// </summary>
         [DataMember]
-        public string CourseCode { get; set; }
+        public List<string> CourseCode { get; set; }
         /// <summary>
         /// 시간 정보
         /// </summary>
