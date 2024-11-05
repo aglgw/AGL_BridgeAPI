@@ -10,12 +10,12 @@ using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.API_Template.Controllers
 {
-    public class OAPIController : ApiControllerBase
+    public class TeeTimeController : ApiControllerBase
     {
-        private readonly ILogger<OAPIController> _logger;
-        private readonly IOAPIService _oapiService;
+        private readonly ILogger<TeeTimeController> _logger;
+        private readonly ITeeTimeService _oapiService;
 
-        public OAPIController(ILogger<OAPIController> logger,IOAPIService oapiService)
+        public TeeTimeController(ILogger<TeeTimeController> logger,ITeeTimeService oapiService)
         {
             _logger = logger;
             _oapiService = oapiService;

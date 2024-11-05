@@ -19,7 +19,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public int SupplierId { get; set; }
 
         [Required, StringLength(100)]
-        public string ReservationId { get; set; } // 공급사 예약 번호
+        public string? ReservationId { get; set; } // 공급사 예약 번호
 
         [StringLength(50)]
         public string? SalesChannel { get; set; } // 판매 채널

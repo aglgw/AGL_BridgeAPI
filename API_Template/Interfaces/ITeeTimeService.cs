@@ -9,7 +9,7 @@ namespace AGL.Api.API_Template.Interfaces
     /// <summary>
     /// OPEN API
     /// </summary>
-    public interface IOAPIService
+    public interface ITeeTimeService
     {
         /// <summary>
         /// 티타임 등록

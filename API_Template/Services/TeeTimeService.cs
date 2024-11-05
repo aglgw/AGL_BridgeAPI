@@ -23,26 +23,19 @@ using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.API_Template.Services
 {
-    public class OAPIService : BaseService, IOAPIService
+    public class TeeTimeService : BaseService, ITeeTimeService
     {
         private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
         private readonly ICommonService _commonService;
         //private readonly CommonService _commonService;
 
-        public OAPIService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService)
+        public TeeTimeService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService)
         {
             _context = context;
             _configuration = configuration;
             _commonService = commonService;
         }
-        //public OAPIService(OAPI_DbContext context, IConfiguration configuration)
-        //{
-        //    _context = context;
-        //    _configuration = configuration;
-        //    _commonService = new CommonService(_context, _configuration);
-        //}
-
 
         public async Task<IDataResult> PostTeeTime(OAPITeeTimeRequest request, string supplierCode)
         {

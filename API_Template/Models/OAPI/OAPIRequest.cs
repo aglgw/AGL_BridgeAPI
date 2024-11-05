@@ -162,4 +162,94 @@ namespace AGL.Api.API_Template.Models.OAPI
 
 
     }
+
+    /// <summary>
+    ///예약 요청
+    /// </summary>
+    public class ReqBookingRequest : OAPITeeTimeBaseRequest
+    {
+        /// <summary>
+        /// 코스 코드
+        /// </summary>
+        [DataMember]
+        public string CourseCode { get; set; }
+        /// <summary>
+        /// 예약요청일 YYYY-MM-DD
+        /// </summary>
+        [DataMember]
+        public string ReservationDate { get; set; }
+        /// <summary>
+        /// 시작시간 HHMM
+        /// </summary>
+        [DataMember]
+        public string ReservationStartTime { get; set; }
+        /// <summary>
+        /// 플레이어 수
+        /// </summary>
+        [DataMember]
+        public int ReservationMembers { get; set; }
+        /// <summary>
+        /// 화폐
+        /// </summary>
+        [DataMember]
+        public string Currency { get; set; }
+        /// <summary>
+        /// 총요금
+        /// </summary>
+        [DataMember]
+        public decimal TotalPrice { get; set; }
+        /// <summary>
+        /// 예약자명
+        /// </summary>
+        [DataMember]
+        public string HolderName { get; set; }
+        /// <summary>
+        /// 예약자 연락처
+        /// </summary>
+        [DataMember]
+        public string ReservationPhone { get; set; }
+        /// <summary>
+        /// 예약자 이메일
+        /// </summary>
+        [DataMember]
+        public string ReservationEmail { get; set; }
+        /// <summary>
+        /// 예약자 국적
+        /// </summary>
+        [DataMember]
+        public string ReservationCountry { get; set; }
+        /// <summary>
+        /// 내장객 정보
+        /// </summary>
+        [DataMember]
+        public List<GuestInfo>? GuestInfo { get; set; }
+        
+    }
+
+    /// <summary>
+    ///예약 요청
+    /// </summary>
+    public class GuestInfo
+    {
+        /// <summary>
+        /// 내장객명
+        /// </summary>
+        [DataMember]
+        public string? GuestName { get; set; }
+        /// <summary>
+        /// 내장객 연락처
+        /// </summary>
+        [DataMember]
+        public string? GuestPhone { get; set; }
+        /// <summary>
+        /// 내장객 성별 F: 여성 M: 남성
+        /// </summary>
+        [DataMember]
+        public string? GuestGender { get; set; }
+        /// <summary>
+        /// 내장객 국적
+        /// </summary>
+        [DataMember]
+        public string? GuestCountry { get; set; }
+    }
 }

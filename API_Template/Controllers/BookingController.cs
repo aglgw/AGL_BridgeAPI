@@ -37,13 +37,27 @@ namespace AGL.Api.API_Template.Controllers
         }
 
         /// <summary>
+        /// 예약 요청
+        /// </summary>
+        /// <returns></returns>
+        [Route("reservation")]
+        [HttpPost]
+        public async Task<IDataResult> POSTBookingRequest(
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, ReqBookingRequest request)
+        {
+            var result = await _bookingService.POSTBookingRequest(request, SupplierCode);
+
+            return result;
+        }
+
+        /// <summary>
         /// 예약 조회
         /// </summary>
         /// <returns></returns>
         [Route("reservationList")]
         [HttpGet]
         public async Task<IDataResult> GetBookingInquiry(
-            [FromHeader(Name = "X-Client-Code")][Required] string ClientCode, [FromBody]ReqBookingInquiry Req)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody]ReqBookingInquiry Req)
         {
 
 
@@ -60,7 +74,7 @@ namespace AGL.Api.API_Template.Controllers
         [Route("reservation/confirm/{reservationId}")]
         [HttpGet]
         public async Task<IDataResult> GetConfirmBookingInquiry(
-            [FromHeader(Name = "X-Client-Code")][Required] string ClientCode, [FromRoute] string reservationId)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromRoute] string reservationId)
         {
             var result = await _bookingService.GetConfirmBookingInquiry(reservationId);
 
@@ -75,7 +89,7 @@ namespace AGL.Api.API_Template.Controllers
         [Route("cancel")]
         [HttpPost]
         public async Task<IDataResult> GetBookingCancel(
-            [FromHeader(Name = "X-Client-Code")][Required] string ClientCode, [FromBody] OAPIReservationRequest Req)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody] OAPIReservationRequest Req)
         {
 
             var result = await _bookingService.GetBookingCancel(Req);
@@ -91,9 +105,9 @@ namespace AGL.Api.API_Template.Controllers
         [Route("reservation/confirm")]
         [HttpPost]
         public async Task<IDataResult> PostBookingConfirm(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPIReservationRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPIReservationRequest request)
         {
-            var result = await _bookingService.PostBookingConfirm(request, X_Supplier_Code);
+            var result = await _bookingService.PostBookingConfirm(request, SupplierCode);
 
             return result;
         }

@@ -16,6 +16,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using static AGL.Api.API_Template.Models.OAPI.OAPI;
 using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -37,13 +39,99 @@ namespace AGL.Api.API_Template.Services
             _commonService = commonService;
         }
 
-
         /// <summary>
-        /// 예약 조회
+        /// 예약 요청
         /// </summary>
         /// <param name="Req"></param>
         /// <returns></returns>
-        public async Task<IDataResult> GetBookingInquiry(ReqBookingInquiry Req)
+        public async Task<IDataResult> POSTBookingRequest(ReqBookingRequest Req, string SupplierCode)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    /*
+                     * - 공급사 코드로 API 인증을 위한 인증 키, 코드 가져오기
+                     * - ReservationManagements 예약관리 DB에 추가
+                     * - json 양식 맞춘후 공급사 코드, 토큰, 엔드포인트로 전송
+                     */
+                    OAPI_Supplier? supplier = _context.Suppliers.Where(s => s.SupplierCode == SupplierCode).FirstOrDefault();
+
+                    if (supplier == null)
+                    {
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
+                    }
+
+                    // 인증 정보 설정
+                    string clientCode = supplier.SupplierCode;
+                    string token = GenerateSHA256Hash(supplier.TokenAglToSupplier);
+
+                    // 엔드포인트 설정
+                    string EndpointUrl;
+                    if (_configuration["AppSetting:Environment"] == "dev")
+                    {
+                        EndpointUrl = supplier.EndPointDev;
+                    }
+                    else
+                    {
+                        EndpointUrl = supplier.EndPointProd;
+                    }
+
+                    // HTTP 요청 설정
+                    using (var client = new HttpClient())
+                    {
+                        client.DefaultRequestHeaders.Add("X-Client-Code", clientCode);
+                        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+                        var jsonContent = JsonConvert.SerializeObject(Req);
+                        var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                        var response = await client.PostAsync(EndpointUrl, httpContent);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseContent = await response.Content.ReadAsStringAsync();
+                            var responseJson = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                            // 예약 관리 DB에 추가
+                            var reservation = new OAPI_ReservationManagement
+                            {
+                                SupplierId = supplier.SupplierId,
+                                ReservationId = responseJson?.ReservationId,
+                                SalesChannel = "",
+                                Endpoint = "",
+                                ReservationStatus = 1,
+                                CreatedDate = DateTime.UtcNow,
+                            };
+                            _context.ReservationManagements.Add(reservation);
+                            await _context.SaveChangesAsync();
+
+                            await transaction.CommitAsync();
+
+                            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation Request was successfully", null);
+                        }
+                        else
+                        {
+                            return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, "Failed to send reservation request", null);
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+
+                    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                }
+            }
+        }
+
+            /// <summary>
+            /// 예약 조회
+            /// </summary>
+            /// <param name="Req"></param>
+            /// <returns></returns>
+            public async Task<IDataResult> GetBookingInquiry(ReqBookingInquiry Req)
         {
 
 
@@ -255,6 +343,15 @@ namespace AGL.Api.API_Template.Services
             return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", rst);
         }
 
+        private string GenerateSHA256Hash(string input)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(input);
+                var hash = sha256.ComputeHash(bytes);
+                return BitConverter.ToString(hash).Replace("-", "").ToLower();
+            }
+        }
 
     }
 }

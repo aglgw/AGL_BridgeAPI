@@ -16,6 +16,13 @@ namespace AGL.Api.API_Template.Interfaces
         /// </summary>
         /// <param name="Req"></param>
         /// <returns></returns>
+        Task<IDataResult> POSTBookingRequest(ReqBookingRequest Req, string ClientCode);
+
+        /// <summary>
+        /// 예약조회
+        /// </summary>
+        /// <param name="Req"></param>
+        /// <returns></returns>
         Task<IDataResult> GetBookingInquiry(ReqBookingInquiry Req);
 
         /// <summary>
