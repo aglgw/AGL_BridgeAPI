@@ -54,7 +54,7 @@ namespace AGL.Api.API_Template.Controllers
         /// 예약 조회
         /// </summary>
         /// <returns></returns>
-        [Route("reservationList")]
+        [Route("reservation/list")]
         [HttpGet]
         public async Task<IDataResult> GetBookingInquiry(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody]ReqBookingInquiry Req)
@@ -86,7 +86,7 @@ namespace AGL.Api.API_Template.Controllers
         /// 예약 취소
         /// </summary>
         /// <returns></returns>
-        [Route("cancel")]
+        [Route("reservation/cancel")]
         [HttpPost]
         public async Task<IDataResult> GetBookingCancel(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody] ReservationRequest Req)

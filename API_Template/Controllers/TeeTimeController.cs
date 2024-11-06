@@ -53,7 +53,7 @@ namespace AGL.Api.API_Template.Controllers
         /// 티타임 조회
         /// </summary>
         /// <returns></returns>
-        [Route("teetimeList")]
+        [Route("teetime/list")]
         [HttpGet]
         public async Task<IDataResult> GetTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeGetRequest request)
@@ -67,7 +67,7 @@ namespace AGL.Api.API_Template.Controllers
         /// 티타임 상태 수정
         /// </summary>
         /// <returns></returns>
-        [Route("teeTime/availability")]
+        [Route("teetime/availability")]
         [HttpPut]
         public async Task<IDataResult> PutTeeTimeAvailability(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimetAvailabilityRequest request)

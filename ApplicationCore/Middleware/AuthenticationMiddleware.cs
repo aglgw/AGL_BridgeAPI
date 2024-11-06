@@ -24,6 +24,13 @@ namespace AGL.Api.ApplicationCore.Middleware
         }
         public async Task InvokeAsync(HttpContext context)
         {
+            // 특정 경로나 컨트롤러에서 미들웨어 제외
+            if (context.Request.Path.StartsWithSegments("/api/inbound"))
+            {
+                await _next(context); // 미들웨어 건너뛰기
+                return;
+            }
+
             using (var scope = _scopeFactory.CreateScope())
             {
                 var myDatabaseService = scope.ServiceProvider.GetRequiredService<IMyDatabaseService>();

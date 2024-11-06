@@ -51,7 +51,7 @@ namespace AGL.Api.API_Template.Controllers
         /// 골프장 조회
         /// </summary>
         /// <returns></returns>
-        [Route("golfclubList")]
+        [Route("golfclub/list")]
         [HttpGet]
         public async Task<IDataResult> GetTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
