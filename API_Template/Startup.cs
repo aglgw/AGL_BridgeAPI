@@ -1,3 +1,5 @@
+using AGL.Api.Bridge_API.Interfaces;
+using AGL.Api.Bridge_API.Services;
 using AGL.Api.ApplicationCore;
 using AGL.Api.ApplicationCore.Filters;
 using AGL.Api.ApplicationCore.Interfaces;
@@ -17,7 +19,7 @@ using System;
 using System.IO;
 using System.Reflection;
 
-namespace AGL.Api.API_Template
+namespace AGL.Api.Bridge_API
 {
     public class Startup
     {

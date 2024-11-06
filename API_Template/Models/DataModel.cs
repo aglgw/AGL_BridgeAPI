@@ -1,4 +1,4 @@
-﻿namespace AGL.Api.API_Template.Models
+﻿namespace AGL.Api.Bridge_API.Models
 {
     public record ShopList
     {

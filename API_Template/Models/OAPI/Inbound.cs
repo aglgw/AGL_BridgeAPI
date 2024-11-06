@@ -1,9 +1,9 @@
-﻿using static AGL.Api.API_Template.Models.OAPI.OAPI;
+﻿using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using System.Runtime.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
-namespace AGL.Api.API_Template.Models.OAPI
+namespace AGL.Api.Bridge_API.Models.OAPI
 {
     public class Inbound
     {

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.Serialization;
 
-namespace AGL.Api.API_Template.Models.OAPI
+namespace AGL.Api.Bridge_API.Models.OAPI
 {
     public class OAPI
     {

@@ -1,14 +1,14 @@
-﻿using AGL.Api.API_Template.Interfaces;
-using AGL.Api.API_Template.Models.OAPI;
+﻿using AGL.Api.Bridge_API.Interfaces;
+using AGL.Api.Bridge_API.Models.OAPI;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.Domain.Entities.OAPI;
 using AGL.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using static AGL.Api.API_Template.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
-namespace AGL.Api.API_Template.Services
+namespace AGL.Api.Bridge_API.Services
 {
     public class GolfClubService : IGolfClubService
     {

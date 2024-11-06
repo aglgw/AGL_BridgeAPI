@@ -1,15 +1,15 @@
-﻿using AGL.Api.API_Template.Interfaces;
-using AGL.Api.API_Template.Models.OAPI;
-using AGL.Api.API_Template.Services;
+﻿using AGL.Api.Bridge_API.Interfaces;
+using AGL.Api.Bridge_API.Models.OAPI;
+using AGL.Api.Bridge_API.Services;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using Azure.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using static AGL.Api.API_Template.Models.OAPI.Inbound;
+using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
 
-namespace AGL.Api.API_Template.Controllers
+namespace AGL.Api.Bridge_API.Controllers
 {
     public class InboundController : ApiControllerBase
     {

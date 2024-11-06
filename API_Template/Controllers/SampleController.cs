@@ -1,4 +1,4 @@
-using AGL.Api.API_Template.Interfaces;
+using AGL.Api.Bridge_API.Interfaces;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models;
@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace AGL.Api.API_Template.Controllers
+namespace AGL.Api.Bridge_API.Controllers
 {
     public class SampleController : ApiControllerBase
     {
@@ -24,7 +24,7 @@ namespace AGL.Api.API_Template.Controllers
             _sampleService = sampleService;
         }
 
-
+/*
         /// <summary>
         /// 샘플 - 체크인 티타임 리스트 조회(Type EFCore ORM)
         /// </summary>
@@ -34,12 +34,12 @@ namespace AGL.Api.API_Template.Controllers
         public async Task<IActionResult> GetCheckInTeeTimeList()
         {
             LogService.logInformation("dd");
-            
+
             var rst = await _sampleService.GetCheckInTeeTimeList();
-            
+
             return Ok(rst);
         }
-        
+
         /// <returns></returns>
         /// <summary>
         /// 샘플 - SP 조회 
@@ -48,7 +48,7 @@ namespace AGL.Api.API_Template.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("[action]")]
-        public async Task<IActionResult> CallSp([FromQuery]string fieldId)
+        public async Task<IActionResult> CallSp([FromQuery] string fieldId)
         {
             LogService.logInformation("dd");
 
@@ -206,11 +206,11 @@ namespace AGL.Api.API_Template.Controllers
         {
             Utils.UtilLogs.LogRegHour(folderName, fileName, logTitle, logTxt);
 
-            Utils.UtilLogs.LogRegHour(folderName, fileName, "Error: " +logTitle,  "Error: " +logTxt, true);
+            Utils.UtilLogs.LogRegHour(folderName, fileName, "Error: " + logTitle, "Error: " + logTxt, true);
 
             Utils.UtilLogs.LogRegDay(folderName, fileName, logTitle, logTxt);
 
-            Utils.UtilLogs.LogRegDay(folderName, fileName,  "Error: " + logTitle, "Error: " + logTxt, true);
+            Utils.UtilLogs.LogRegDay(folderName, fileName, "Error: " + logTitle, "Error: " + logTxt, true);
 
             await Task.CompletedTask;
 
@@ -233,7 +233,7 @@ namespace AGL.Api.API_Template.Controllers
             await Task.CompletedTask;
 
             return Ok();
-        }
+        }*/
     }
 
 }

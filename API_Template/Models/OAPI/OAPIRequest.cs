@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using static AGL.Api.API_Template.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
-namespace AGL.Api.API_Template.Models.OAPI
+namespace AGL.Api.Bridge_API.Models.OAPI
 {
     [DataContract]
     public class TeeTimeBaseRequest

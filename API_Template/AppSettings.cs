@@ -1,4 +1,4 @@
-﻿namespace AGL.Api.API_Template
+﻿namespace AGL.Api.Bridge_API
 {
     public class AppSettings
     {

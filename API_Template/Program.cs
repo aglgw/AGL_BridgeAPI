@@ -1,4 +1,4 @@
-using AGL.Api.API_Template;
+using AGL.Api.Bridge_API;
 using AGL.Api.ApplicationCore.Utilities;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -7,7 +7,7 @@ using System;
 using System.IO;
 using System.Net;
 
-namespace AGL.Api.API_Template
+namespace AGL.Api.Bridge_API
 {
 
     public class Program

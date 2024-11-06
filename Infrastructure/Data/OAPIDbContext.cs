@@ -12,16 +12,14 @@ namespace AGL.Api.Infrastructure.Data
 
         public OAPI_DbContext(
             DbContextOptions<OAPI_DbContext> options,
-
             ILogger<OAPI_DbContext> logger = null) : base(options)
         {
-
             _logger = logger;
         }
 
         public DbSet<OAPI_Supplier> Suppliers { get; set; } // 공급사
         public DbSet<OAPI_GolfClub> GolfClubs { get; set; } // 골프장
-        public DbSet<OAPI_GolfClubHole> Holes { get; set; } // 골프장홀
+        public DbSet<OAPI_GolfClubHole> GolfClubHoles { get; set; } // 골프장홀
         public DbSet<OAPI_GolfClubRefundPolicy> GolfClubRefundPolicies { get; set; } // 골프장 환불정책
         public DbSet<OAPI_GolfClubImage> GolfClubImages { get; set; } // 골프장 이미지
         public DbSet<OAPI_GolfClubCourse> GolfClubCourses { get; set; } // 골프장 코스

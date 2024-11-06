@@ -1,8 +1,8 @@
 ﻿using AGL.Api.ApplicationCore.Interfaces;
-using static AGL.Api.API_Template.Models.OAPI.Inbound;
-using static AGL.Api.API_Template.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
-namespace AGL.Api.API_Template.Interfaces
+namespace AGL.Api.Bridge_API.Interfaces
 {
     public interface IInboundService
     {

@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace AGL.Api.API_Template.Utils
+namespace AGL.Api.Bridge_API.Utils
 {
     /// <summary>
     /// 

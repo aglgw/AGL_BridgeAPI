@@ -1,9 +1,9 @@
 ﻿using System.Runtime.Serialization;
-using static AGL.Api.API_Template.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using System;
 using AGL.Api.ApplicationCore.Interfaces;
 
-namespace AGL.Api.API_Template.Models.OAPI
+namespace AGL.Api.Bridge_API.Models.OAPI
 {
     public class OAPIResponse
     {

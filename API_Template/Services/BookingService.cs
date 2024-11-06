@@ -1,6 +1,6 @@
-﻿using AGL.Api.API_Template.Interfaces;
-using AGL.Api.API_Template.Models.OAPI;
-using AGL.Api.API_Template.Utils;
+﻿using AGL.Api.Bridge_API.Interfaces;
+using AGL.Api.Bridge_API.Models.OAPI;
+using AGL.Api.Bridge_API.Utils;
 using AGL.Api.ApplicationCore.Extensions;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
@@ -18,11 +18,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using static AGL.Api.API_Template.Models.OAPI.OAPI;
-using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace AGL.Api.API_Template.Services
+namespace AGL.Api.Bridge_API.Services
 {
     public class BookingService : BaseService,IBookingService
     {

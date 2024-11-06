@@ -3,7 +3,7 @@ using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Queries;
 using AGL.Api.Infrastructure.Data;
 
-namespace AGL.Api.API_Template.Interfaces
+namespace AGL.Api.Bridge_API.Interfaces
 {
 
     public interface ISampleService

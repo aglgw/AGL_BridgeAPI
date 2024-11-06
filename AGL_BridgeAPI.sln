@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API_Template", "API_Template\API_Template.csproj", "{607895A1-C1FC-4BF7-AD5F-DA7442143EB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bridge_API", "API_Template\Bridge_API.csproj", "{607895A1-C1FC-4BF7-AD5F-DA7442143EB0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{37985F96-E15B-4FEB-99AA-3A0288D38F46}"
 EndProject

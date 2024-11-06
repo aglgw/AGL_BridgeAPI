@@ -1,6 +1,6 @@
-﻿using AGL.Api.API_Template.Interfaces;
-using AGL.Api.API_Template.Models.OAPI;
-using AGL.Api.API_Template.Utils;
+﻿using AGL.Api.Bridge_API.Interfaces;
+using AGL.Api.Bridge_API.Models.OAPI;
+using AGL.Api.Bridge_API.Utils;
 using AGL.Api.ApplicationCore.Extensions;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
@@ -13,28 +13,33 @@ using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using static AGL.Api.API_Template.Models.OAPI.OAPI;
-using static AGL.Api.API_Template.Models.OAPI.OAPIResponse;
+using System.Text.Json;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
-namespace AGL.Api.API_Template.Services
+namespace AGL.Api.Bridge_API.Services
 {
     public class TeeTimeService : BaseService, ITeeTimeService
     {
         private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
         private readonly ICommonService _commonService;
-        //private readonly CommonService _commonService;
+        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
 
-        public TeeTimeService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService)
+
+        public TeeTimeService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService, IBackgroundTaskQueue backgroundTaskQueue)
         {
             _context = context;
             _configuration = configuration;
             _commonService = commonService;
+            _backgroundTaskQueue = backgroundTaskQueue;
         }
 
         public async Task<IDataResult> PostTeeTime(TeeTimeRequest request, string supplierCode)
@@ -44,7 +49,13 @@ namespace AGL.Api.API_Template.Services
 
         public async Task<IDataResult> PutTeeTime(TeeTimeRequest request, string supplierCode)
         {
-            return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
+            //return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
+            // 백그라운드에서 작업 진행
+            _backgroundTaskQueue.QueueBackgroundWorkItem(async token =>
+            {
+                await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
+            });
+            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
         }
 
         public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
@@ -240,7 +251,14 @@ namespace AGL.Api.API_Template.Services
             }
         }
 
-        private async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode)
+        private async Task<IDataResult> ProcessBackgroundTaskTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode, DbContext scopedContext, CancellationToken token)
+        {
+
+
+            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
+        }
+
+            private async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
