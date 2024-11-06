@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bridge_API", "Bridge_API\Bridge_API.csproj", "{607895A1-C1FC-4BF7-AD5F-DA7442143EB0}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{37985F96-E15B-4FEB-99AA-3A0288D38F46}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "webapi", "webapi", "{2BC5CFF8-8346-4BB7-9D31-DD51AA1FFADA}"
@@ -15,16 +13,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationCore", "Applicat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{32849BD4-9BBB-4A93-BB9E-894CFE97015C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bridge_API", "Bridge_API\Bridge_API.csproj", "{1FC2CB8C-86DD-4175-9C85-32FA0C4470A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{607895A1-C1FC-4BF7-AD5F-DA7442143EB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{607895A1-C1FC-4BF7-AD5F-DA7442143EB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{607895A1-C1FC-4BF7-AD5F-DA7442143EB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{607895A1-C1FC-4BF7-AD5F-DA7442143EB0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CB572D5C-6EEE-460D-A259-CDE4DDB6F222}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CB572D5C-6EEE-460D-A259-CDE4DDB6F222}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB572D5C-6EEE-460D-A259-CDE4DDB6F222}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -37,15 +33,19 @@ Global
 		{32849BD4-9BBB-4A93-BB9E-894CFE97015C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32849BD4-9BBB-4A93-BB9E-894CFE97015C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32849BD4-9BBB-4A93-BB9E-894CFE97015C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FC2CB8C-86DD-4175-9C85-32FA0C4470A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FC2CB8C-86DD-4175-9C85-32FA0C4470A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FC2CB8C-86DD-4175-9C85-32FA0C4470A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FC2CB8C-86DD-4175-9C85-32FA0C4470A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{607895A1-C1FC-4BF7-AD5F-DA7442143EB0} = {2BC5CFF8-8346-4BB7-9D31-DD51AA1FFADA}
 		{CB572D5C-6EEE-460D-A259-CDE4DDB6F222} = {37985F96-E15B-4FEB-99AA-3A0288D38F46}
 		{F5897C99-B32F-4CB3-882D-A6D4F0F8D605} = {37985F96-E15B-4FEB-99AA-3A0288D38F46}
 		{32849BD4-9BBB-4A93-BB9E-894CFE97015C} = {37985F96-E15B-4FEB-99AA-3A0288D38F46}
+		{1FC2CB8C-86DD-4175-9C85-32FA0C4470A4} = {2BC5CFF8-8346-4BB7-9D31-DD51AA1FFADA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {25468309-EE17-4356-9F9C-76066E75437B}
