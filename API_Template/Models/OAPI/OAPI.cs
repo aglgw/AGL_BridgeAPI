@@ -9,13 +9,13 @@ namespace AGL.Api.API_Template.Models.OAPI
         /// 티타임 정보
         /// </summary>
         [DataContract]
-        public class TeeTimeInfo
+        public class TeeTimeInfo 
         {
             /// <summary>
             /// 날짜
             /// </summary>
-            [DataMember]
-            public string? PlayDate { get; set; }
+            [DataMember(EmitDefaultValue = false)]
+            public object? PlayDate { get; set; }
             /// <summary>
             /// 코스 정보
             /// </summary>
@@ -126,6 +126,133 @@ namespace AGL.Api.API_Template.Models.OAPI
         }
 
         /// <summary>
+        /// 골프장 등록/수정/조회
+        /// </summary>
+        [DataContract]
+        public class GolfClubInfo
+        {
+            /// <summary>
+            /// 골프장의 고유 코드
+            /// </summary>
+            [DataMember]
+            public string GolfclubCode { get; set; }
+
+            /// <summary>
+            /// 골프장 이름
+            /// </summary>
+            [DataMember]
+            public string GolfclubName { get; set; }
+
+            /// <summary>
+            /// ISO alpha-2 형식의 국가 코드
+            /// </summary>
+            [DataMember]
+            public string CountryCode { get; set; }
+
+            /// <summary>
+            /// 언어 코드
+            /// </summary>
+            [DataMember]
+            public string Language { get; set; }
+
+            /// <summary>
+            /// 통화 코드
+            /// </summary>
+            [DataMember]
+            public string Currency { get; set; }
+
+            /// <summary>
+            /// 골프장 설명
+            /// </summary>
+            [DataMember]
+            public string? Description { get; set; }
+
+            /// <summary>
+            /// 골프장 주소
+            /// </summary>
+            [DataMember]
+            public string? Address { get; set; }
+
+            /// <summary>
+            /// 골프장 위치의 위도
+            /// </summary>
+            [DataMember]
+            public string? Latitude { get; set; }
+
+            /// <summary>
+            /// 골프장 위치의 경도
+            /// </summary>
+            [DataMember]
+            public string? Longitude { get; set; }
+
+            /// <summary>
+            /// 골프장 전화번호
+            /// </summary>
+            [DataMember]
+            public string? Phone { get; set; }
+
+            /// <summary>
+            /// 골프장 팩스 번호
+            /// </summary>
+            [DataMember]
+            public string? Fax { get; set; }
+
+            /// <summary>
+            /// 골프장 이메일 주소
+            /// </summary>
+            [DataMember]
+            public string? Email { get; set; }
+
+            /// <summary>
+            /// 골프장 홈페이지 URL
+            /// </summary>
+            [DataMember]
+            public string? Homepage { get; set; }
+
+            /// <summary>
+            /// 골프장의 총 홀 수
+            /// </summary>
+            [DataMember]
+            public int? TotalHoleCount { get; set; }
+
+            /// <summary>
+            /// 골프장의 총 코스 수
+            /// </summary>
+            [DataMember]
+            public int? TotalCourseCount { get; set; }
+
+            /// <summary>
+            /// 예약 시 내장객 정보 필수 여부
+            /// </summary>
+            [DataMember]
+            public bool? IsGuestInfoRequired { get; set; } 
+
+            /// <summary>
+            /// 골프장 이미지 목록
+            /// </summary>
+            [DataMember]
+            public List<Images>? Image { get; set; }
+
+            /// <summary>
+            /// 골프장의 환불 정책 목록
+            /// </summary>
+            [DataMember]
+            public List<RefundPolicy>? RefundPolicy { get; set; }
+
+            /// <summary>
+            /// 골프장의 코스 목록
+            /// </summary>
+            [DataMember]
+            public List<Course> Course { get; set; }
+
+            /// <summary>
+            /// 골프장의 홀 정보 목록
+            /// </summary>
+            [DataMember]
+            public List<HoleInfo>? HoleInfo { get; set; }
+        }
+
+        /// <summary>
         /// 환불 정책
         /// </summary>
         [DataContract]
@@ -135,17 +262,22 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 환불 가능한 남은 일자
             /// </summary>
             [DataMember]
-            public int? RefundDate { get; set; }
+            public int RefundDate { get; set; }
+            /// <summary>
+            /// 환불 가능한 시간
+            /// </summary>
+            [DataMember]
+            public string? RefundHour { get; set; }
             /// <summary>
             /// 환불 수수료
             /// </summary>
             [DataMember]
-            public decimal? RefundFee { get; set; }
+            public decimal RefundFee { get; set; }
             /// <summary>
             /// 환불 단위 (1 비율 - 특정 비율에 따라 환불 , 2 고정액 – 정해진 금액으로 환불)
             /// </summary>
             [DataMember]
-            public int? RefundUnit { get; set; }
+            public byte RefundUnit { get; set; }
         }
 
         /// <summary>
@@ -154,6 +286,11 @@ namespace AGL.Api.API_Template.Models.OAPI
         [DataContract]
         public class Images
         {
+            /// <summary>
+            /// 번호
+            /// </summary>
+            [DataMember]
+            public int? id { get; set; }
             /// <summary>
             /// 경로
             /// </summary>
@@ -168,7 +305,7 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 이미지설명
             /// </summary>
             [DataMember]
-            public string ImageDescription { get; set; }
+            public string Description { get; set; }
         }
 
         /// <summary>
@@ -191,12 +328,12 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 코스 홀 수
             /// </summary>
             [DataMember]
-            public int CourseHoleCount { get; set; }
+            public int? CourseHoleCount { get; set; }
             /// <summary>
             /// 시작 홀
             /// </summary>
             [DataMember]
-            public int StartHole { get; set; }
+            public int? StartHole { get; set; }
         }
 
         /// <summary>
@@ -209,38 +346,37 @@ namespace AGL.Api.API_Template.Models.OAPI
             /// 홀 번호
             /// </summary>
             [DataMember]
-            public string HoleNumber { get; set; }
+            public int HoleNumber { get; set; }
             /// <summary>
             /// 홀 명
             /// </summary>
             [DataMember]
-            public string HoleName { get; set; }
+            public string? HoleName { get; set; }
             /// <summary>
             /// 파
             /// </summary>
             [DataMember]
-            public int Par { get; set; }
+            public int? Par { get; set; }
             /// <summary>
             /// 거리 단위 ( 1 yards , 2 meters )
             /// </summary>
             [DataMember]
-            public int DistanceUnit { get; set; }
+            public int? DistanceUnit { get; set; }
             /// <summary>
             /// 거리
             /// </summary>
             [DataMember]
-            public int Distance { get; set; }
+            public int? Distance { get; set; }
         }
 
 
 
-        
+        [DataContract]
         public class BookingInfo
         {
             /// <summary>
             /// Booking ID
             /// </summary>
-            
             public string ReservationId { get; set; } = string.Empty;
             /// <summary>
             /// Golf Club Code
@@ -281,6 +417,7 @@ namespace AGL.Api.API_Template.Models.OAPI
 
         }
 
+        [DataContract]
         public class ConfirmBookingInfo
         {
             /// <summary>
@@ -315,6 +452,7 @@ namespace AGL.Api.API_Template.Models.OAPI
 
         }
 
+        [DataContract]
         public class CancelBookingInfo
         {
             /// <summary>

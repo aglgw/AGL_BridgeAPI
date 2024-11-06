@@ -37,17 +37,17 @@ namespace AGL.Api.API_Template.Services
             _commonService = commonService;
         }
 
-        public async Task<IDataResult> PostTeeTime(OAPITeeTimeRequest request, string supplierCode)
+        public async Task<IDataResult> PostTeeTime(TeeTimeRequest request, string supplierCode)
         {
             return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
         }
 
-        public async Task<IDataResult> UpdateTeeTime(OAPITeeTimeRequest request, string supplierCode)
+        public async Task<IDataResult> PutTeeTime(TeeTimeRequest request, string supplierCode)
         {
             return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
         }
 
-        public async Task<IDataResult> GetTeeTime(OAPITeeTimeGetRequest request, string supplierCode)
+        public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
         {
             if (string.IsNullOrEmpty(request.StartDate) || string.IsNullOrEmpty(request.EndDate))
             {
@@ -84,7 +84,8 @@ namespace AGL.Api.API_Template.Services
                     .Select(g => new
                     {
                         TeeTime = g.First().TeeTime,
-                        PlayDate = g.First().DateSlot.PlayDate,
+                        //PlayDates = g.Select(tm => tm.DateSlot.PlayDate).Distinct().ToList(),
+                        PlayDates = g.Select(tm => DateTime.ParseExact(tm.DateSlot.PlayDate, "yyyyMMdd", null).ToString("yyyy-MM-dd")).Distinct().OrderBy(date => date).ToList(),
                         CourseCodes = g.Select(tm => tm.TeeTime.GolfClubCourse.CourseCode).Distinct().ToList(),
                         Times = g.Select(tm => new { tm.TimeSlot.StartTime, tm.SupplierTeetimeCode }).OrderBy(t => t.StartTime).ToList(),
                         PricePolicyId = g.Key.PricePolicyId,
@@ -101,15 +102,13 @@ namespace AGL.Api.API_Template.Services
                 // 그룹화된 티타임을 순회하며 TeeTimeInfo 객체 생성
                 foreach (var groupedTeeTime in groupedTeeTimes)
                 {
-                    
                     var teeTime = groupedTeeTime.TeeTime;
                     var pricePolicy = pricePolicies.ContainsKey(groupedTeeTime.PricePolicyId) ? pricePolicies[groupedTeeTime.PricePolicyId] : null;
                     var refundPolicy = refundPolicies.ContainsKey(groupedTeeTime.RefundPolicyId) ? refundPolicies[groupedTeeTime.RefundPolicyId] : null;
-
                     // 상세 정보를 포함한 TeeTimeInfo 객체 생성
                     var teeTimeInfo = new TeeTimeInfo
                     {
-                        PlayDate = groupedTeeTime.PlayDate,
+                        PlayDate = groupedTeeTime.PlayDates.ToList(),
                         CourseCode = groupedTeeTime.CourseCodes,
                         MinMembers = teeTime.MinMembers,
                         MaxMembers = teeTime.MaxMembers,
@@ -161,7 +160,7 @@ namespace AGL.Api.API_Template.Services
 
                                 return new RefundPolicy
                                 {
-                                    RefundDate = refundDate,
+                                    RefundDate = refundDate ?? 0,
                                     RefundFee = refundFee ?? 0,
                                     RefundUnit = refundUnit ?? 0
                                 };
@@ -171,7 +170,7 @@ namespace AGL.Api.API_Template.Services
                     responseData["teeTimeInfo"].Add(teeTimeInfo);
                 }
 
-                return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime Listd successfully", responseData);
+                return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime List successfully", responseData);
             }
             catch (Exception ex)
             {
@@ -179,7 +178,7 @@ namespace AGL.Api.API_Template.Services
             }
         }
 
-        public async Task<IDataResult> PutTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode)
+        public async Task<IDataResult> PutTeeTimeAvailability(TeeTimetAvailabilityRequest request, string supplierCode)
         {
             var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.GolfclubCode);
 
@@ -241,7 +240,7 @@ namespace AGL.Api.API_Template.Services
             }
         }
 
-        private async Task<IDataResult> ProcessTeeTime(OAPITeeTimeRequest request, string supplierCode, string golfclubCode)
+        private async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
@@ -256,7 +255,6 @@ namespace AGL.Api.API_Template.Services
                     if (existingGolfclub == null)
                     {
                         return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid", null); // 골프장이 유효하지 않을때 처리
-                        //return CreateResponse(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid", null); // 골프장이 유효하지 않을때 처리
                     }
 
                     // 1. applicableDates 생성
@@ -280,15 +278,19 @@ namespace AGL.Api.API_Template.Services
                             endDate = new DateTime(endYear, endMonth, lastDay);
                         }
 
+                        // 요청한 기간 에서 요일, 특정일, 예외일 처리
                         applicableDates = Enumerable.Range(0, (endDate - startDate).Days + 1)
-                                                    .Select(offset => startDate.AddDays(offset).ToString("yyyyMMdd"));
+                            .Select(offset => startDate.AddDays(offset))
+                            .Where(date => (request.Week.Contains((int)date.DayOfWeek) || request.EffectiveDate.Contains(date.ToString("yyyy-MM-dd"))) && !request.ExceptionDate.Contains(date.ToString("yyyy-MM-dd")))
+                            .Select(date => date.ToString("yyyyMMdd"))
+                            .ToList();
                     }
                     else // dateApplyType이 1이 아닌 경우: effectiveDate 리스트의 날짜들 사용
                     {
                         applicableDates = request.EffectiveDate
-                                                .Where(date => !string.IsNullOrWhiteSpace(date) &&DateTime.TryParseExact(date, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
-                                                .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
-                                                .ToList();
+                            .Where(date => !string.IsNullOrWhiteSpace(date) && DateTime.TryParseExact(date, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
+                            .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
+                            .ToList();
                     }
 
                     // 1. 기존 데이터 조회 (요금 정책, 환불 정책, 날짜 슬롯, 시간 슬롯, 코스정보, 티타임 정보 등)
@@ -397,16 +399,14 @@ namespace AGL.Api.API_Template.Services
                         }
 
                         // 환불 정책 중복 확인 후 추가
+                        var sortedRefundPolicies = teeTimeInfo.RefundPolicy.OrderByDescending(rp => rp.RefundDate).ToList();
                         var existingRefundPolicy = existingTeeTimeRefundPolicies.FirstOrDefault(rp =>
-                            Enumerable.Range(1, teeTimeInfo.RefundPolicy.Count).All(i =>
-                                ((rp.GetType().GetProperty($"RefundDate_{i}")?.GetValue(rp) as int?) == teeTimeInfo.RefundPolicy[i - 1].RefundDate) &&
-                                //((rp.GetType().GetProperty($"RefundHour_{i}")?.GetValue(rp) as string) == null && teeTimeInfo.RefundPolicy[i - 1].RefundHour == null) ||
-                                //((rp.GetType().GetProperty($"RefundHour_{i}")?.GetValue(rp) as string) == teeTimeInfo.RefundPolicy[i - 1].RefundHour?.ToString("D4")) &&
-                                (rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == null && teeTimeInfo.RefundPolicy[i - 1].RefundFee == null ||
-                                ((rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == teeTimeInfo.RefundPolicy[i - 1].RefundFee) &&
-                                ((rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == null && teeTimeInfo.RefundPolicy[i - 1].RefundUnit == null) ||
-                                ((rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == teeTimeInfo.RefundPolicy[i - 1].RefundUnit)
-                            ));
+                            sortedRefundPolicies.Count <= 5 && Enumerable.Range(1, sortedRefundPolicies.Count).All(i =>
+                                (rp.GetType().GetProperty($"RefundDate_{i}")?.GetValue(rp) as int?) == sortedRefundPolicies[i - 1].RefundDate &&
+                                (rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == sortedRefundPolicies[i - 1].RefundFee &&
+                                (rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == sortedRefundPolicies[i - 1].RefundUnit
+                            )
+                        );
 
                         int refundPolicyId;
                         if (existingRefundPolicy != null)
@@ -498,7 +498,6 @@ namespace AGL.Api.API_Template.Services
                     await transaction.CommitAsync();
 
                     return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
-                    //return CreateResponse(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
                 }
                 catch (Exception ex)
                 {
@@ -506,7 +505,6 @@ namespace AGL.Api.API_Template.Services
                     await transaction.RollbackAsync();
 
                     return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-                    //return CreateResponse(false, ResultCode.SERVER_ERROR, ex.Message, null);
                 }
             }
         }

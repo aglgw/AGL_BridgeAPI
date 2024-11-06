@@ -58,7 +58,7 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithOne(h => h.GolfClub)
                    .HasForeignKey(h => h.GolfClubId);
 
-            builder.Property(e => e.IsResidentGuestRequired).HasColumnType("bit");
+            builder.Property(e => e.isGuestInfoRequired).HasColumnType("bit");
         }
     }
 
@@ -83,6 +83,7 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .HasForeignKey(r => r.GolfClubId);
 
             builder.Property(e => e.RefundFee).HasColumnType("decimal(18,4)");
+            builder.Property(e => e.RefundUnit).HasColumnType("TINYINT");
         }
     }
 
@@ -230,7 +231,7 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             // OAPI_TeetimeRefundPolicy와 OAPI_TeetimeRefundMapping 간의 관계 설정
             builder.HasMany(rp => rp.TeeTimeMappings) // OAPI_TeetimePricePolicy는 여러 개의 OAPI_TeeTimeMapping과 관계를 가짐
                    .WithOne(tr => tr.TeetimePricePolicy) // 각 OAPI_TeeTimeMapping은 하나의 TeetimePricePolicy와 관계를 가짐
-                   .HasForeignKey(tr => tr.RefundPolicyId) // 외래 키 설정
+                   .HasForeignKey(tr => tr.PricePolicyId) // 외래 키 설정
                    .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
 
             var decimalProperties = new[]

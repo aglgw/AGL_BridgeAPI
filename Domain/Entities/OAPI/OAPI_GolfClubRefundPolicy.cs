@@ -15,15 +15,14 @@ namespace AGL.Api.Domain.Entities.OAPI
         [ForeignKey("OAPI_GolfClub")]
         public int? GolfClubId { get; set; } // 골프장ID (FK)
 
-        [Required, StringLength(8)]
-        public string RefundDate { get; set; } // 환불잔여일
+        public int RefundDate { get; set; } // 환불잔여일
 
         [StringLength(4)]
         public string? RefundHour { get; set; } // 환불시간
 
-        public decimal? RefundFee { get; set; } // 환불수수료
+        public decimal RefundFee { get; set; } // 환불수수료
 
-        public byte? RefundUnit { get; set; } // 환불단위
+        public byte RefundUnit { get; set; } // 환불단위
 
         [Required]
         public DateTime CreatedDate { get; set; } // 생성일

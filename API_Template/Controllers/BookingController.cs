@@ -89,7 +89,7 @@ namespace AGL.Api.API_Template.Controllers
         [Route("cancel")]
         [HttpPost]
         public async Task<IDataResult> GetBookingCancel(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody] OAPIReservationRequest Req)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody] ReservationRequest Req)
         {
 
             var result = await _bookingService.GetBookingCancel(Req);
@@ -105,7 +105,7 @@ namespace AGL.Api.API_Template.Controllers
         [Route("reservation/confirm")]
         [HttpPost]
         public async Task<IDataResult> PostBookingConfirm(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPIReservationRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, ReservationRequest request)
         {
             var result = await _bookingService.PostBookingConfirm(request, SupplierCode);
 

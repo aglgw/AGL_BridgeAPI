@@ -5,7 +5,7 @@ using static AGL.Api.API_Template.Models.OAPI.OAPI;
 namespace AGL.Api.API_Template.Models.OAPI
 {
     [DataContract]
-    public class OAPITeeTimeBaseRequest
+    public class TeeTimeBaseRequest
     {
         [DataMember]
         public string? GolfclubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
@@ -15,7 +15,7 @@ namespace AGL.Api.API_Template.Models.OAPI
     /// 티타임 등록/수정 요청
     /// </summary>
     [DataContract]
-    public class OAPITeeTimeRequest
+    public class TeeTimeRequest
     {
         /// <summary>
         /// 골프장 코드
@@ -63,7 +63,7 @@ namespace AGL.Api.API_Template.Models.OAPI
     /// 티타임 조회
     /// </summary>
     [DataContract]
-    public class OAPITeeTimeGetRequest
+    public class TeeTimeGetRequest
     {
         /// <summary>
         /// 시작일
@@ -86,7 +86,7 @@ namespace AGL.Api.API_Template.Models.OAPI
     /// 티타임 상태수정
     /// </summary>
     [DataContract]
-    public class OAPITeeTimetAvailabilityRequest
+    public class TeeTimetAvailabilityRequest
     {
         /// <summary>
         /// 골프장 코드
@@ -119,7 +119,7 @@ namespace AGL.Api.API_Template.Models.OAPI
     /// 예약확정
     /// </summary>
     [DataContract]
-    public class OAPIReservationRequest
+    public class ReservationRequest
     {
         /// <summary>
         /// 부킹 IDE
@@ -133,7 +133,7 @@ namespace AGL.Api.API_Template.Models.OAPI
     /// <summary>
     ///예약 목록 조회
     /// </summary>
-    public class ReqBookingInquiry: OAPITeeTimeBaseRequest
+    public class ReqBookingInquiry: TeeTimeBaseRequest
     {
         /// <summary>
         /// 시작일 YYYY-MM-DD
@@ -166,7 +166,7 @@ namespace AGL.Api.API_Template.Models.OAPI
     /// <summary>
     ///예약 요청
     /// </summary>
-    public class ReqBookingRequest : OAPITeeTimeBaseRequest
+    public class ReqBookingRequest : TeeTimeBaseRequest
     {
         /// <summary>
         /// 코스 코드
@@ -252,4 +252,6 @@ namespace AGL.Api.API_Template.Models.OAPI
         [DataMember]
         public string? GuestCountry { get; set; }
     }
+
+
 }

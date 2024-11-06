@@ -13,12 +13,12 @@ namespace AGL.Api.API_Template.Controllers
     public class TeeTimeController : ApiControllerBase
     {
         private readonly ILogger<TeeTimeController> _logger;
-        private readonly ITeeTimeService _oapiService;
+        private readonly ITeeTimeService _teetimeService;
 
-        public TeeTimeController(ILogger<TeeTimeController> logger,ITeeTimeService oapiService)
+        public TeeTimeController(ILogger<TeeTimeController> logger,ITeeTimeService teetimeService)
         {
             _logger = logger;
-            _oapiService = oapiService;
+            _teetimeService = teetimeService;
         }
 
         /// <summary>
@@ -28,9 +28,9 @@ namespace AGL.Api.API_Template.Controllers
         [Route("teetime")]
         [HttpPost]
         public async Task<IDataResult> PostTeeTime(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
         {
-            var result = await _oapiService.PostTeeTime(request, X_Supplier_Code);
+            var result = await _teetimeService.PostTeeTime(request, SupplierCode);
 
             return result;
         }
@@ -41,10 +41,10 @@ namespace AGL.Api.API_Template.Controllers
         /// <returns></returns>
         [Route("teetime/update")]
         [HttpPut]
-        public async Task<IDataResult> UpdateTeeTime(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeRequest request)
+        public async Task<IDataResult> PutTeeTime(
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
         {
-            var result = await _oapiService.UpdateTeeTime(request, X_Supplier_Code);
+            var result = await _teetimeService.PutTeeTime(request, SupplierCode);
 
             return result;
         }
@@ -56,9 +56,9 @@ namespace AGL.Api.API_Template.Controllers
         [Route("teetimeList")]
         [HttpGet]
         public async Task<IDataResult> GetTeeTime(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimeGetRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeGetRequest request)
         {
-            var result = await _oapiService.GetTeeTime(request, X_Supplier_Code);
+            var result = await _teetimeService.GetTeeTime(request, SupplierCode);
 
             return result;
         }
@@ -70,9 +70,9 @@ namespace AGL.Api.API_Template.Controllers
         [Route("teeTime/availability")]
         [HttpPut]
         public async Task<IDataResult> PutTeeTimeAvailability(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string X_Supplier_Code, OAPITeeTimetAvailabilityRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimetAvailabilityRequest request)
         {
-            var result = await _oapiService.PutTeeTimeAvailability(request, X_Supplier_Code);
+            var result = await _teetimeService.PutTeeTimeAvailability(request, SupplierCode);
 
             return result;
         }

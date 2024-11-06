@@ -13,7 +13,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public int GolfClubId { get; set; } // 골프장ID (FK)
 
         [Required]
-        public int Idx { get; set; } // 번호
+        public int? Idx { get; set; } // 번호
 
         [Required, StringLength(255)]
         public string Url { get; set; } // 경로

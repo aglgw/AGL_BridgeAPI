@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 
 namespace AGL.Api.Domain.Entities.OAPI
 {
@@ -13,10 +14,14 @@ namespace AGL.Api.Domain.Entities.OAPI
         public int GolfClubId { get; set; } // 골프장ID (FK)
 
         [StringLength(255)]
-        public string? CourseCode { get; set; } // 코스 코드
+        public string CourseCode { get; set; } // 코스 코드
 
         [StringLength(255)]
-        public string? CourseName { get; set; } // 코스명
+        public string CourseName { get; set; } // 코스명
+
+        public int? CourseHoleCount { get; set; }
+
+        public int? StartHole { get; set; }
 
         [Required]
         public DateTime CreatedDate { get; set; } // 생성일

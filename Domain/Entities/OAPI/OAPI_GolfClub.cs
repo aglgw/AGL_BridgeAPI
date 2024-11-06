@@ -55,10 +55,10 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         public int? TotalCourseCount { get; set; } // 코스 갯수
 
-        public bool? IsResidentGuestRequired { get; set; } // 내장객 예약시 필수 여부
+        public bool? isGuestInfoRequired { get; set; } // 내장객 예약시 필수 여부
 
-        [Required]
-        public int ReservationType { get; set; } // 예약종류
+        //[Required]
+        //public int ReservationType { get; set; } // 예약종류
 
         //public bool? TeetimeCancelIsActive { get; set; } // 티타임 취소시 활성화여부
 

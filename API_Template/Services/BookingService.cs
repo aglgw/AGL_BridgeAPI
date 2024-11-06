@@ -223,7 +223,7 @@ namespace AGL.Api.API_Template.Services
         }
 
 
-        public async Task<IDataResult> GetBookingCancel(OAPIReservationRequest Req)
+        public async Task<IDataResult> GetBookingCancel(ReservationRequest Req)
         {
 
             if(string.IsNullOrWhiteSpace(Req.ReservationId))
@@ -270,7 +270,7 @@ namespace AGL.Api.API_Template.Services
         }
 
 
-        public async Task<IDataResult> PostBookingConfirm(OAPIReservationRequest request, string supplierCode)
+        public async Task<IDataResult> PostBookingConfirm(ReservationRequest request, string supplierCode)
         {
             var reservationId = request.ReservationId;
 

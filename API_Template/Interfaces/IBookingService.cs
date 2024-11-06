@@ -37,12 +37,12 @@ namespace AGL.Api.API_Template.Interfaces
         /// </summary>
         /// <param name="Req"></param>
         /// <returns></returns>
-        Task<IDataResult> GetBookingCancel(OAPIReservationRequest Req);
+        Task<IDataResult> GetBookingCancel(ReservationRequest Req);
         /// <summary>
         /// 예약확정
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> PostBookingConfirm(OAPIReservationRequest request, string supplierCode);
+        Task<IDataResult> PostBookingConfirm(ReservationRequest request, string supplierCode);
 
 
 

@@ -15,21 +15,21 @@ namespace AGL.Api.API_Template.Interfaces
         /// 티타임 등록
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> PostTeeTime(OAPITeeTimeRequest request, string supplierCode);
+        Task<IDataResult> PostTeeTime(TeeTimeRequest request, string supplierCode);
         /// <summary>
         /// 티타임 수정
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> UpdateTeeTime(OAPITeeTimeRequest request, string supplierCode);
+        Task<IDataResult> PutTeeTime(TeeTimeRequest request, string supplierCode);
         /// <summary>
         /// 티타임 조회
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> GetTeeTime(OAPITeeTimeGetRequest request, string supplierCode);
+        Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode);
         /// <summary>
         /// 티타임 상태수정
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> PutTeeTimeAvailability(OAPITeeTimetAvailabilityRequest request, string supplierCode);
+        Task<IDataResult> PutTeeTimeAvailability(TeeTimetAvailabilityRequest request, string supplierCode);
     }
 }
