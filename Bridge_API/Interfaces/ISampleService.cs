@@ -11,7 +11,7 @@ namespace AGL.Api.Bridge_API.Interfaces
         Task<IDataResult> GetCheckInTeeTimeList();
         Task<IDataResult> CallSp(string fieldId);
         Task<IDataResult> GetHTT();
-
+        Task<IDataResult> GetEnvironment();
         Task MigNation();
 
 

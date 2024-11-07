@@ -17,6 +17,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.Mapping;
 using StoredProcedureEFCore;
 using System.Linq.Expressions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using AGL.Api.Bridge_API.Utils;
+using System.Reflection;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -141,7 +143,20 @@ namespace AGL.Api.Bridge_API.Services
 
         }
 
+        public async Task<IDataResult> GetEnvironment()
+        {
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
+            // 현재 어셈블리를 가져옵니다.
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // 어셈블리의 이름을 가져옵니다.
+            var assemblyName = assembly.GetName().Name;
+
+
+            UtilLogs.LogRegDay($"Sample", $"GetEnvironment", $"environment : {environment} // assemblyName : {assemblyName}", "");
+            return Successed($"environment : {environment} // assemblyName : {assemblyName}");
+        }
     }
         
 }

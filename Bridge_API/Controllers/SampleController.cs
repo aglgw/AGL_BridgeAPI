@@ -1,13 +1,10 @@
-using AGL.Api.Bridge_API.Interfaces;
 using AGL.Api.ApplicationCore.Infrastructure;
-using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models;
 using AGL.Api.ApplicationCore.Models.Enum;
-using AGL.Api.ApplicationCore.Models.Queries;
 using AGL.Api.ApplicationCore.Utilities;
+using AGL.Api.Bridge_API.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -24,7 +21,21 @@ namespace AGL.Api.Bridge_API.Controllers
             _sampleService = sampleService;
         }
 
-/*
+#if DEBUG
+        /// <summary>
+        /// Environment 조회 
+        /// </summary>
+        /// <returns></returns>
+        [Route("GetEnvironment")]
+        [HttpGet]
+        public async Task<IActionResult> GetEnvironment([FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode)
+        {
+            var rst = await _sampleService.GetEnvironment();
+
+            return Ok(rst);
+        }
+
+
         /// <summary>
         /// 샘플 - 체크인 티타임 리스트 조회(Type EFCore ORM)
         /// </summary>
@@ -233,7 +244,8 @@ namespace AGL.Api.Bridge_API.Controllers
             await Task.CompletedTask;
 
             return Ok();
-        }*/
+        }
+#endif
     }
 
 }
