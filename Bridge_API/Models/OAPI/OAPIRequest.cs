@@ -31,33 +31,48 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 기간 시작일 
         /// </summary>
         [DataMember]
-        public string StartPlayDate { get; set; }
+        public string? StartPlayDate { get; set; }
         /// <summary>
         /// 기간 종료일 
         /// </summary>
         [DataMember]
-        public string EndPlayDate { get; set; }
+        public string? EndPlayDate { get; set; }
         /// <summary>
         /// 예외일 ( 공휴일 적용 ) 
         /// </summary>
         [DataMember]
-        public List<string> ExceptionDate { get; set; }
+        public List<string>? ExceptionDate { get; set; }
         /// <summary>
         /// 기간 중 적용 요일 ( 1 월요일, 2 화요일, 3 수요일, 4 목요일, 5 금요일, 6 토요일, 7 일요일 )
         /// </summary>
         [DataMember]
-        public List<int> Week { get; set; }
+        public List<int>? Week { get; set; }
         /// <summary>
         /// 적용일
         /// </summary>
         [DataMember]
-        public List<string> EffectiveDate { get; set; }
+        public List<string>? EffectiveDate { get; set; }
         /// <summary>
         /// 티타임 정보 리스트
         /// </summary>
         [DataMember]
         public List<TeeTimeInfo> TeeTimeInfo { get; set; }
     }
+
+    /// <summary>
+    /// 티타임 등록/수정 백그라운드
+    /// </summary>
+    [DataContract]
+    public class TeeTimeBackgroundRequest : TeeTimeRequest
+    {
+        /// <summary>
+        /// 공급사 코드 
+        /// </summary>
+        [DataMember]
+        public string SupplierCode { get; set; }
+    }
+        
+
 
     /// <summary>
     /// 티타임 조회

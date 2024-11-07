@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.Json;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -31,31 +32,24 @@ namespace AGL.Api.Bridge_API.Services
         private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
         private readonly ICommonService _commonService;
-        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
+        private readonly RequestQueue _queue;
 
-
-        public TeeTimeService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService, IBackgroundTaskQueue backgroundTaskQueue)
+        public TeeTimeService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService, RequestQueue queue)
         {
             _context = context;
             _configuration = configuration;
             _commonService = commonService;
-            _backgroundTaskQueue = backgroundTaskQueue;
+            _queue = queue;
         }
 
         public async Task<IDataResult> PostTeeTime(TeeTimeRequest request, string supplierCode)
         {
-            return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
+            return await ValidateTeeTime(request, supplierCode, request.GolfclubCode, "POST");
         }
 
         public async Task<IDataResult> PutTeeTime(TeeTimeRequest request, string supplierCode)
         {
-            //return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
-            // 백그라운드에서 작업 진행
-            _backgroundTaskQueue.QueueBackgroundWorkItem(async token =>
-            {
-                await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
-            });
-            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
+            return await ValidateTeeTime(request, supplierCode, request.GolfclubCode, "PUT");
         }
 
         public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
@@ -251,14 +245,52 @@ namespace AGL.Api.Bridge_API.Services
             }
         }
 
-        private async Task<IDataResult> ProcessBackgroundTaskTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode, DbContext scopedContext, CancellationToken token)
+        private async Task<IDataResult> ValidateTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode, string mode)
         {
+            if (string.IsNullOrEmpty(golfclubCode))
+            {
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfclubCode not found", null);
+            }
 
+            if (request.DateApplyType == 1)
+            {
+                if (string.IsNullOrEmpty(request.StartPlayDate) || string.IsNullOrEmpty(request.EndPlayDate))
+                {
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate or EndPlayDate not found", null);
+                }
+            }
+            else if (request.DateApplyType == 2)
+            {
+                if (request.ExceptionDate == null || request.EffectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
+                {
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EffectiveDate not found", null);
+                }
+            }
 
-            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
+            TeeTimeBackgroundRequest teeTimeBackgroundRequest = new TeeTimeBackgroundRequest
+            {
+                SupplierCode = supplierCode
+            };
+
+            // Copy all properties from TeeTimeRequest to TeeTimeBackgroundRequest
+            foreach (var property in typeof(TeeTimeRequest).GetProperties())
+            {
+                property.SetValue(teeTimeBackgroundRequest, property.GetValue(request));
+            }
+
+            if (mode == "PUT")
+            {
+                _queue.Enqueue(teeTimeBackgroundRequest);
+                return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
+            }
+            else 
+            {
+                return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
+            }
+
         }
 
-            private async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode)
+        public async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
@@ -511,7 +543,8 @@ namespace AGL.Api.Bridge_API.Services
                             await _context.BulkInsertOrUpdateAsync(teeTimeMappingsList);
                         }
                     }
-
+                    //_logger.LogInformation("ProcessTeeTime is running.");
+                    Debug.WriteLine("ProcessTeeTime is running.");
                     // 트랜잭션 커밋
                     await transaction.CommitAsync();
 

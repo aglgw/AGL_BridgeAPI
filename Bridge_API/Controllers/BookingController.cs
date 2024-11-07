@@ -22,7 +22,7 @@ namespace AGL.Api.Bridge_API.Controllers
             _logger = logger;
             _bookingService = bookingService;
         }
-
+#if DEBUG
         [AllowAnonymous]
         [Route("test")]
         [HttpGet]
@@ -97,7 +97,7 @@ namespace AGL.Api.Bridge_API.Controllers
             return result;
         }
 
-
+#endif
         /// <summary>
         /// 예약 확정
         /// </summary>

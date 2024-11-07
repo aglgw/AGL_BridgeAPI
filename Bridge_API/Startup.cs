@@ -44,6 +44,10 @@ namespace AGL.Api.Bridge_API
             services.AddScoped<IOAPIDbContext, OAPI_DbContext_GetSupplier>();
             services.AddScoped<IMyDatabaseService, MyDatabaseService>();
 
+            services.AddSingleton<RequestQueue>();
+            services.AddHostedService<BackgroundRequestService>();
+            services.AddTransient<TeeTimeService>();
+
             services.AddInfrastructure(Configuration);
             services.AddCustomIntegrations();
             services.AddCustomMvc(Logger);

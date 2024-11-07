@@ -21,6 +21,7 @@ using System.Text;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using AGL.Api.ApplicationCore.Utilities;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -68,15 +69,13 @@ namespace AGL.Api.Bridge_API.Services
 
                     // 엔드포인트 설정
                     string EndpointUrl;
-                    if (_configuration["AppSetting:Environment"] == "dev")
-                    {
-                        EndpointUrl = supplier.EndPointDev;
-                    }
-                    else
-                    {
-                        EndpointUrl = supplier.EndPointProd;
-                    }
 
+                    if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+                        EndpointUrl = supplier.EndPointDev;
+                    else
+                        EndpointUrl = supplier.EndPointProd;
+
+                    Utils.UtilLogs.LogRegHour(SupplierCode, Req.GolfclubCode, $"예약 요청 ", $"예약 요청 테스트");
                     // HTTP 요청 설정
                     using (var client = new HttpClient())
                     {
@@ -90,6 +89,8 @@ namespace AGL.Api.Bridge_API.Services
 
                         if (response.IsSuccessStatusCode)
                         {
+
+
                             var responseContent = await response.Content.ReadAsStringAsync();
                             var responseJson = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
