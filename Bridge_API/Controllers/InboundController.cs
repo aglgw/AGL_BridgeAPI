@@ -21,7 +21,7 @@ namespace AGL.Api.Bridge_API.Controllers
             _logger = logger;
             _InboundService = InboundService;
         }
-
+#if DEBUG
         /// <summary>
         /// 내부연동 티타임 기간조회
         /// </summary>
@@ -34,7 +34,7 @@ namespace AGL.Api.Bridge_API.Controllers
 
             return result;
         }
-
+#endif
 
     }
 }
