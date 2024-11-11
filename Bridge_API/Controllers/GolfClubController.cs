@@ -5,6 +5,9 @@ using AGL.Api.ApplicationCore.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using AGL.Api.ApplicationCore.Models.Enum;
+using AGL.Api.ApplicationCore.Filters;
+
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -25,7 +28,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("golfclub")]
         [HttpPost]
-        public async Task<IDataResult> PostTeeTime(
+        public async Task<IDataResult> PostGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, GolfClubInfo request)
         {
             var result = await _golfService.PostGolfClub(request, SupplierCode);
@@ -39,7 +42,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("golfclub/update")]
         [HttpPut]
-        public async Task<IDataResult> PutTeeTime(
+        public async Task<IDataResult> PutGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, GolfClubInfo request)
         {
             var result = await _golfService.PutGolfClub(request, SupplierCode);
@@ -53,7 +56,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("golfclub/list")]
         [HttpGet]
-        public async Task<IDataResult> GetTeeTime(
+        public async Task<IDataResult> GetGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
             [FromQuery(Name = "GolfclubCode")] string? GolfclubCode)
         {

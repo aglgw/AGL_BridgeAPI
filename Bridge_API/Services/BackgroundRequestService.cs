@@ -25,9 +25,6 @@ namespace AGL.Api.Bridge_API.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            //_logger.LogInformation("BackgroundRequestService is starting.");
-            Debug.WriteLine("BackgroundRequestService is starting.");
-
             _backgroundTask = Task.Run(() => ExecuteAsync(_stoppingCts.Token), cancellationToken);
             return Task.CompletedTask;
         }
@@ -38,8 +35,6 @@ namespace AGL.Api.Bridge_API.Services
             {
                 return;
             }
-            //_logger.LogInformation("BackgroundRequestService is stopping.");
-            Debug.WriteLine("BackgroundRequestService is stopping.");
 
             _stoppingCts.Cancel();
             await Task.WhenAny(_backgroundTask, Task.Delay(Timeout.Infinite, cancellationToken));
@@ -47,15 +42,11 @@ namespace AGL.Api.Bridge_API.Services
 
         private async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //_logger.LogInformation("BackgroundRequestService is running.");
-            Debug.WriteLine("BackgroundRequestService is running.");
-
             while (!stoppingToken.IsCancellationRequested)
             {
                 if (_queue.TryDequeue(out var request))
                 {
-                    //_logger.LogInformation("Processing request for SupplierCode: {SupplierCode}, GolfclubCode: {GolfclubCode}", request.SupplierCode, request.GolfclubCode);
-                    Debug.WriteLine($"Processing request for SupplierCode: {request.SupplierCode}, GolfclubCode: {request.GolfclubCode}");
+                    Utils.UtilLogs.LogRegHour(request.SupplierCode, request.GolfclubCode, $"TeeTime queue start", $"골프장TeeTime queue start");
 
                     var directory = "C:\\AGL\\JSON";
                     Directory.CreateDirectory(directory);
@@ -64,18 +55,16 @@ namespace AGL.Api.Bridge_API.Services
                     var fileName = Path.Combine(directory, $"Request_{request.SupplierCode}_{request.GolfclubCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}.json");
                     await File.WriteAllTextAsync(fileName, json, stoppingToken);
 
-                    //_logger.LogInformation("Request saved to file: {FileName}", fileName);
-                    Debug.WriteLine($"Request saved to file: {fileName}");
+                    Utils.UtilLogs.LogRegHour(request.SupplierCode, request.GolfclubCode, $"골프장 수정 queue start", $"json saved to file: {fileName}");
 
                     using var scope = _scopeFactory.CreateScope();
                     var teeTimeService = scope.ServiceProvider.GetRequiredService<TeeTimeService>();
                     await teeTimeService.ProcessTeeTime(request, request.SupplierCode, request.GolfclubCode);
+
+                    Utils.UtilLogs.LogRegHour(request.SupplierCode, request.GolfclubCode, $"TeeTime queue end", $"골프장TeeTime queue end");
                 }
                 await Task.Delay(1000, stoppingToken); // Adjust delay as needed
             }
-
-            //_logger.LogInformation("BackgroundRequestService is stopping.");
-            Debug.WriteLine("BackgroundRequestService has stopped.");
         }
     }
 }

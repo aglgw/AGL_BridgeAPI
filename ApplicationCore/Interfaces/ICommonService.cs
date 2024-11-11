@@ -1,15 +1,12 @@
-﻿using AGL.Api.Bridge_API.Models.OAPI;
-using AGL.Api.ApplicationCore.Interfaces;
-using AGL.Api.ApplicationCore.Models.Enum;
-using Microsoft.AspNetCore.Mvc;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+﻿using AGL.Api.ApplicationCore.Models.Enum;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace AGL.Api.Bridge_API.Interfaces
+namespace AGL.Api.ApplicationCore.Interfaces
 {
-    /// <summary>
-    /// OPEN API
-    /// </summary>
     public interface ICommonService
     {
         /// <summary>

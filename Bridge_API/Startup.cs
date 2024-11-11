@@ -18,6 +18,8 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
 using System.Reflection;
+using AGL.Api.ApplicationCore.Utilities;
+
 
 namespace AGL.Api.Bridge_API
 {
@@ -41,17 +43,19 @@ namespace AGL.Api.Bridge_API
             services.AddDbContext<OAPI_DbContext_GetSupplier>(options =>
                 options.UseSqlServer(Configuration["OAPI.Application.ConnectionString"]));
 
-            services.AddScoped<IOAPIDbContext, OAPI_DbContext_GetSupplier>();
-            services.AddScoped<IMyDatabaseService, MyDatabaseService>();
+            services.AddScoped<IOAPIDbContext, OAPI_DbContext_GetSupplier>(); // 인증 미들웨어 dbcontext
+            services.AddScoped<IMyDatabaseService, MyDatabaseService>(); // 인증 미들웨어 dbcontext
 
-            services.AddSingleton<RequestQueue>();
-            services.AddHostedService<BackgroundRequestService>();
             services.AddTransient<TeeTimeService>();
+            services.AddSingleton<RequestQueue>(); // 티타임 수정 queue 처리
+            services.AddHostedService<BackgroundRequestService>(); // 티타임 수정 queue 처리
+
+            services.AddHostedService<MemoryMonitoringService>(); // 메모리 처리
 
             services.AddInfrastructure(Configuration);
             services.AddCustomIntegrations();
             services.AddCustomMvc(Logger);
-            
+
             services.AddApiClient();
             services.AddDefaultCors();
 

@@ -22,12 +22,10 @@ namespace AGL.Api.Bridge_API.Services
 {
     public class CommonService : BaseService, ICommonService
     {
-        private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
 
-        public CommonService(OAPI_DbContext context, IConfiguration configuration)
+        public CommonService(IConfiguration configuration)
         {
-            _context = context;
             _configuration = configuration;
         }
 
