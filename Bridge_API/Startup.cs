@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using AGL.Api.ApplicationCore.Utilities;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace AGL.Api.Bridge_API
@@ -58,6 +59,12 @@ namespace AGL.Api.Bridge_API
 
             services.AddApiClient();
             services.AddDefaultCors();
+
+            // ModelState 유효성 검사 필터를 비활성화
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
 
             services.Configure<AppSettings>(Configuration);
             var openApi = Configuration.GetSection("OpenApi").Get<OpenApiConfiguration>();

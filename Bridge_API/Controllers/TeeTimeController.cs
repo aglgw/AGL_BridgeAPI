@@ -30,6 +30,7 @@ namespace AGL.Api.Bridge_API.Controllers
         public async Task<IDataResult> PostTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
         {
+            Utils.UtilLogs.LogRegHour(SupplierCode, request.GolfclubCode, "TeeTime", "등록 처리 시작");
             var result = await _teetimeService.PostTeeTime(request, SupplierCode);
 
             return result;
@@ -44,6 +45,7 @@ namespace AGL.Api.Bridge_API.Controllers
         public async Task<IDataResult> PutTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
         {
+            Utils.UtilLogs.LogRegHour(SupplierCode, request.GolfclubCode, "TeeTime", "변경 처리 시작");
             var result = await _teetimeService.PutTeeTime(request, SupplierCode);
 
             return result;

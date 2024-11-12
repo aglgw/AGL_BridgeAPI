@@ -1,4 +1,5 @@
-﻿using AGL.Api.ApplicationCore.Interfaces;
+﻿using AGL.Api.ApplicationCore.Filters;
+using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.ApplicationCore.Models.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,9 @@ using System.Text;
 namespace AGL.Api.ApplicationCore.Infrastructure
 {
     [ApiController]
+    [ValidateJsonPropertiesFilter] // dto 유효성 체크 필터
+    [CustomResponseFilter] // 커스텀 response 필터
+    //[DisableValidation] // 메서드 전용 유효성 제외
     //[Route("api/v1/[controller]")]
     [Route("api")]
     [Produces("application/json")]

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace AGL.Api.Bridge_API.Models.OAPI
@@ -20,42 +21,50 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 코스 정보
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "CourseCode is required")]
             public List<string> CourseCode { get; set; }
             /// <summary>
             /// 최소인원
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "MinMembers is required")]
             public int MinMembers { get; set; }
             /// <summary>
             /// 최대인원
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "MaxMembers is required")]
             public int MaxMembers { get; set; }
             /// <summary>
             /// 카트 포함 여부 ( true  포함, false  불포함 )
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "IncludeCart is required")]
             public bool IncludeCart { get; set; }
             /// <summary>
             /// 캐디 포함 여부 ( true  포함, false  불포함 )
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "IncludeCaddie is required")]
             public bool IncludeCaddie { get; set; }
             /// <summary>
             /// 예약 유형 (0: 즉시예약, 1: 대기예약 등)
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "ReservationType is required")]
             public int ReservationType { get; set; }
 
             /// <summary>
             /// 티타임 정보 리스트
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Time is required")]
             public List<TimeInfo> Time { get; set; }
             /// <summary>
             /// 가격 정보 리스트
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Price is required")]
             public List<PriceInfo> Price { get; set; }
             /// <summary>
             /// 환불 정책 리스트
@@ -74,6 +83,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 시작 시간 HHMM (예: 0600)
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "StartTime is required")]
             public string StartTime { get; set; }
             /// <summary>
             /// 티타임 코드 리스트 (예: 0600-18-in, 0600-18-out)
@@ -92,11 +102,13 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 플레이어 수
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "PlayerCount is required")]
             public int? PlayerCount { get; set; }
             /// <summary>
             /// 그린피
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "GreenFee is required")]
             public decimal? GreenFee { get; set; }
             /// <summary>
             /// 카트피
@@ -122,6 +134,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 1인 총 요금 (greenFee + cartFee + caddyFee + tax + additionalTax)
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "UnitPrice is required")]
             public decimal? UnitPrice { get; set; }
         }
 
@@ -135,30 +148,35 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 골프장의 고유 코드
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "GolfclubCode is required")]
             public string GolfclubCode { get; set; }
 
             /// <summary>
             /// 골프장 이름
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "GolfclubName is required")]
             public string GolfclubName { get; set; }
 
             /// <summary>
             /// ISO alpha-2 형식의 국가 코드
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "CountryCode is required")]
             public string CountryCode { get; set; }
 
             /// <summary>
             /// 언어 코드
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Language is required")]
             public string Language { get; set; }
 
             /// <summary>
             /// 통화 코드
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Currency is required")]
             public string Currency { get; set; }
 
             /// <summary>
@@ -177,12 +195,14 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 골프장 위치의 위도
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Latitude is required")]
             public string? Latitude { get; set; }
 
             /// <summary>
             /// 골프장 위치의 경도
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Longitude is required")]
             public string? Longitude { get; set; }
 
             /// <summary>
@@ -225,6 +245,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 예약 시 내장객 정보 필수 여부
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "IsGuestInfoRequired is required")]
             public bool? IsGuestInfoRequired { get; set; } 
 
             /// <summary>
@@ -243,6 +264,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 골프장의 코스 목록
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Course is required")]
             public List<Course> Course { get; set; }
 
             /// <summary>
@@ -262,6 +284,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 환불 가능한 남은 일자
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "RefundDate is required")]
             public int RefundDate { get; set; }
             /// <summary>
             /// 환불 가능한 시간
@@ -272,11 +295,13 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 환불 수수료
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "RefundFee is required")]
             public decimal RefundFee { get; set; }
             /// <summary>
             /// 환불 단위 (1 비율 - 특정 비율에 따라 환불 , 2 고정액 – 정해진 금액으로 환불)
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "RefundUnit is required")]
             public byte RefundUnit { get; set; }
         }
 
@@ -290,22 +315,24 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 번호
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Images id is required")]
             public int? id { get; set; }
             /// <summary>
             /// 경로
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "Url is required")]
             public string Url { get; set; }
             /// <summary>
             /// 제목
             /// </summary>
             [DataMember]
-            public string Title { get; set; }
+            public string? Title { get; set; }
             /// <summary>
             /// 이미지설명
             /// </summary>
             [DataMember]
-            public string Description { get; set; }
+            public string? Description { get; set; }
         }
 
         /// <summary>
@@ -318,11 +345,13 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 코스 코드
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "CourseCode is required")]
             public string CourseCode { get; set; }
             /// <summary>
             /// 코스 명
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "CourseName is required")]
             public string CourseName { get; set; }
             /// <summary>
             /// 코스 홀 수
@@ -346,6 +375,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 홀 번호
             /// </summary>
             [DataMember]
+            [Required(ErrorMessage = "HoleNumber is required")]
             public int HoleNumber { get; set; }
             /// <summary>
             /// 홀 명

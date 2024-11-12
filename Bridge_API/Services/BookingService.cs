@@ -89,8 +89,6 @@ namespace AGL.Api.Bridge_API.Services
 
                         if (response.IsSuccessStatusCode)
                         {
-
-
                             var responseContent = await response.Content.ReadAsStringAsync();
                             var responseJson = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
@@ -278,6 +276,7 @@ namespace AGL.Api.Bridge_API.Services
             // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
             {
+                Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", $"예약번호 또는 공급사 코드 없음 {reservationId} : {supplierCode}");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid", null);
             }
 
@@ -289,6 +288,7 @@ namespace AGL.Api.Bridge_API.Services
                     var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
                     if (supplier == null)
                     {
+                        Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "공급사 검색 안됨");
                         return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
                     }
                     int supplierId = supplier.SupplierId;
@@ -302,15 +302,17 @@ namespace AGL.Api.Bridge_API.Services
                         reservation.UpdatedDate = DateTime.Now;
 
                         _context.SaveChanges();
+                        Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에 변경 완료");
                     }
                     else
                     {
+                        Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에서 검색 안됨");
                         return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
                     }
 
                     // 트랜잭션 커밋
                     await transaction.CommitAsync();
-
+                    Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약확정 완료");
                     return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
                 }
                 catch (Exception ex)

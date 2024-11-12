@@ -54,9 +54,9 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
         {
-            if (string.IsNullOrEmpty(request.StartDate) || string.IsNullOrEmpty(request.EndDate))
+            if (string.IsNullOrEmpty(request.StartDate) && string.IsNullOrEmpty(request.EndDate))
             {
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "startDate or ) is invalid", null);
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "startDate or EndDate is invalid", null);
             }
 
             try
@@ -247,22 +247,26 @@ namespace AGL.Api.Bridge_API.Services
 
         private async Task<IDataResult> ValidateTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode, string mode)
         {
+            // 골프장 코드 유효성
             if (string.IsNullOrEmpty(golfclubCode))
             {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "골프장 코드 없음");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfclubCode not found", null);
             }
 
-            if (request.DateApplyType == 1)
+            if (request.DateApplyType == 1) // 날짜적용방법이 1번 일때 시작일과 종료일이 있어야 함
             {
                 if (string.IsNullOrEmpty(request.StartPlayDate) || string.IsNullOrEmpty(request.EndPlayDate))
                 {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "시작일 종료일 없음");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate or EndPlayDate not found", null);
                 }
             }
-            else if (request.DateApplyType == 2)
+            else if (request.DateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
             {
-                if (request.ExceptionDate == null || request.EffectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
+                if (request.EffectiveDate == null || request.EffectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
                 {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "적용일 없음");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EffectiveDate not found", null);
                 }
             }
@@ -278,8 +282,9 @@ namespace AGL.Api.Bridge_API.Services
                 property.SetValue(teeTimeBackgroundRequest, property.GetValue(request));
             }
 
-            if (mode == "PUT")
+            if (mode == "PUT") // 업데이트 일때 큐방식
             {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "queue 로 진행");
                 _queue.Enqueue(teeTimeBackgroundRequest);
                 return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
             }
@@ -290,7 +295,7 @@ namespace AGL.Api.Bridge_API.Services
 
         }
 
-        public async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode)
+        public async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfClubCode)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
@@ -301,9 +306,10 @@ namespace AGL.Api.Bridge_API.Services
                     int supplierId = supplier.SupplierId;
 
                     // 골프장 코드로 골프장 정보 조회
-                    var existingGolfclub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfclubCode);
+                    var existingGolfclub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
                     if (existingGolfclub == null)
                     {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "골프장 검색 코드 없음");
                         return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid", null); // 골프장이 유효하지 않을때 처리
                     }
 
@@ -334,6 +340,7 @@ namespace AGL.Api.Bridge_API.Services
                             .Where(date => (request.Week.Contains((int)date.DayOfWeek) || request.EffectiveDate.Contains(date.ToString("yyyy-MM-dd"))) && !request.ExceptionDate.Contains(date.ToString("yyyy-MM-dd")))
                             .Select(date => date.ToString("yyyyMMdd"))
                             .ToList();
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 1로 검색");
                     }
                     else // dateApplyType이 1이 아닌 경우: effectiveDate 리스트의 날짜들 사용
                     {
@@ -341,6 +348,7 @@ namespace AGL.Api.Bridge_API.Services
                             .Where(date => !string.IsNullOrWhiteSpace(date) && DateTime.TryParseExact(date, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
                             .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
                             .ToList();
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 2로 검색");
                     }
 
                     // 1. 기존 데이터 조회 (요금 정책, 환불 정책, 날짜 슬롯, 시간 슬롯, 코스정보, 티타임 정보 등)
@@ -349,7 +357,7 @@ namespace AGL.Api.Bridge_API.Services
                     var dateSlots = await _context.DateSlots.Where(ds => applicableDates.Contains(ds.PlayDate)).ToListAsync();
                     var timeSlots = await _context.TimeSlots.ToListAsync();
                     var golfClubCourses = await _context.GolfClubs
-                        .Where(gc => gc.GolfClubCode == golfclubCode && gc.SupplierId == supplierId)
+                        .Where(gc => gc.GolfClubCode == golfClubCode && gc.SupplierId == supplierId)
                         .Include(gc => gc.Courses)
                         .SelectMany(gc => gc.Courses)
                         .ToListAsync();
@@ -378,8 +386,8 @@ namespace AGL.Api.Bridge_API.Services
                             var golfClubCourse = golfClubCourses.FirstOrDefault(gc => gc.CourseCode == courseCode);
                             if (golfClubCourse == null) //골프장 코스 없을시
                             {
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "코스 코드 없음");
                                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
-                                //return CreateResponse(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
                             }
 
                             // 기존 티타임 조회 또는 신규 티타임 추가
@@ -424,6 +432,7 @@ namespace AGL.Api.Bridge_API.Services
                         if (existingTeeTimePricePolicy != null)
                         {
                             pricePolicyId = existingTeeTimePricePolicy.PricePolicyId;
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "요금 정책 있음");
                         }
                         else
                         {
@@ -446,6 +455,7 @@ namespace AGL.Api.Bridge_API.Services
 
                             // 새로운 정책 추가 후 리스트에 포함
                             existingTeeTimePricePolicies.Add(newTeeTimePricePolicy);
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "요금 정책 없어서 추가");
                         }
 
                         // 환불 정책 중복 확인 후 추가
@@ -462,6 +472,7 @@ namespace AGL.Api.Bridge_API.Services
                         if (existingRefundPolicy != null)
                         {
                             refundPolicyId = existingRefundPolicy.RefundPolicyId;
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 있음");
                         }
                         else
                         {
@@ -483,6 +494,7 @@ namespace AGL.Api.Bridge_API.Services
 
                             // 새로운 정책 추가 후 리스트에 포함
                             existingTeeTimeRefundPolicies.Add(newRefundPolicy);
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 없어서 추가");
                         }
 
                         // 병렬로 티타임 매핑 생성
@@ -540,13 +552,15 @@ namespace AGL.Api.Bridge_API.Services
                         var teeTimeMappingsList = teeTimeMappings.ToList();
                         if (teeTimeMappingsList.Any())
                         {
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "벌크 저장 시작");
                             await _context.BulkInsertOrUpdateAsync(teeTimeMappingsList);
                         }
                     }
-                    //_logger.LogInformation("ProcessTeeTime is running.");
-                    Debug.WriteLine("ProcessTeeTime is running.");
+
+                    //Debug.WriteLine("ProcessTeeTime is running.");
                     // 트랜잭션 커밋
                     await transaction.CommitAsync();
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "티타임 처리 완료");
 
                     return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
                 }
