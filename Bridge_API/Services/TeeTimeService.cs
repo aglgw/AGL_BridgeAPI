@@ -221,6 +221,11 @@ namespace AGL.Api.Bridge_API.Services
                     // 조건에 맞는 TeeTimePriceMappings 목록을 조회
                     var existingTeeTimeMappings = await existingTeeTimeMappingsQuery.ToListAsync();
 
+                    if(!existingTeeTimeMappings.Any() || existingTeeTimeMappings == null)
+                    {
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "TeeTime not found", null);
+                    }
+
                     // 조회된 티타임 가격 매핑에 대해 가용성 및 수정 날짜 업데이트를 벌크 업데이트로 수행
                     existingTeeTimeMappings.ForEach(teeTimeMapping =>
                     {
@@ -233,7 +238,7 @@ namespace AGL.Api.Bridge_API.Services
 
                     await transaction.CommitAsync();
 
-                    return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
+                    return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "TeeTime Availability successfully", null);
                 }
                 catch (Exception ex)
                 {
@@ -256,10 +261,27 @@ namespace AGL.Api.Bridge_API.Services
 
             if (request.DateApplyType == 1) // 날짜적용방법이 1번 일때 시작일과 종료일이 있어야 함
             {
-                if (string.IsNullOrEmpty(request.StartPlayDate) || string.IsNullOrEmpty(request.EndPlayDate))
+                string dateFormat = "yyyy-MM-dd";
+
+                // StartPlayDate 유효성 검사
+                if (!DateTime.TryParseExact(request.StartPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "시작일 종료일 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate or EndPlayDate not found", null);
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "시작일 없음");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                }
+
+                // EndPlayDate 유효성 검사
+                if (!DateTime.TryParseExact(request.EndPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "종료일 없음");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EndPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                }
+
+                // StartPlayDate가 EndPlayDate보다 빠른 날짜인지 확인
+                if (startDate > endDate)
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "시작일이 종료일보다 빠른 날짜임");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate cannot be later than EndPlayDate", null);
                 }
             }
             else if (request.DateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
@@ -271,12 +293,13 @@ namespace AGL.Api.Bridge_API.Services
                 }
             }
 
+            // TeeTimeBackgroundRequest 객체 생성 및 SupplierCode 설정
             TeeTimeBackgroundRequest teeTimeBackgroundRequest = new TeeTimeBackgroundRequest
             {
                 SupplierCode = supplierCode
             };
 
-            // Copy all properties from TeeTimeRequest to TeeTimeBackgroundRequest
+            // TeeTimeRequest의 모든 속성을 TeeTimeBackgroundRequest로 복사
             foreach (var property in typeof(TeeTimeRequest).GetProperties())
             {
                 property.SetValue(teeTimeBackgroundRequest, property.GetValue(request));
@@ -552,7 +575,7 @@ namespace AGL.Api.Bridge_API.Services
                         var teeTimeMappingsList = teeTimeMappings.ToList();
                         if (teeTimeMappingsList.Any())
                         {
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "벌크 저장 시작");
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "티타임 저장 시작");
                             await _context.BulkInsertOrUpdateAsync(teeTimeMappingsList);
                         }
                     }

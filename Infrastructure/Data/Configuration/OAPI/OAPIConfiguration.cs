@@ -264,4 +264,25 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
         }
     }
 
+    public class OAPISyncClientConfiguration : IEntityTypeConfiguration<OAPI_SyncClient>
+    {
+        public void Configure(EntityTypeBuilder<OAPI_SyncClient> builder)
+        {
+            builder.ToTable("OAPI_SyncClient");
+            builder.HasKey(e => e.SyncClientId);
+        }
+    }
+
+    public class OAPISyncTeeTimeMappingConfiguration : IEntityTypeConfiguration<OAPI_SyncTeeTimeMapping>
+    {
+        public void Configure(EntityTypeBuilder<OAPI_SyncTeeTimeMapping> builder)
+        {
+            builder.ToTable("OAPI_SyncTeeTimeMapping");
+            builder.HasKey(e => e.SyncTeeTimeMappingId);
+
+            builder.HasOne(e => e.TeeTimeMapping)
+                   .WithOne()
+                   .HasForeignKey<OAPI_SyncTeeTimeMapping>(stm => stm.SyncTeeTimeMappingId);
+        }
+    }
 }
