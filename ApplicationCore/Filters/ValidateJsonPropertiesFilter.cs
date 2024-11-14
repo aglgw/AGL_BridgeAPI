@@ -13,7 +13,7 @@ namespace AGL.Api.ApplicationCore.Filters
 {
     public class ValidateJsonPropertiesFilter : ActionFilterAttribute
     {
-        public override void OnActionExecuting(ActionExecutingContext context)
+        public async override void OnActionExecuting(ActionExecutingContext context)
         {
             // DisableValidation 특성이 있는 경우 유효성 검사 건너뜀
             if (context.ActionDescriptor.EndpointMetadata.OfType<DisableValidationAttribute>().Any())
@@ -36,7 +36,7 @@ namespace AGL.Api.ApplicationCore.Filters
 
             // JSON 데이터에서 요청 본문 읽기
             using var reader = new StreamReader(context.HttpContext.Request.Body);
-            var body = reader.ReadToEnd();
+            var body = await reader.ReadToEndAsync();
             context.HttpContext.Request.Body.Position = 0; // 스트림 위치를 초기화하여 다른 미들웨어가 사용할 수 있도록 함
 
             // 요청 본문을 Dictionary로 변환

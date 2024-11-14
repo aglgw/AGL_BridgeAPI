@@ -17,22 +17,22 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 성공여부
             /// </summary>
             [DataMember]
-            public bool IsSuccess { get; set; }
+            public bool isSuccess { get; set; }
             /// <summary>
             /// 응답 코드
             /// </summary>
             [DataMember]
-            public string RstCd { get; set; }
+            public string rstCd { get; set; }
             /// <summary>
             /// 응답 숫자 코드
             /// </summary>
             [DataMember]
-            public int StatusCode { get; set; }
+            public int statusCode { get; set; }
             /// <summary>
             /// 응답 메세지
             /// </summary>
             [DataMember]
-            public string RstMsg { get; set; }
+            public string rstMsg { get; set; }
         }
 
         [DataContract]

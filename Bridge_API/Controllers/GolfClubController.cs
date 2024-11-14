@@ -33,7 +33,7 @@ namespace AGL.Api.Bridge_API.Controllers
         public async Task<IDataResult> PostGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, GolfClubInfo request)
         {
-            Utils.UtilLogs.LogRegHour(SupplierCode, request.GolfclubCode, "GolfClub", "골프장 등록 처리 시작");
+            Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 등록 처리 시작");
             var result = await _golfService.PostGolfClub(request, SupplierCode);
 
             return result;
@@ -48,7 +48,7 @@ namespace AGL.Api.Bridge_API.Controllers
         public async Task<IDataResult> PutGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, GolfClubInfo request)
         {
-            Utils.UtilLogs.LogRegHour(SupplierCode, request.GolfclubCode, "GolfClub", "골프장 변경 처리 시작");
+            Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 변경 처리 시작");
             var result = await _golfService.PutGolfClub(request, SupplierCode);
 
             return result;
@@ -60,6 +60,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("golfclub/list")]
         [HttpGet]
+        //[DisableValidation]
         public async Task<IDataResult> GetGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
             [FromQuery(Name = "GolfclubCode")] string? GolfclubCode)

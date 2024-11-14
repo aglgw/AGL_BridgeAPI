@@ -26,12 +26,12 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PostGolfClub(GolfClubInfo request, string supplierCode)
         {
-            return await ProcessGolfClub(request, supplierCode, request.GolfclubCode);
+            return await ProcessGolfClub(request, supplierCode, request.golfClubCode);
         }
 
         public async Task<IDataResult> PutGolfClub(GolfClubInfo request, string supplierCode)
         {
-            return await ProcessGolfClub(request, supplierCode, request.GolfclubCode);
+            return await ProcessGolfClub(request, supplierCode, request.golfClubCode);
         }
 
         public async Task<IDataResult> GetGolfClub(string supplierCode, string golfClubCode)
@@ -67,47 +67,47 @@ namespace AGL.Api.Bridge_API.Services
 
                 var golfClubDtos = existingGolfclubs.Select(golfClub => new GolfClubInfo
                 {
-                    GolfclubCode = golfClub.GolfClubCode,
-                    GolfclubName = golfClub.GolfClubName,
-                    CountryCode = golfClub.CountryCode,
-                    Currency = golfClub.Currency,
-                    Description = golfClub.Description,
-                    Address = golfClub.Address,
-                    Latitude = golfClub.Latitude?.ToString(),
-                    Longitude = golfClub.Longitude?.ToString(),
-                    Phone = golfClub.Phone,
-                    Fax = golfClub.Fax,
-                    Email = golfClub.Email,
-                    Homepage = golfClub.Homepage,
-                    TotalHoleCount = golfClub.TotalHoleCount,
-                    TotalCourseCount = golfClub.Courses.Count,
-                    IsGuestInfoRequired = golfClub.isGuestInfoRequired,
-                    Image = golfClub.GolfClubImages.Select(img => new Images
+                    golfClubCode = golfClub.GolfClubCode,
+                    golfClubName = golfClub.GolfClubName,
+                    countryCode = golfClub.CountryCode,
+                    currency = golfClub.Currency,
+                    description = golfClub.Description,
+                    address = golfClub.Address,
+                    latitude = golfClub.Latitude?.ToString(),
+                    longitude = golfClub.Longitude?.ToString(),
+                    phone = golfClub.Phone,
+                    fax = golfClub.Fax,
+                    email = golfClub.Email,
+                    homepage = golfClub.Homepage,
+                    totalHoleCount = golfClub.TotalHoleCount,
+                    totalCourseCount = golfClub.Courses.Count,
+                    isGuestInfoRequired = golfClub.isGuestInfoRequired,
+                    image = golfClub.GolfClubImages.Select(img => new Images
                     {
                         id = img.Idx,
-                        Url = img.Url,
-                        Title = img.Title,
-                        Description = img.ImageDescription
+                        url = img.Url,
+                        title = img.Title,
+                        description = img.ImageDescription
                     }).ToList(),
-                    RefundPolicy = golfClub.RefundPolicies.Select(rp => new RefundPolicy { 
-                        RefundDate = rp.RefundDate,
-                        RefundFee = rp.RefundFee,
-                        RefundUnit = rp.RefundUnit,
+                    refundPolicy = golfClub.RefundPolicies.Select(rp => new RefundPolicy { 
+                        refundDate = rp.RefundDate,
+                        refundFee = rp.RefundFee,
+                        refundUnit = rp.RefundUnit,
                     }).ToList(),
-                    Course = golfClub.Courses.Select(c => new Course
+                    course = golfClub.Courses.Select(c => new Course
                     {
-                        CourseCode = c.CourseCode,
-                        CourseName = c.CourseName,
-                        CourseHoleCount = c.CourseHoleCount,
-                        StartHole = c.StartHole,
+                        courseCode = c.CourseCode,
+                        courseName = c.CourseName,
+                        courseHoleCount = c.CourseHoleCount,
+                        startHole = c.StartHole,
                     }).ToList(),
-                    HoleInfo = golfClub.Holes.Select(h => new HoleInfo
+                    holeInfo = golfClub.Holes.Select(h => new HoleInfo
                     {
-                        HoleNumber = h.HoleNumber,
-                        HoleName = h.HoleName,
-                        Par = h.Par,
-                        DistanceUnit = h.DistanceUnit,
-                        Distance = h.Distance
+                        holeNumber = h.HoleNumber,
+                        holeName = h.HoleName,
+                        par = h.Par,
+                        distanceUnit = h.DistanceUnit,
+                        distance = h.Distance
                     }).ToList()
                 }).ToList();
 
@@ -149,20 +149,20 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     golfClubId = existingGolfclub.GolfClubId;
                     // 기존 골프장 정보 업데이트
-                    existingGolfclub.GolfClubName = request.GolfclubName;
-                    existingGolfclub.CountryCode = request.CountryCode;
-                    existingGolfclub.Currency = request.Currency;
-                    existingGolfclub.Description = request.Description;
-                    existingGolfclub.Address = request.Address;
-                    existingGolfclub.Latitude = request.Latitude;
-                    existingGolfclub.Longitude = request.Longitude;
-                    existingGolfclub.Phone = request.Phone;
-                    existingGolfclub.Fax = request.Fax;
-                    existingGolfclub.Email = request.Email;
-                    existingGolfclub.Homepage = request.Homepage;
-                    existingGolfclub.TotalHoleCount = request.TotalHoleCount;
-                    existingGolfclub.TotalCourseCount = request.TotalCourseCount;
-                    existingGolfclub.isGuestInfoRequired = request.IsGuestInfoRequired;
+                    existingGolfclub.GolfClubName = request.golfClubName;
+                    existingGolfclub.CountryCode = request.countryCode;
+                    existingGolfclub.Currency = request.currency;
+                    existingGolfclub.Description = request.description;
+                    existingGolfclub.Address = request.address;
+                    existingGolfclub.Latitude = request.latitude;
+                    existingGolfclub.Longitude = request.longitude;
+                    existingGolfclub.Phone = request.phone;
+                    existingGolfclub.Fax = request.fax;
+                    existingGolfclub.Email = request.email;
+                    existingGolfclub.Homepage = request.homepage;
+                    existingGolfclub.TotalHoleCount = request.totalHoleCount;
+                    existingGolfclub.TotalCourseCount = request.totalCourseCount;
+                    existingGolfclub.isGuestInfoRequired = request.isGuestInfoRequired;
                     existingGolfclub.UpdatedDate = DateTime.UtcNow;
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "기존 골프장 정보 업데이트 시작");
                 }
@@ -171,21 +171,21 @@ namespace AGL.Api.Bridge_API.Services
                     var newGolfClub = new OAPI_GolfClub
                     {
                         SupplierId = supplierId,
-                        GolfClubCode = request.GolfclubCode,
-                        GolfClubName = request.GolfclubName,
-                        CountryCode = request.CountryCode,
-                        Currency = request.Currency,
-                        Description = request.Description,
-                        Address = request.Address,
-                        Latitude = request.Latitude,
-                        Longitude = request.Longitude,
-                        Phone = request.Phone,
-                        Fax = request.Fax,
-                        Email = request.Email,
-                        Homepage = request.Homepage,
-                        TotalHoleCount = request.TotalHoleCount,
-                        TotalCourseCount = request.TotalCourseCount,
-                        isGuestInfoRequired = request.IsGuestInfoRequired,
+                        GolfClubCode = request.golfClubCode,
+                        GolfClubName = request.golfClubName,
+                        CountryCode = request.countryCode,
+                        Currency = request.currency,
+                        Description = request.description,
+                        Address = request.address,
+                        Latitude = request.latitude,
+                        Longitude = request.longitude,
+                        Phone = request.phone,
+                        Fax = request.fax,
+                        Email = request.email,
+                        Homepage = request.homepage,
+                        TotalHoleCount = request.totalHoleCount,
+                        TotalCourseCount = request.totalCourseCount,
+                        isGuestInfoRequired = request.isGuestInfoRequired,
                         CreatedDate = DateTime.UtcNow
                     };
                     _context.GolfClubs.Add(newGolfClub);
@@ -202,16 +202,16 @@ namespace AGL.Api.Bridge_API.Services
                 var newHoles = new List<OAPI_GolfClubHole>();
 
                 // 이미지 정보 저장 (유효성 체크)
-                if (request.Image != null)
+                if (request.image != null)
                 {
-                    foreach (var image in request.Image)
+                    foreach (var image in request.image)
                     {
                         var existingImage = existingImages.FirstOrDefault(i => i.Idx == image.id);
                         if (existingImage != null)
                         {
-                            existingImage.Url = image.Url;
-                            existingImage.Title = image.Title;
-                            existingImage.ImageDescription = image.Description;
+                            existingImage.Url = image.url;
+                            existingImage.Title = image.title;
+                            existingImage.ImageDescription = image.description;
                             existingImage.UpdatedDate = DateTime.UtcNow;
                         }
                         else
@@ -220,9 +220,9 @@ namespace AGL.Api.Bridge_API.Services
                             {
                                 GolfClubId = golfClubId,
                                 Idx = image.id,
-                                Url = image.Url,
-                                Title = image.Title,
-                                ImageDescription = image.Description,
+                                Url = image.url,
+                                Title = image.title,
+                                ImageDescription = image.description,
                                 CreatedDate = DateTime.UtcNow
                             };
                             newImages.Add(newImage);
@@ -231,17 +231,17 @@ namespace AGL.Api.Bridge_API.Services
                 }
 
                 // 환불 정책 정보 저장 (유효성 체크)
-                if (request.RefundPolicy != null)
+                if (request.refundPolicy != null)
                 {
-                    foreach (var refundPolicy in request.RefundPolicy)
+                    foreach (var refundPolicy in request.refundPolicy)
                     {
-                        var existingPolicy = existingRefundPolicies.FirstOrDefault(rp => rp.RefundDate == refundPolicy.RefundDate);
+                        var existingPolicy = existingRefundPolicies.FirstOrDefault(rp => rp.RefundDate == refundPolicy.refundDate);
                         if (existingPolicy != null)
                         {
                             //existingPolicy.RefundHour = refundPolicy.RefundHour;
-                            existingPolicy.RefundFee = refundPolicy.RefundFee;
-                            existingPolicy.RefundHour = refundPolicy.RefundHour;
-                            existingPolicy.RefundUnit = refundPolicy.RefundUnit;
+                            existingPolicy.RefundFee = refundPolicy.refundFee;
+                            existingPolicy.RefundHour = refundPolicy.refundHour;
+                            existingPolicy.RefundUnit = refundPolicy.refundUnit;
                             existingPolicy.UpdatedDate = DateTime.UtcNow;
                         }
                         else
@@ -249,10 +249,10 @@ namespace AGL.Api.Bridge_API.Services
                             var newRefundPolicy = new OAPI_GolfClubRefundPolicy
                             {
                                 GolfClubId = golfClubId,
-                                RefundDate = refundPolicy.RefundDate,
-                                RefundHour = refundPolicy.RefundHour,
-                                RefundFee = refundPolicy.RefundFee,
-                                RefundUnit = refundPolicy.RefundUnit,
+                                RefundDate = refundPolicy.refundDate,
+                                RefundHour = refundPolicy.refundHour,
+                                RefundFee = refundPolicy.refundFee,
+                                RefundUnit = refundPolicy.refundUnit,
                                 CreatedDate = DateTime.UtcNow
                             };
                             newRefundPolicies.Add(newRefundPolicy);
@@ -261,14 +261,14 @@ namespace AGL.Api.Bridge_API.Services
                 }
 
                 // 코스 정보 저장 (유효성 체크)
-                if (request.Course != null)
+                if (request.course != null)
                 {
-                    foreach (var course in request.Course)
+                    foreach (var course in request.course)
                     {
-                        var existingCourse = existingCourses.FirstOrDefault(c => c.CourseCode.ToString() == course.CourseCode.ToString());
+                        var existingCourse = existingCourses.FirstOrDefault(c => c.CourseCode.ToString() == course.courseCode.ToString());
                         if (existingCourse != null)
                         {
-                            existingCourse.CourseName = course.CourseName;
+                            existingCourse.CourseName = course.courseName;
                             existingCourse.UpdatedDate = DateTime.UtcNow;
                         }
                         else
@@ -276,8 +276,8 @@ namespace AGL.Api.Bridge_API.Services
                             var newCourse = new OAPI_GolfClubCourse
                             {
                                 GolfClubId = golfClubId,
-                                CourseCode = course.CourseCode,
-                                CourseName = course.CourseName,
+                                CourseCode = course.courseCode,
+                                CourseName = course.courseName,
                                 CreatedDate = DateTime.UtcNow,
                             };
                             newCourses.Add(newCourse);
@@ -286,19 +286,19 @@ namespace AGL.Api.Bridge_API.Services
                 }
 
                 // 홀 정보 저장 (유효성 체크)
-                if (request.HoleInfo != null)
+                if (request.holeInfo != null)
                 {
-                    foreach (var hole in request.HoleInfo)
+                    foreach (var hole in request.holeInfo)
                     {
-                        if (hole.HoleNumber <= 0)
+                        if (hole.holeNumber <= 0)
                             return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "HoleNumber is invalid", null);
 
-                        var existingHole = existingHoles.FirstOrDefault(h => h.HoleNumber.ToString() == hole.HoleNumber.ToString());
+                        var existingHole = existingHoles.FirstOrDefault(h => h.HoleNumber.ToString() == hole.holeNumber.ToString());
                         if (existingHole != null)
                         {
-                            existingHole.Par = hole.Par;
-                            existingHole.DistanceUnit = hole.DistanceUnit;
-                            existingHole.Distance = hole.Distance;
+                            existingHole.Par = hole.par;
+                            existingHole.DistanceUnit = hole.distanceUnit;
+                            existingHole.Distance = hole.distance;
                             existingHole.UpdatedDate = DateTime.UtcNow;
                         }
                         else
@@ -306,10 +306,10 @@ namespace AGL.Api.Bridge_API.Services
                             var newHole = new OAPI_GolfClubHole
                             {
                                 GolfClubId = golfClubId,
-                                HoleNumber = hole.HoleNumber,
-                                Par = hole.Par,
-                                DistanceUnit = hole.DistanceUnit,
-                                Distance = hole.Distance,
+                                HoleNumber = hole.holeNumber,
+                                Par = hole.par,
+                                DistanceUnit = hole.distanceUnit,
+                                Distance = hole.distance,
                                 CreatedDate = DateTime.UtcNow,
                                 UpdatedDate = null
                             };

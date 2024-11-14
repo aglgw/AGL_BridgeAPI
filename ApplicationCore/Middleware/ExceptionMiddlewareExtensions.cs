@@ -25,7 +25,7 @@ namespace AGL.Api.ApplicationCore.Middleware
                         var jsonResult = JsonConvert.SerializeObject(new Failure
                         {
                             Code = ResultCode.Forbidden,
-                            RstMsg = contextFeature.Error.Message
+                            rstMsg = contextFeature.Error.Message
                         });
 
                         if (contextFeature.Error is DomainException)
@@ -36,7 +36,7 @@ namespace AGL.Api.ApplicationCore.Middleware
                             jsonResult = JsonConvert.SerializeObject(new Failure
                             {
                                 Code = domainException.Code,
-                                RstMsg = domainException.Message
+                                rstMsg = domainException.Message
                             });
                         }
 

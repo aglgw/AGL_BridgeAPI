@@ -39,20 +39,20 @@ namespace AGL.Api.Bridge_API.Services
                 // 데이터가 없는 경우 기본 응답
                 return new OAPIResponseBase
                 {
-                    IsSuccess = isSuccess,
-                    RstCd = description,
-                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    StatusCode = (int)resultCode
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode
                 };
             }
             else if (data is List<string> stringList)
             {
                 return new OAPICommonListResponse<string>
                 {
-                    IsSuccess = isSuccess,
-                    RstCd = description,
-                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    StatusCode = (int)resultCode,
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode,
                     data = stringList
                 };
             }
@@ -60,10 +60,10 @@ namespace AGL.Api.Bridge_API.Services
             {
                 return new OAPITeeTimeGetResponse
                 {
-                    IsSuccess = isSuccess,
-                    RstCd = description,
-                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    StatusCode = (int)resultCode,
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode,
                     data = teeTimeDict
                 };
             }
@@ -71,10 +71,10 @@ namespace AGL.Api.Bridge_API.Services
             {
                 return new OAPICommonResponse<string>
                 {
-                    IsSuccess = isSuccess,
-                    RstCd = description,
-                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    StatusCode = (int)resultCode,
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode,
                     data = singleString
                 };
             }
@@ -83,10 +83,10 @@ namespace AGL.Api.Bridge_API.Services
                 // 기타 타입에 대한 공통 응답
                 return new OAPICommonResponse<T>
                 {
-                    IsSuccess = isSuccess,
-                    RstCd = description,
-                    RstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    StatusCode = (int)resultCode,
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode,
                     data = data
                 };
             }

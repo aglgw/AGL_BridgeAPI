@@ -44,25 +44,25 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PostTeeTime(TeeTimeRequest request, string supplierCode)
         {
-            return await ValidateTeeTime(request, supplierCode, request.GolfclubCode, "POST");
+            return await ValidateTeeTime(request, supplierCode, request.golfClubCode, "POST");
         }
 
         public async Task<IDataResult> PutTeeTime(TeeTimeRequest request, string supplierCode)
         {
-            return await ValidateTeeTime(request, supplierCode, request.GolfclubCode, "PUT");
+            return await ValidateTeeTime(request, supplierCode, request.golfClubCode, "PUT");
         }
 
         public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
         {
-            if (string.IsNullOrEmpty(request.StartDate) && string.IsNullOrEmpty(request.EndDate))
+            if (string.IsNullOrEmpty(request.startDate) && string.IsNullOrEmpty(request.endDate))
             {
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "startDate or EndDate is invalid", null);
             }
 
             try
             {
-                var startDateParsed = request.StartDate;
-                var endDateParsed = request.EndDate;
+                var startDateParsed = request.startDate;
+                var endDateParsed = request.endDate;
 
                 // 공급자 코드에 따른 가격 정책 가져오기
                 var pricePolicies = await _context.TeetimePricePolicies
@@ -80,7 +80,7 @@ namespace AGL.Api.Bridge_API.Services
                     .Include(tm => tm.TeeTime).ThenInclude(t => t.GolfClubCourse)
                     .Include(tm => tm.TimeSlot)
                     .Include(tm => tm.DateSlot)
-                    .Where(tm => tm.TeeTime.GolfClub.GolfClubCode == request.GolfclubCode && string.Compare(tm.DateSlot.PlayDate, startDateParsed) >= 0 && string.Compare(tm.DateSlot.PlayDate, endDateParsed) <= 0 && tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode)
+                    .Where(tm => tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode && string.Compare(tm.DateSlot.PlayDate, startDateParsed) >= 0 && string.Compare(tm.DateSlot.PlayDate, endDateParsed) <= 0 && tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode)
                     .ToListAsync();
 
                 // 특정 속성들(최소/최대 인원, 가격 정책, 환불 정책)으로 티타임 그룹화
@@ -113,19 +113,19 @@ namespace AGL.Api.Bridge_API.Services
                     // 상세 정보를 포함한 TeeTimeInfo 객체 생성
                     var teeTimeInfo = new TeeTimeInfo
                     {
-                        PlayDate = groupedTeeTime.PlayDates.ToList(),
-                        CourseCode = groupedTeeTime.CourseCodes,
-                        MinMembers = teeTime.MinMembers,
-                        MaxMembers = teeTime.MaxMembers,
-                        IncludeCart = teeTime.IncludeCart,
-                        IncludeCaddie = teeTime.IncludeCaddie,
-                        ReservationType = teeTime.ReservationType,
-                        Time = groupedTeeTime.Times.GroupBy(t => t.StartTime).Select(g => new TimeInfo
+                        playDate = groupedTeeTime.PlayDates.ToList(),
+                        courseCode = groupedTeeTime.CourseCodes,
+                        minMembers = teeTime.MinMembers,
+                        maxMembers = teeTime.MaxMembers,
+                        includeCart = teeTime.IncludeCart,
+                        includeCaddie = teeTime.IncludeCaddie,
+                        reservationType = teeTime.ReservationType,
+                        time = groupedTeeTime.Times.GroupBy(t => t.StartTime).Select(g => new TimeInfo
                         {
-                            StartTime = g.Key,
-                            TeeTimeCode = g.Select(t => t.SupplierTeetimeCode).Distinct().ToList()
+                            startTime = g.Key,
+                            teeTimeCode = g.Select(t => t.SupplierTeetimeCode).Distinct().ToList()
                         }).ToList(),
-                        Price = pricePolicy != null ?
+                        price = pricePolicy != null ?
                             Enumerable.Range(1, 5).Select(playerCount =>
                             {
                                 var greenFee = (decimal?)pricePolicy.GetType().GetProperty($"GreenFee_{playerCount}")?.GetValue(pricePolicy);
@@ -142,16 +142,16 @@ namespace AGL.Api.Bridge_API.Services
 
                                 return new PriceInfo
                                 {
-                                    PlayerCount = playerCount,
-                                    GreenFee = greenFee ?? 0,
-                                    CartFee = cartFee ?? 0,
-                                    CaddyFee = caddyFee ?? 0,
-                                    Tax = tax ?? 0,
-                                    AdditionalTax = additionalTax ?? 0,
-                                    UnitPrice = unitPrice ?? 0
+                                    playerCount = playerCount,
+                                    greenFee = greenFee ?? 0,
+                                    cartFee = cartFee ?? 0,
+                                    caddyFee = caddyFee ?? 0,
+                                    tax = tax ?? 0,
+                                    additionalTax = additionalTax ?? 0,
+                                    unitPrice = unitPrice ?? 0
                                 };
                             }).Where(p => p != null).Cast<PriceInfo>().ToList() : new List<PriceInfo>(),
-                        RefundPolicy = refundPolicy != null ?
+                        refundPolicy = refundPolicy != null ?
                             Enumerable.Range(1, 5).Select(refundCount =>
                             {
                                 var refundDate = refundPolicy.GetType().GetProperty($"RefundDate_{refundCount}")?.GetValue(refundPolicy) as int?;
@@ -165,9 +165,9 @@ namespace AGL.Api.Bridge_API.Services
 
                                 return new RefundPolicy
                                 {
-                                    RefundDate = refundDate ?? 0,
-                                    RefundFee = refundFee ?? 0,
-                                    RefundUnit = refundUnit ?? 0
+                                    refundDate = refundDate ?? 0,
+                                    refundFee = refundFee ?? 0,
+                                    refundUnit = refundUnit ?? 0
                                 };
                             }).Where(rp => rp != null).Cast<RefundPolicy>().ToList() : new List<RefundPolicy>()
                     };
@@ -185,7 +185,7 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PutTeeTimeAvailability(TeeTimetAvailabilityRequest request, string supplierCode)
         {
-            var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.GolfclubCode);
+            var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.golfClubCode);
 
             if (golfClub == null)
             {
@@ -197,9 +197,9 @@ namespace AGL.Api.Bridge_API.Services
                 try
                 {
                     // 요청에서 제공된 티타임 코드 목록을 가져옴
-                    var startTimes = request.Time != null ? request.Time.Select(t => t.StartTime).ToList() : new List<string>();
-                    var teeTimeCodes = request.Time != null ? request.Time.SelectMany(t => t.TeeTimeCode).ToList() : [];
-                    var playDate = request.PlayDate.Replace("-", "");
+                    var startTimes = request.time != null ? request.time.Select(t => t.startTime).ToList() : new List<string>();
+                    var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.teeTimeCode).ToList() : [];
+                    var playDate = request.playDate.Replace("-", "");
 
                     // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
                     var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
@@ -207,8 +207,8 @@ namespace AGL.Api.Bridge_API.Services
                             .ThenInclude(t => t.GolfClubCourse) // GolfClubCourse 엔터티 포함 (연관관계)
                         .Include(tm => tm.DateSlot) // DateSlot 엔터티 포함 (연관관계)
                         .Include(tm => tm.TimeSlot) // TimeSlot 엔터티 포함 (연관관계)
-                        .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.GolfclubCode && // 요청된 골프장 코드와 일치 확인
-                                     request.CourseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode) && // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
+                        .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.golfClubCode && // 요청된 골프장 코드와 일치 확인
+                                     request.courseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode) && // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
                                      tm.DateSlot.PlayDate == playDate && // 요청된 플레이 날짜와 일치하는 DateSlot 확인
                                      startTimes.Contains(tm.TimeSlot.StartTime.ToString()));  // 요청된 시작 시간과 일치하는지 확인
 
@@ -229,7 +229,7 @@ namespace AGL.Api.Bridge_API.Services
                     // 조회된 티타임 가격 매핑에 대해 가용성 및 수정 날짜 업데이트를 벌크 업데이트로 수행
                     existingTeeTimeMappings.ForEach(teeTimeMapping =>
                     {
-                        teeTimeMapping.IsAvailable = request.Available;
+                        teeTimeMapping.IsAvailable = request.available;
                         teeTimeMapping.UpdatedDate = DateTime.UtcNow;
                     });
 
@@ -259,19 +259,19 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfclubCode not found", null);
             }
 
-            if (request.DateApplyType == 1) // 날짜적용방법이 1번 일때 시작일과 종료일이 있어야 함
+            if (request.dateApplyType == 1) // 날짜적용방법이 1번 일때 시작일과 종료일이 있어야 함
             {
                 string dateFormat = "yyyy-MM-dd";
 
                 // StartPlayDate 유효성 검사
-                if (!DateTime.TryParseExact(request.StartPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
+                if (!DateTime.TryParseExact(request.startPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "시작일 없음");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
                 }
 
                 // EndPlayDate 유효성 검사
-                if (!DateTime.TryParseExact(request.EndPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
+                if (!DateTime.TryParseExact(request.endPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "종료일 없음");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EndPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
@@ -284,9 +284,9 @@ namespace AGL.Api.Bridge_API.Services
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate cannot be later than EndPlayDate", null);
                 }
             }
-            else if (request.DateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
+            else if (request.dateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
             {
-                if (request.EffectiveDate == null || request.EffectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
+                if (request.effectiveDate == null || request.effectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "적용일 없음");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EffectiveDate not found", null);
@@ -296,7 +296,7 @@ namespace AGL.Api.Bridge_API.Services
             // TeeTimeBackgroundRequest 객체 생성 및 SupplierCode 설정
             TeeTimeBackgroundRequest teeTimeBackgroundRequest = new TeeTimeBackgroundRequest
             {
-                SupplierCode = supplierCode
+                supplierCode = supplierCode
             };
 
             // TeeTimeRequest의 모든 속성을 TeeTimeBackgroundRequest로 복사
@@ -313,7 +313,7 @@ namespace AGL.Api.Bridge_API.Services
             }
             else 
             {
-                return await ProcessTeeTime(request, supplierCode, request.GolfclubCode);
+                return await ProcessTeeTime(request, supplierCode, request.golfClubCode);
             }
 
         }
@@ -340,19 +340,19 @@ namespace AGL.Api.Bridge_API.Services
                     IEnumerable<string> applicableDates;
 
                     // 날짜적용방법에 따라 조건 생성 ( 1: 기간 , 2: 특정날짜 )
-                    if (request.DateApplyType == 1) // dateApplyType이 1인 경우: startDate부터 endDate까지의 날짜 생성
+                    if (request.dateApplyType == 1) // dateApplyType이 1인 경우: startDate부터 endDate까지의 날짜 생성
                     {
-                        if (!DateTime.TryParseExact(request.StartPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime startDate))
+                        if (!DateTime.TryParseExact(request.startPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime startDate))
                         {
-                            var startYear = int.Parse(request.StartPlayDate.Substring(0, 4));
-                            var startMonth = int.Parse(request.StartPlayDate.Substring(5, 2));
+                            var startYear = int.Parse(request.startPlayDate.Substring(0, 4));
+                            var startMonth = int.Parse(request.startPlayDate.Substring(5, 2));
                             startDate = new DateTime(startYear, startMonth, 1);
                         }
 
-                        if (!DateTime.TryParseExact(request.EndPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime endDate))
+                        if (!DateTime.TryParseExact(request.endPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime endDate))
                         {
-                            var endYear = int.Parse(request.EndPlayDate.Substring(0, 4));
-                            var endMonth = int.Parse(request.EndPlayDate.Substring(5, 2));
+                            var endYear = int.Parse(request.endPlayDate.Substring(0, 4));
+                            var endMonth = int.Parse(request.endPlayDate.Substring(5, 2));
                             int lastDay = DateTime.DaysInMonth(endYear, endMonth);
                             endDate = new DateTime(endYear, endMonth, lastDay);
                         }
@@ -360,14 +360,14 @@ namespace AGL.Api.Bridge_API.Services
                         // 요청한 기간 에서 요일, 특정일, 예외일 처리
                         applicableDates = Enumerable.Range(0, (endDate - startDate).Days + 1)
                             .Select(offset => startDate.AddDays(offset))
-                            .Where(date => (request.Week.Contains((int)date.DayOfWeek) || request.EffectiveDate.Contains(date.ToString("yyyy-MM-dd"))) && !request.ExceptionDate.Contains(date.ToString("yyyy-MM-dd")))
+                            .Where(date => (request.week.Contains((int)date.DayOfWeek) || request.effectiveDate.Contains(date.ToString("yyyy-MM-dd"))) && !request.exceptionDate.Contains(date.ToString("yyyy-MM-dd")))
                             .Select(date => date.ToString("yyyyMMdd"))
                             .ToList();
                         Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 1로 검색");
                     }
                     else // dateApplyType이 1이 아닌 경우: effectiveDate 리스트의 날짜들 사용
                     {
-                        applicableDates = request.EffectiveDate
+                        applicableDates = request.effectiveDate
                             .Where(date => !string.IsNullOrWhiteSpace(date) && DateTime.TryParseExact(date, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
                             .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
                             .ToList();
@@ -401,9 +401,9 @@ namespace AGL.Api.Bridge_API.Services
                     var existingTeeTimeMappingsSet = new ConcurrentDictionary<(int TeetimeId, int DateSlotId, int TimeSlotId), bool>(existingTeeTimeMappings.Select(ttm => new KeyValuePair<(int, int, int), bool>((ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId), true)));
 
                     // 코스 코드 수 만큼 티타임 추가
-                    foreach (var teeTimeInfo in request.TeeTimeInfo)
+                    foreach (var teeTimeInfo in request.teeTimeInfo)
                     {
-                        foreach (var courseCode in teeTimeInfo.CourseCode)
+                        foreach (var courseCode in teeTimeInfo.courseCode)
                         {
                             // 골프장 코스 조회
                             var golfClubCourse = golfClubCourses.FirstOrDefault(gc => gc.CourseCode == courseCode);
@@ -414,7 +414,7 @@ namespace AGL.Api.Bridge_API.Services
                             }
 
                             // 기존 티타임 조회 또는 신규 티타임 추가
-                            var teeTime = teeTimes.FirstOrDefault(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId && tt.MinMembers == teeTimeInfo.MinMembers && tt.MaxMembers == teeTimeInfo.MaxMembers);
+                            var teeTime = teeTimes.FirstOrDefault(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId && tt.MinMembers == teeTimeInfo.minMembers && tt.MaxMembers == teeTimeInfo.maxMembers);
                             if (teeTime == null)
                             {
                                 // 새로운 티타임 추가
@@ -423,11 +423,11 @@ namespace AGL.Api.Bridge_API.Services
                                     GolfClubCourseId = golfClubCourse.GolfClubCourseId,
                                     SupplierId = supplierId,
                                     GolfClubId = existingGolfclub.GolfClubId,
-                                    MinMembers = teeTimeInfo.MinMembers,
-                                    MaxMembers = teeTimeInfo.MaxMembers,
-                                    IncludeCart = teeTimeInfo.IncludeCart,
-                                    IncludeCaddie = teeTimeInfo.IncludeCaddie,
-                                    ReservationType = teeTimeInfo.ReservationType,
+                                    MinMembers = teeTimeInfo.minMembers,
+                                    MaxMembers = teeTimeInfo.maxMembers,
+                                    IncludeCart = teeTimeInfo.includeCart,
+                                    IncludeCaddie = teeTimeInfo.includeCaddie,
+                                    ReservationType = teeTimeInfo.reservationType,
                                     CreatedDate = DateTime.UtcNow
                                 };
                                 _context.TeeTimes.Add(newTeeTime);
@@ -443,12 +443,12 @@ namespace AGL.Api.Bridge_API.Services
                         // 요금 정책 중복 확인 후 추가
                         var existingTeeTimePricePolicy = existingTeeTimePricePolicies.FirstOrDefault(p =>
                             Enumerable.Range(1, 6).All(count =>
-                                p.GetType().GetProperty($"GreenFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.Price.FirstOrDefault(price => price.PlayerCount == count)?.GreenFee &&
-                                p.GetType().GetProperty($"CartFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.Price.FirstOrDefault(price => price.PlayerCount == count)?.CartFee &&
-                                p.GetType().GetProperty($"CaddyFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.Price.FirstOrDefault(price => price.PlayerCount == count)?.CaddyFee &&
-                                p.GetType().GetProperty($"Tax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.Price.FirstOrDefault(price => price.PlayerCount == count)?.Tax &&
-                                p.GetType().GetProperty($"AdditionalTax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.Price.FirstOrDefault(price => price.PlayerCount == count)?.AdditionalTax &&
-                                p.GetType().GetProperty($"UnitPrice_{count}")?.GetValue(p) as decimal? == teeTimeInfo.Price.FirstOrDefault(price => price.PlayerCount == count)?.UnitPrice
+                                p.GetType().GetProperty($"GreenFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.greenFee &&
+                                p.GetType().GetProperty($"CartFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.cartFee &&
+                                p.GetType().GetProperty($"CaddyFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.caddyFee &&
+                                p.GetType().GetProperty($"Tax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.tax &&
+                                p.GetType().GetProperty($"AdditionalTax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.additionalTax &&
+                                p.GetType().GetProperty($"UnitPrice_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.unitPrice
                             ));
 
                         int pricePolicyId;
@@ -460,15 +460,15 @@ namespace AGL.Api.Bridge_API.Services
                         else
                         {
                             var newTeeTimePricePolicy = new OAPI_TeetimePricePolicy();
-                            foreach (var price in teeTimeInfo.Price)
+                            foreach (var price in teeTimeInfo.price)
                             {
-                                var count = price.PlayerCount;
-                                newTeeTimePricePolicy.GetType().GetProperty($"GreenFee_{count}")?.SetValue(newTeeTimePricePolicy, price.GreenFee);
-                                newTeeTimePricePolicy.GetType().GetProperty($"CartFee_{count}")?.SetValue(newTeeTimePricePolicy, price.CartFee);
-                                newTeeTimePricePolicy.GetType().GetProperty($"CaddyFee_{count}")?.SetValue(newTeeTimePricePolicy, price.CaddyFee);
-                                newTeeTimePricePolicy.GetType().GetProperty($"Tax_{count}")?.SetValue(newTeeTimePricePolicy, price.Tax);
-                                newTeeTimePricePolicy.GetType().GetProperty($"AdditionalTax_{count}")?.SetValue(newTeeTimePricePolicy, price.AdditionalTax);
-                                newTeeTimePricePolicy.GetType().GetProperty($"UnitPrice_{count}")?.SetValue(newTeeTimePricePolicy, price.UnitPrice);
+                                var count = price.playerCount;
+                                newTeeTimePricePolicy.GetType().GetProperty($"GreenFee_{count}")?.SetValue(newTeeTimePricePolicy, price.greenFee);
+                                newTeeTimePricePolicy.GetType().GetProperty($"CartFee_{count}")?.SetValue(newTeeTimePricePolicy, price.cartFee);
+                                newTeeTimePricePolicy.GetType().GetProperty($"CaddyFee_{count}")?.SetValue(newTeeTimePricePolicy, price.caddyFee);
+                                newTeeTimePricePolicy.GetType().GetProperty($"Tax_{count}")?.SetValue(newTeeTimePricePolicy, price.tax);
+                                newTeeTimePricePolicy.GetType().GetProperty($"AdditionalTax_{count}")?.SetValue(newTeeTimePricePolicy, price.additionalTax);
+                                newTeeTimePricePolicy.GetType().GetProperty($"UnitPrice_{count}")?.SetValue(newTeeTimePricePolicy, price.unitPrice);
                             }
                             newTeeTimePricePolicy.CreatedDate = DateTime.UtcNow;
 
@@ -482,12 +482,12 @@ namespace AGL.Api.Bridge_API.Services
                         }
 
                         // 환불 정책 중복 확인 후 추가
-                        var sortedRefundPolicies = teeTimeInfo.RefundPolicy.OrderByDescending(rp => rp.RefundDate).ToList();
+                        var sortedRefundPolicies = teeTimeInfo.refundPolicy.OrderByDescending(rp => rp.refundDate).ToList();
                         var existingRefundPolicy = existingTeeTimeRefundPolicies.FirstOrDefault(rp =>
                             sortedRefundPolicies.Count <= 5 && Enumerable.Range(1, sortedRefundPolicies.Count).All(i =>
-                                (rp.GetType().GetProperty($"RefundDate_{i}")?.GetValue(rp) as int?) == sortedRefundPolicies[i - 1].RefundDate &&
-                                (rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == sortedRefundPolicies[i - 1].RefundFee &&
-                                (rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == sortedRefundPolicies[i - 1].RefundUnit
+                                (rp.GetType().GetProperty($"RefundDate_{i}")?.GetValue(rp) as int?) == sortedRefundPolicies[i - 1].refundDate &&
+                                (rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == sortedRefundPolicies[i - 1].refundFee &&
+                                (rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == sortedRefundPolicies[i - 1].refundUnit
                             )
                         );
 
@@ -500,14 +500,14 @@ namespace AGL.Api.Bridge_API.Services
                         else
                         {
                             var newRefundPolicy = new OAPI_TeetimeRefundPolicy();
-                            var sortedRefundPolicy = teeTimeInfo.RefundPolicy.OrderByDescending(r => r.RefundDate).ToList();
-                            for (int i = 0; i < teeTimeInfo.RefundPolicy.Count; i++)
+                            var sortedRefundPolicy = teeTimeInfo.refundPolicy.OrderByDescending(r => r.refundDate).ToList();
+                            for (int i = 0; i < teeTimeInfo.refundPolicy.Count; i++)
                             {
-                                var refund = teeTimeInfo.RefundPolicy[i];
-                                newRefundPolicy.GetType().GetProperty($"RefundDate_{i + 1}")?.SetValue(newRefundPolicy, refund.RefundDate);
+                                var refund = teeTimeInfo.refundPolicy[i];
+                                newRefundPolicy.GetType().GetProperty($"RefundDate_{i + 1}")?.SetValue(newRefundPolicy, refund.refundDate);
                                 //newRefundPolicy.GetType().GetProperty($"RefundHour_{i + 1}")?.SetValue(newRefundPolicy, "0000");
-                                newRefundPolicy.GetType().GetProperty($"RefundFee_{i + 1}")?.SetValue(newRefundPolicy, refund.RefundFee);
-                                newRefundPolicy.GetType().GetProperty($"RefundUnit_{i + 1}")?.SetValue(newRefundPolicy, (byte?)refund.RefundUnit);
+                                newRefundPolicy.GetType().GetProperty($"RefundFee_{i + 1}")?.SetValue(newRefundPolicy, refund.refundFee);
+                                newRefundPolicy.GetType().GetProperty($"RefundUnit_{i + 1}")?.SetValue(newRefundPolicy, (byte?)refund.refundUnit);
                             }
                             newRefundPolicy.CreatedDate = DateTime.UtcNow;
 
@@ -524,14 +524,14 @@ namespace AGL.Api.Bridge_API.Services
                         var teeTimeMappings = new ConcurrentBag<OAPI_TeeTimeMapping>();
                         Parallel.ForEach(Partitioner.Create(applicableDates), date => // 최상위 루프에서만 병렬화 적용
                         {
-                            foreach (var time in teeTimeInfo.Time)
+                            foreach (var time in teeTimeInfo.time)
                             {
-                                foreach (var (course, code) in teeTimeInfo.CourseCode.Zip(time.TeeTimeCode))
+                                foreach (var (course, code) in teeTimeInfo.courseCode.Zip(time.teeTimeCode))
                                 {
                                     if (!golfClubCourseMap.TryGetValue(course, out var golfClubCourseId) ||
-                                        !teeTimesDictionary.TryGetValue((golfClubCourseId, teeTimeInfo.MinMembers, teeTimeInfo.MaxMembers), out var teeTimeDictionary) ||
+                                        !teeTimesDictionary.TryGetValue((golfClubCourseId, teeTimeInfo.minMembers, teeTimeInfo.maxMembers), out var teeTimeDictionary) ||
                                         !dateSlotMap.TryGetValue(date, out var dateSlotId) ||
-                                        !timeSlotMap.TryGetValue(time.StartTime, out var timeSlotId))
+                                        !timeSlotMap.TryGetValue(time.startTime, out var timeSlotId))
                                         continue;
 
                                     var key = (teeTimeDictionary.TeetimeId, dateSlotId, timeSlotId);

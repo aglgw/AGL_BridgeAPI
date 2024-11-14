@@ -75,7 +75,7 @@ namespace AGL.Api.Bridge_API.Services
                     else
                         EndpointUrl = supplier.EndPointProd;
 
-                    Utils.UtilLogs.LogRegHour(SupplierCode, Req.GolfclubCode, $"예약 요청 ", $"예약 요청 테스트");
+                    Utils.UtilLogs.LogRegHour(SupplierCode, Req.golfClubCode, $"예약 요청 ", $"예약 요청 테스트");
                     // HTTP 요청 설정
                     using (var client = new HttpClient())
                     {
@@ -150,7 +150,7 @@ namespace AGL.Api.Bridge_API.Services
 
                     var rstMsg = string.Empty;
 
-                    if (string.Equals(resp?.RstCd.ToLower(), "success"))
+                    if (string.Equals(resp?.rstCd.ToLower(), "success"))
                     {
 
                         //데이터 처리 부분 추가 필요
@@ -158,7 +158,7 @@ namespace AGL.Api.Bridge_API.Services
                     }
                     else
                     {
-                        rstMsg = resp != null ? resp.RstMsg : "Not Found Result";
+                        rstMsg = resp != null ? resp.rstMsg : "Not Found Result";
 
                         return await _commonService.CreateResponse<object>(true, ResultCode.SERVER_ERROR, rstMsg, null);
                     }
@@ -201,7 +201,7 @@ namespace AGL.Api.Bridge_API.Services
 
                     var rstMsg = string.Empty;
 
-                    if (string.Equals(resp?.RstCd.ToLower(), "success"))
+                    if (string.Equals(resp?.rstCd.ToLower(), "success"))
                     {
 
                         //데이터 처리 부분 추가 필요
@@ -209,7 +209,7 @@ namespace AGL.Api.Bridge_API.Services
                     }
                     else
                     {
-                        rstMsg = resp != null ? resp.RstMsg : "Not Found Result";
+                        rstMsg = resp != null ? resp.rstMsg : "Not Found Result";
 
                         return await _commonService.CreateResponse<object>(true, ResultCode.SERVER_ERROR, rstMsg, null);
                     }
@@ -225,11 +225,11 @@ namespace AGL.Api.Bridge_API.Services
         public async Task<IDataResult> GetBookingCancel(ReservationRequest Req)
         {
 
-            if(string.IsNullOrWhiteSpace(Req.ReservationId))
+            if(string.IsNullOrWhiteSpace(Req.reservationId))
                 return await _commonService.CreateResponse<object>(true, ResultCode.INVALID_INPUT, "reservationId is invalid", null);
 
 
-            if (await _context.ReservationManagements.AnyAsync(x => x.ReservationId == Req.ReservationId))
+            if (await _context.ReservationManagements.AnyAsync(x => x.ReservationId == Req.reservationId))
                 return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Reservation data does not exist", null);
 
 
@@ -249,7 +249,7 @@ namespace AGL.Api.Bridge_API.Services
 
                     var rstMsg = string.Empty;
 
-                    if (string.Equals(resp?.RstCd.ToLower(), "success"))
+                    if (string.Equals(resp?.rstCd.ToLower(), "success"))
                     {
 
                         //데이터 처리 부분 추가 필요
@@ -257,7 +257,7 @@ namespace AGL.Api.Bridge_API.Services
                     }
                     else
                     {
-                        rstMsg = resp != null ? resp.RstMsg : "Not Found Result";
+                        rstMsg = resp != null ? resp.rstMsg : "Not Found Result";
 
                         return await _commonService.CreateResponse<object>(true, ResultCode.SERVER_ERROR, rstMsg, null);
                     }
@@ -271,7 +271,7 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PostBookingConfirm(ReservationRequest request, string supplierCode)
         {
-            var reservationId = request.ReservationId;
+            var reservationId = request.reservationId;
 
             // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
@@ -330,15 +330,15 @@ namespace AGL.Api.Bridge_API.Services
 
             var rst = new BookingInfo
             {
-                ReservationId = "",
-                GolfclubCode = "",
-                PlayDate = "",
-                StartTime = "",
-                PlayerCount = 0,
-                Status = 0,
-                OrderDate = "",
-                Currency = "s",
-                CancelPenaltyAmount = Convert.ToDecimal(1)
+                reservationId = "",
+                golfClubCode = "",
+                playDate = "",
+                startTime = "",
+                playerCount = 0,
+                status = 0,
+                orderDate = "",
+                currency = "s",
+                cancelPenaltyAmount = Convert.ToDecimal(1)
             };
 
             

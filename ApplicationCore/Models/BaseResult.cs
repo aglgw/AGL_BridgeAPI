@@ -10,7 +10,7 @@ namespace AGL.Api.ApplicationCore.Models
         [JsonIgnore]
         public ResultCode Code { get; set; }
 
-        public bool IsSuccess
+        public bool isSuccess
         {
             get
             {
@@ -19,14 +19,14 @@ namespace AGL.Api.ApplicationCore.Models
         }
 
         [JsonProperty(Order = 0)]
-        public string RstCd
+        public string rstCd
         {
             get
             {
                 return Code.Description();
             }
         }
-        public int StatusCode
+        public int statusCode
         {
             get
             {
@@ -34,6 +34,6 @@ namespace AGL.Api.ApplicationCore.Models
             }
         }
         [JsonProperty(Order = 1)]
-        public string RstMsg { get; set; } = string.Empty;
+        public string rstMsg { get; set; } = string.Empty;
     }
 }

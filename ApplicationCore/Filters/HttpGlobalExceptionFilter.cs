@@ -38,7 +38,7 @@ namespace AGL.Api.ApplicationCore.Filters
                 var json = new Failure
                 {
                     Code = domainException.Code,
-                    RstMsg = domainException.Message
+                    rstMsg = domainException.Message
                 };
 
                 if (_env.IsDevelopment())
@@ -54,7 +54,7 @@ namespace AGL.Api.ApplicationCore.Filters
                 var json = new Failure
                 {
                     Code = ResultCode.SERVER_ERROR,
-                    RstMsg = context.Exception.Message
+                    rstMsg = context.Exception.Message
                 };
 
                 if (_env.IsDevelopment())

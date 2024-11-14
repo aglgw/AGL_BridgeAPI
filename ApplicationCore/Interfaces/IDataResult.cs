@@ -2,9 +2,9 @@
 {
     public interface IDataResult
     {
-        bool IsSuccess { get; }
-        string RstCd { get; }
-        int StatusCode { get; }
-        string RstMsg { get; set; }        
+        bool isSuccess { get; }
+        string rstCd { get; }
+        int statusCode { get; }
+        string rstMsg { get; set; }        
     }
 }
