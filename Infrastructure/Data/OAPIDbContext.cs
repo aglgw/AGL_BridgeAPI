@@ -18,6 +18,7 @@ namespace AGL.Api.Infrastructure.Data
         }
 
         public DbSet<OAPI_Supplier> Suppliers { get; set; } // 공급사
+
         public DbSet<OAPI_GolfClub> GolfClubs { get; set; } // 골프장
         public DbSet<OAPI_GolfClubHole> GolfClubHoles { get; set; } // 골프장홀
         public DbSet<OAPI_GolfClubRefundPolicy> GolfClubRefundPolicies { get; set; } // 골프장 환불정책
@@ -26,11 +27,16 @@ namespace AGL.Api.Infrastructure.Data
 
         public DbSet<OAPI_DateSlot> DateSlots { get; set; } // 날짜
         public DbSet<OAPI_TimeSlot> TimeSlots { get; set; } // 시간
+
         public DbSet<OAPI_TeeTime> TeeTimes { get; set; } // 티타임
         public DbSet<OAPI_TeeTimeMapping> TeeTimeMappings { get; set; } // 티타임 날짜시간정보
         public DbSet<OAPI_TeetimeRefundPolicy> TeetimeRefundPolicies { get; set; } // 환불 정책
         public DbSet<OAPI_TeetimePricePolicy> TeetimePricePolicies { get; set; } // 가격 정책
+
         public DbSet<OAPI_ReservationManagement> ReservationManagements { get; set; } // 가격 정책
+
+        public DbSet<OAPI_SyncClient> syncClients { get; set; } // 싱크 클라이언트 (내부 혹은 외부 채널)
+        public DbSet<OAPI_SyncTeeTimeMapping> syncTeeTimeMappings { get; set; } // 싱크 티타임 날짜시간정보
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
