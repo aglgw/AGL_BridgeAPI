@@ -9,8 +9,8 @@ namespace AGL.Api.Domain.Entities.OAPI
         [Required]
         public int SupplierId { get; set; } // 공급자ID (PK)
 
-        [Required, StringLength(6)]
-        public string FieldId { get; set; } // 공급자필드ID
+        [Required, StringLength(3)]
+        public string DaemonId { get; set; } // 공급자 데몬ID - 연동용
 
         [Required, StringLength(50)]
         public string SupplierCode { get; set; } // 공급자 코드
