@@ -18,8 +18,6 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         public string? ClientEndpoint { get; set; }
 
-        public int? LastSyncTeeTimeId { get; set; }
-
         public int? LastSyncTeeTimeMappingId { get; set; }
     }
 }

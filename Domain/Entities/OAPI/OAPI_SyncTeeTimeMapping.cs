@@ -19,6 +19,9 @@ namespace AGL.Api.Domain.Entities.OAPI
         [ForeignKey("OAPI_TeeTimeMapping")]
         public int TeetimeMappingId { get; set; }
 
+        [Required]
+        public DateTime CreatedDate { get; set; }
+
         [JsonIgnore]
         public virtual OAPI_TeeTimeMapping TeeTimeMapping { get; set; } = new OAPI_TeeTimeMapping();
     }

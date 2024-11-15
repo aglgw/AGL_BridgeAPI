@@ -236,7 +236,7 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
             var decimalProperties = new[]
             {
-                "GreenFee", "CartFee", "Tax", "AdditionalTax", "UnitPrice"
+                "GreenFee", "CartFee", "CaddyFee", "Tax", "AdditionalTax", "UnitPrice"
             };
 
             foreach (var property in decimalProperties)

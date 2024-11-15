@@ -18,7 +18,7 @@ namespace AGL.Api.Infrastructure
                           sqlServerOptionsAction: sqlOptions =>
                           {
                               sqlOptions.MigrationsAssembly(typeof(OAPI_DbContext).GetTypeInfo().Assembly.FullName);
-                              //sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                              sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
                           });
             }, ServiceLifetime.Scoped);
 
