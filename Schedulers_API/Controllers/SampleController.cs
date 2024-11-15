@@ -1,6 +1,7 @@
 using AGL.Api.Schedulers_API.Interfaces;
 using AGL.Api.ApplicationCore.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using AGL.Api.API_Schedulers.Interfaces;
 
 namespace AGL.Api.Schedulers_API.Controllers
 {
@@ -11,12 +12,15 @@ namespace AGL.Api.Schedulers_API.Controllers
 
         private readonly ILogger<SampleController> _logger;
         private readonly ISampleService _sampleService;
+        private readonly ISyncTeeTimeService _syncTeeTimeService;
 
         public SampleController(ILogger<SampleController> logger,
-            ISampleService sampleService)
+            ISampleService sampleService
+            , ISyncTeeTimeService syncTeeTimeService)
         {
             _logger = logger;
             _sampleService = sampleService;
+            _syncTeeTimeService = syncTeeTimeService;
         }
 
 
@@ -61,6 +65,21 @@ namespace AGL.Api.Schedulers_API.Controllers
             LogService.logInformation("SampleController>TestProtocol Start");
 
             var rst = await _sampleService.TestProtocol();
+
+            return Ok(rst);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> SyncTeeTime()
+        {
+            LogService.logInformation("SampleController>SyncTeeTime Start");
+
+            var rst = await _syncTeeTimeService.SyncTeeTime();
 
             return Ok(rst);
         }

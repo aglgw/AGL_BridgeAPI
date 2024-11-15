@@ -4,11 +4,13 @@ namespace AGL.Api.API_Schedulers.Models.OAPI
 {
     public class OAPIScheduler
     {
+        public interface ISyncTeeTimeRequest { }
+
         /// <summary>
         /// 티타임 상태수정
         /// </summary>
         [DataContract]
-        public class SyncTeeTimeRequest
+        public class SyncTeeTimeRequest : ISyncTeeTimeRequest
         {
             /// <summary>
             /// 데몬 ID

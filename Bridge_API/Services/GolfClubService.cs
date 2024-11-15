@@ -122,234 +122,246 @@ namespace AGL.Api.Bridge_API.Services
 
         private async Task<IDataResult> ProcessGolfClub(GolfClubInfo request, string supplierCode, string golfClubCode)
         {
-            try
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
             {
-                // 공급사 코드로 공급사 ID 조회
-                OAPI_Supplier supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
-                int supplierId = supplier.SupplierId;
-
-                // 모든 관련 데이터를 미리 조회 골프장,이미지,환불정책,코스,홀
-                var existingGolfclub = await _context.GolfClubs
-                    .Include(g => g.GolfClubImages)
-                    .Include(g => g.RefundPolicies)
-                    .Include(g => g.Courses)
-                    .Include(g => g.Holes)
-                    .FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
-
-                List<OAPI_GolfClubImage> existingImages = existingGolfclub?.GolfClubImages.ToList() ?? new List<OAPI_GolfClubImage>();
-                List<OAPI_GolfClubRefundPolicy> existingRefundPolicies = existingGolfclub?.RefundPolicies.ToList() ?? new List<OAPI_GolfClubRefundPolicy>();
-                List<OAPI_GolfClubCourse> existingCourses = existingGolfclub?.Courses.ToList() ?? new List<OAPI_GolfClubCourse>();
-                List<OAPI_GolfClubHole> existingHoles = existingGolfclub?.Holes.ToList() ?? new List<OAPI_GolfClubHole>();
-
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", existingGolfclub != null ? "기존 골프장 정보 조회 성공" : "기존 골프장 정보 없음, 새로 생성 예정");
-
-                // 골프장 정보
-                int golfClubId;
-                if (existingGolfclub != null)
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    golfClubId = existingGolfclub.GolfClubId;
-                    // 기존 골프장 정보 업데이트
-                    existingGolfclub.GolfClubName = request.golfClubName;
-                    existingGolfclub.CountryCode = request.countryCode;
-                    existingGolfclub.Currency = request.currency;
-                    existingGolfclub.Description = request.description;
-                    existingGolfclub.Address = request.address;
-                    existingGolfclub.Latitude = request.latitude;
-                    existingGolfclub.Longitude = request.longitude;
-                    existingGolfclub.Phone = request.phone;
-                    existingGolfclub.Fax = request.fax;
-                    existingGolfclub.Email = request.email;
-                    existingGolfclub.Homepage = request.homepage;
-                    existingGolfclub.TotalHoleCount = request.totalHoleCount;
-                    existingGolfclub.TotalCourseCount = request.totalCourseCount;
-                    existingGolfclub.isGuestInfoRequired = request.isGuestInfoRequired;
-                    existingGolfclub.UpdatedDate = DateTime.UtcNow;
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "기존 골프장 정보 업데이트 시작");
-                }
-                else
-                {
-                    var newGolfClub = new OAPI_GolfClub
+                    try
                     {
-                        SupplierId = supplierId,
-                        GolfClubCode = request.golfClubCode,
-                        GolfClubName = request.golfClubName,
-                        CountryCode = request.countryCode,
-                        Currency = request.currency,
-                        Description = request.description,
-                        Address = request.address,
-                        Latitude = request.latitude,
-                        Longitude = request.longitude,
-                        Phone = request.phone,
-                        Fax = request.fax,
-                        Email = request.email,
-                        Homepage = request.homepage,
-                        TotalHoleCount = request.totalHoleCount,
-                        TotalCourseCount = request.totalCourseCount,
-                        isGuestInfoRequired = request.isGuestInfoRequired,
-                        CreatedDate = DateTime.UtcNow
-                    };
-                    _context.GolfClubs.Add(newGolfClub);
-                    await _context.SaveChangesAsync();
-                    golfClubId = newGolfClub.GolfClubId;
-                    existingGolfclub = newGolfClub;
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "새 골프장 정보 생성 시작");
-                }
+                        // 공급사 코드로 공급사 ID 조회
+                        OAPI_Supplier supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
+                        int supplierId = supplier.SupplierId;
 
-                // 벌크 저장을 위한 리스트 준비
-                var newImages = new List<OAPI_GolfClubImage>();
-                var newRefundPolicies = new List<OAPI_GolfClubRefundPolicy>();
-                var newCourses = new List<OAPI_GolfClubCourse>();
-                var newHoles = new List<OAPI_GolfClubHole>();
+                        // 모든 관련 데이터를 미리 조회 골프장,이미지,환불정책,코스,홀
+                        var existingGolfclub = await _context.GolfClubs
+                            .Include(g => g.GolfClubImages)
+                            .Include(g => g.RefundPolicies)
+                            .Include(g => g.Courses)
+                            .Include(g => g.Holes)
+                            .FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
 
-                // 이미지 정보 저장 (유효성 체크)
-                if (request.image != null)
-                {
-                    foreach (var image in request.image)
-                    {
-                        var existingImage = existingImages.FirstOrDefault(i => i.Idx == image.id);
-                        if (existingImage != null)
+                        List<OAPI_GolfClubImage> existingImages = existingGolfclub?.GolfClubImages.ToList() ?? new List<OAPI_GolfClubImage>();
+                        List<OAPI_GolfClubRefundPolicy> existingRefundPolicies = existingGolfclub?.RefundPolicies.ToList() ?? new List<OAPI_GolfClubRefundPolicy>();
+                        List<OAPI_GolfClubCourse> existingCourses = existingGolfclub?.Courses.ToList() ?? new List<OAPI_GolfClubCourse>();
+                        List<OAPI_GolfClubHole> existingHoles = existingGolfclub?.Holes.ToList() ?? new List<OAPI_GolfClubHole>();
+
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", existingGolfclub != null ? "기존 골프장 정보 조회 성공" : "기존 골프장 정보 없음, 새로 생성 예정");
+
+                        // 골프장 정보
+                        int golfClubId;
+                        if (existingGolfclub != null)
                         {
-                            existingImage.Url = image.url;
-                            existingImage.Title = image.title;
-                            existingImage.ImageDescription = image.description;
-                            existingImage.UpdatedDate = DateTime.UtcNow;
+                            golfClubId = existingGolfclub.GolfClubId;
+                            // 기존 골프장 정보 업데이트
+                            existingGolfclub.GolfClubName = request.golfClubName;
+                            existingGolfclub.CountryCode = request.countryCode;
+                            existingGolfclub.Currency = request.currency;
+                            existingGolfclub.Description = request.description;
+                            existingGolfclub.Address = request.address;
+                            existingGolfclub.Latitude = request.latitude;
+                            existingGolfclub.Longitude = request.longitude;
+                            existingGolfclub.Phone = request.phone;
+                            existingGolfclub.Fax = request.fax;
+                            existingGolfclub.Email = request.email;
+                            existingGolfclub.Homepage = request.homepage;
+                            existingGolfclub.TotalHoleCount = request.totalHoleCount;
+                            existingGolfclub.TotalCourseCount = request.totalCourseCount;
+                            existingGolfclub.isGuestInfoRequired = request.isGuestInfoRequired;
+                            existingGolfclub.UpdatedDate = DateTime.UtcNow;
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "기존 골프장 정보 업데이트 시작");
                         }
                         else
                         {
-                            var newImage = new OAPI_GolfClubImage
+                            var newGolfClub = new OAPI_GolfClub
                             {
-                                GolfClubId = golfClubId,
-                                Idx = image.id,
-                                Url = image.url,
-                                Title = image.title,
-                                ImageDescription = image.description,
+                                SupplierId = supplierId,
+                                GolfClubCode = request.golfClubCode,
+                                GolfClubName = request.golfClubName,
+                                CountryCode = request.countryCode,
+                                Currency = request.currency,
+                                Description = request.description,
+                                Address = request.address,
+                                Latitude = request.latitude,
+                                Longitude = request.longitude,
+                                Phone = request.phone,
+                                Fax = request.fax,
+                                Email = request.email,
+                                Homepage = request.homepage,
+                                TotalHoleCount = request.totalHoleCount,
+                                TotalCourseCount = request.totalCourseCount,
+                                isGuestInfoRequired = request.isGuestInfoRequired,
                                 CreatedDate = DateTime.UtcNow
                             };
-                            newImages.Add(newImage);
+                            _context.GolfClubs.Add(newGolfClub);
+                            await _context.SaveChangesAsync();
+                            golfClubId = newGolfClub.GolfClubId;
+                            existingGolfclub = newGolfClub;
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "새 골프장 정보 생성 시작");
                         }
-                    }
-                }
 
-                // 환불 정책 정보 저장 (유효성 체크)
-                if (request.refundPolicy != null)
-                {
-                    foreach (var refundPolicy in request.refundPolicy)
-                    {
-                        var existingPolicy = existingRefundPolicies.FirstOrDefault(rp => rp.RefundDate == refundPolicy.refundDate);
-                        if (existingPolicy != null)
+                        // 벌크 저장을 위한 리스트 준비
+                        var newImages = new List<OAPI_GolfClubImage>();
+                        var newRefundPolicies = new List<OAPI_GolfClubRefundPolicy>();
+                        var newCourses = new List<OAPI_GolfClubCourse>();
+                        var newHoles = new List<OAPI_GolfClubHole>();
+
+                        // 이미지 정보 저장 (유효성 체크)
+                        if (request.image != null)
                         {
-                            //existingPolicy.RefundHour = refundPolicy.RefundHour;
-                            existingPolicy.RefundFee = refundPolicy.refundFee;
-                            existingPolicy.RefundHour = refundPolicy.refundHour;
-                            existingPolicy.RefundUnit = refundPolicy.refundUnit;
-                            existingPolicy.UpdatedDate = DateTime.UtcNow;
-                        }
-                        else
-                        {
-                            var newRefundPolicy = new OAPI_GolfClubRefundPolicy
+                            foreach (var image in request.image)
                             {
-                                GolfClubId = golfClubId,
-                                RefundDate = refundPolicy.refundDate,
-                                RefundHour = refundPolicy.refundHour,
-                                RefundFee = refundPolicy.refundFee,
-                                RefundUnit = refundPolicy.refundUnit,
-                                CreatedDate = DateTime.UtcNow
-                            };
-                            newRefundPolicies.Add(newRefundPolicy);
+                                var existingImage = existingImages.FirstOrDefault(i => i.Idx == image.id);
+                                if (existingImage != null)
+                                {
+                                    existingImage.Url = image.url;
+                                    existingImage.Title = image.title;
+                                    existingImage.ImageDescription = image.description;
+                                    existingImage.UpdatedDate = DateTime.UtcNow;
+                                }
+                                else
+                                {
+                                    var newImage = new OAPI_GolfClubImage
+                                    {
+                                        GolfClubId = golfClubId,
+                                        Idx = image.id,
+                                        Url = image.url,
+                                        Title = image.title,
+                                        ImageDescription = image.description,
+                                        CreatedDate = DateTime.UtcNow
+                                    };
+                                    newImages.Add(newImage);
+                                }
+                            }
                         }
-                    }
-                }
 
-                // 코스 정보 저장 (유효성 체크)
-                if (request.course != null)
-                {
-                    foreach (var course in request.course)
-                    {
-                        var existingCourse = existingCourses.FirstOrDefault(c => c.CourseCode.ToString() == course.courseCode.ToString());
-                        if (existingCourse != null)
+                        // 환불 정책 정보 저장 (유효성 체크)
+                        if (request.refundPolicy != null)
                         {
-                            existingCourse.CourseName = course.courseName;
-                            existingCourse.UpdatedDate = DateTime.UtcNow;
-                        }
-                        else
-                        {
-                            var newCourse = new OAPI_GolfClubCourse
+                            foreach (var refundPolicy in request.refundPolicy)
                             {
-                                GolfClubId = golfClubId,
-                                CourseCode = course.courseCode,
-                                CourseName = course.courseName,
-                                CreatedDate = DateTime.UtcNow,
-                            };
-                            newCourses.Add(newCourse);
+                                var existingPolicy = existingRefundPolicies.FirstOrDefault(rp => rp.RefundDate == refundPolicy.refundDate);
+                                if (existingPolicy != null)
+                                {
+                                    //existingPolicy.RefundHour = refundPolicy.RefundHour;
+                                    existingPolicy.RefundFee = refundPolicy.refundFee;
+                                    existingPolicy.RefundHour = refundPolicy.refundHour;
+                                    existingPolicy.RefundUnit = refundPolicy.refundUnit;
+                                    existingPolicy.UpdatedDate = DateTime.UtcNow;
+                                }
+                                else
+                                {
+                                    var newRefundPolicy = new OAPI_GolfClubRefundPolicy
+                                    {
+                                        GolfClubId = golfClubId,
+                                        RefundDate = refundPolicy.refundDate,
+                                        RefundHour = refundPolicy.refundHour,
+                                        RefundFee = refundPolicy.refundFee,
+                                        RefundUnit = refundPolicy.refundUnit,
+                                        CreatedDate = DateTime.UtcNow
+                                    };
+                                    newRefundPolicies.Add(newRefundPolicy);
+                                }
+                            }
                         }
-                    }
-                }
 
-                // 홀 정보 저장 (유효성 체크)
-                if (request.holeInfo != null)
-                {
-                    foreach (var hole in request.holeInfo)
-                    {
-                        if (hole.holeNumber <= 0)
-                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "HoleNumber is invalid", null);
-
-                        var existingHole = existingHoles.FirstOrDefault(h => h.HoleNumber.ToString() == hole.holeNumber.ToString());
-                        if (existingHole != null)
+                        // 코스 정보 저장 (유효성 체크)
+                        if (request.course != null)
                         {
-                            existingHole.Par = hole.par;
-                            existingHole.DistanceUnit = hole.distanceUnit;
-                            existingHole.Distance = hole.distance;
-                            existingHole.UpdatedDate = DateTime.UtcNow;
-                        }
-                        else
-                        {
-                            var newHole = new OAPI_GolfClubHole
+                            foreach (var course in request.course)
                             {
-                                GolfClubId = golfClubId,
-                                HoleNumber = hole.holeNumber,
-                                Par = hole.par,
-                                DistanceUnit = hole.distanceUnit,
-                                Distance = hole.distance,
-                                CreatedDate = DateTime.UtcNow,
-                                UpdatedDate = null
-                            };
-                            newHoles.Add(newHole);
+                                var existingCourse = existingCourses.FirstOrDefault(c => c.CourseCode.ToString() == course.courseCode.ToString());
+                                if (existingCourse != null)
+                                {
+                                    existingCourse.CourseName = course.courseName;
+                                    existingCourse.CourseHoleCount = course.courseHoleCount;
+                                    existingCourse.StartHole = course.startHole;
+                                    existingCourse.UpdatedDate = DateTime.UtcNow;
+                                }
+                                else
+                                {
+                                    var newCourse = new OAPI_GolfClubCourse
+                                    {
+                                        GolfClubId = golfClubId,
+                                        CourseCode = course.courseCode,
+                                        CourseName = course.courseName,
+                                        CourseHoleCount = course.courseHoleCount,
+                                        StartHole = course.startHole,
+                                        CreatedDate = DateTime.UtcNow,
+                                    };
+                                    newCourses.Add(newCourse);
+                                }
+                            }
                         }
+
+                        // 홀 정보 저장 (유효성 체크)
+                        if (request.holeInfo != null)
+                        {
+                            foreach (var hole in request.holeInfo)
+                            {
+                                if (hole.holeNumber <= 0)
+                                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "HoleNumber is invalid", null);
+
+                                var existingHole = existingHoles.FirstOrDefault(h => h.HoleNumber.ToString() == hole.holeNumber.ToString());
+                                if (existingHole != null)
+                                {
+                                    existingHole.Par = hole.par;
+                                    existingHole.DistanceUnit = hole.distanceUnit;
+                                    existingHole.Distance = hole.distance;
+                                    existingHole.UpdatedDate = DateTime.UtcNow;
+                                }
+                                else
+                                {
+                                    var newHole = new OAPI_GolfClubHole
+                                    {
+                                        GolfClubId = golfClubId,
+                                        HoleNumber = hole.holeNumber,
+                                        Par = hole.par,
+                                        DistanceUnit = hole.distanceUnit,
+                                        Distance = hole.distance,
+                                        CreatedDate = DateTime.UtcNow,
+                                        UpdatedDate = null
+                                    };
+                                    newHoles.Add(newHole);
+                                }
+                            }
+                        }
+
+                        // 벌크로 새로운 항목 추가
+                        if (newImages.Any())
+                        {
+                            _context.GolfClubImages.AddRange(newImages);
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 이미지 저장");
+                        }
+                        if (newRefundPolicies.Any())
+                        {
+                            _context.GolfClubRefundPolicies.AddRange(newRefundPolicies);
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 환불정책 저장");
+                        }
+                        if (newCourses.Any())
+                        {
+                            _context.GolfClubCourses.AddRange(newCourses);
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 코스 저장");
+                        }
+                        if (newHoles.Any())
+                        {
+                            _context.GolfClubHoles.AddRange(newHoles);
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 홀 저장");
+                        }
+
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "벌크 저장 시작 - 이미지, 환불 정책, 코스, 홀 정보");
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 처리 완료");
+
+                        return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessGolfClub successfully", null);
                     }
-                }
-
-                // 벌크로 새로운 항목 추가
-                if (newImages.Any())
-                {
-                    _context.GolfClubImages.AddRange(newImages);
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 이미지 저장");
-                }
-                if (newRefundPolicies.Any())
-                {
-                    _context.GolfClubRefundPolicies.AddRange(newRefundPolicies);
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 환불정책 저장");
-                }
-                if (newCourses.Any())
-                {
-                    _context.GolfClubCourses.AddRange(newCourses);
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 코스 저장");
-                }
-                if (newHoles.Any())
-                {
-                    _context.GolfClubHoles.AddRange(newHoles);
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 홀 저장");
-                }
-
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "벌크 저장 시작 - 이미지, 환불 정책, 코스, 홀 정보");
-                await _context.SaveChangesAsync();
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 처리 완료");
-
-                return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessGolfClub successfully", null);
-            }
-            catch (Exception ex)
-            {
-                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-            }
+                    catch (Exception ex)
+                    {
+                        return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                    }
+                };
+            });
         }
     }
 }

@@ -192,62 +192,67 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
             }
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            var strategy = _context.Database.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
             {
-                try
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    // 요청에서 제공된 티타임 코드 목록을 가져옴
-                    var startTimes = request.time != null ? request.time.Select(t => t.startTime).ToList() : new List<string>();
-                    var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.teeTimeCode).ToList() : [];
-                    var playDate = request.playDate.Replace("-", "");
-
-                    // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
-                    var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
-                        .Include(tm => tm.TeeTime) // TeeTime 엔터티 포함
-                            .ThenInclude(t => t.GolfClubCourse) // GolfClubCourse 엔터티 포함 (연관관계)
-                        .Include(tm => tm.DateSlot) // DateSlot 엔터티 포함 (연관관계)
-                        .Include(tm => tm.TimeSlot) // TimeSlot 엔터티 포함 (연관관계)
-                        .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.golfClubCode && // 요청된 골프장 코드와 일치 확인
-                                     request.courseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode) && // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
-                                     tm.DateSlot.PlayDate == playDate && // 요청된 플레이 날짜와 일치하는 DateSlot 확인
-                                     startTimes.Contains(tm.TimeSlot.StartTime.ToString()));  // 요청된 시작 시간과 일치하는지 확인
-
-                    // 티타임 코드 목록이 있을 경우 해당 코드들에 대한 조건 추가
-                    if (teeTimeCodes.Count != 0)
+                    try
                     {
-                        existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => teeTimeCodes.Contains(tm.SupplierTeetimeCode));
+                        // 요청에서 제공된 티타임 코드 목록을 가져옴
+                        var startTimes = request.time != null ? request.time.Select(t => t.startTime).ToList() : new List<string>();
+                        var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.teeTimeCode).ToList() : [];
+                        var playDate = request.playDate.Replace("-", "");
+
+                        // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
+                        var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
+                            .Include(tm => tm.TeeTime) // TeeTime 엔터티 포함
+                                .ThenInclude(t => t.GolfClubCourse) // GolfClubCourse 엔터티 포함 (연관관계)
+                            .Include(tm => tm.DateSlot) // DateSlot 엔터티 포함 (연관관계)
+                            .Include(tm => tm.TimeSlot) // TimeSlot 엔터티 포함 (연관관계)
+                            .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.golfClubCode && // 요청된 골프장 코드와 일치 확인
+                                         request.courseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode) && // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
+                                         tm.DateSlot.PlayDate == playDate && // 요청된 플레이 날짜와 일치하는 DateSlot 확인
+                                         startTimes.Contains(tm.TimeSlot.StartTime.ToString()));  // 요청된 시작 시간과 일치하는지 확인
+
+                        // 티타임 코드 목록이 있을 경우 해당 코드들에 대한 조건 추가
+                        if (teeTimeCodes.Count != 0)
+                        {
+                            existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => teeTimeCodes.Contains(tm.SupplierTeetimeCode));
+                        }
+
+                        // 조건에 맞는 TeeTimePriceMappings 목록을 조회
+                        var existingTeeTimeMappings = await existingTeeTimeMappingsQuery.ToListAsync();
+
+                        if (!existingTeeTimeMappings.Any() || existingTeeTimeMappings == null)
+                        {
+                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "TeeTime not found", null);
+                        }
+
+                        // 조회된 티타임 가격 매핑에 대해 가용성 및 수정 날짜 업데이트를 벌크 업데이트로 수행
+                        existingTeeTimeMappings.ForEach(teeTimeMapping =>
+                        {
+                            teeTimeMapping.IsAvailable = request.available;
+                            teeTimeMapping.UpdatedDate = DateTime.UtcNow;
+                        });
+
+                        // 벌크 업데이트 수행
+                        await _context.BulkUpdateAsync(existingTeeTimeMappings);
+
+                        await transaction.CommitAsync();
+
+                        return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "TeeTime Availability successfully", null);
                     }
-
-                    // 조건에 맞는 TeeTimePriceMappings 목록을 조회
-                    var existingTeeTimeMappings = await existingTeeTimeMappingsQuery.ToListAsync();
-
-                    if(!existingTeeTimeMappings.Any() || existingTeeTimeMappings == null)
+                    catch (Exception ex)
                     {
-                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "TeeTime not found", null);
+                        // 오류 발생 시 트랜잭션 롤백
+                        await transaction.RollbackAsync();
+
+                        return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
                     }
-
-                    // 조회된 티타임 가격 매핑에 대해 가용성 및 수정 날짜 업데이트를 벌크 업데이트로 수행
-                    existingTeeTimeMappings.ForEach(teeTimeMapping =>
-                    {
-                        teeTimeMapping.IsAvailable = request.available;
-                        teeTimeMapping.UpdatedDate = DateTime.UtcNow;
-                    });
-
-                    // 벌크 업데이트 수행
-                    await _context.BulkUpdateAsync(existingTeeTimeMappings);
-
-                    await transaction.CommitAsync();
-
-                    return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "TeeTime Availability successfully", null);
                 }
-                catch (Exception ex)
-                {
-                    // 오류 발생 시 트랜잭션 롤백
-                    await transaction.RollbackAsync();
-
-                    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-                }
-            }
+            });
         }
 
         private async Task<IDataResult> ValidateTeeTime(TeeTimeRequest request, string supplierCode, string golfclubCode, string mode)
@@ -271,7 +276,7 @@ namespace AGL.Api.Bridge_API.Services
                 }
 
                 // EndPlayDate 유효성 검사
-                if (!DateTime.TryParseExact(request.endPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
+                 if (!DateTime.TryParseExact(request.endPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "TeeTime", "종료일 없음");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EndPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
@@ -320,281 +325,286 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfClubCode)
         {
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            var strategy = _context.Database.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
             {
-                try
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    // 공급사 코드로 공급사 ID 조회
-                    var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
-                    int supplierId = supplier.SupplierId;
-
-                    // 골프장 코드로 골프장 정보 조회
-                    var existingGolfclub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
-                    if (existingGolfclub == null)
+                    try
                     {
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "골프장 검색 코드 없음");
-                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid", null); // 골프장이 유효하지 않을때 처리
-                    }
+                        // 공급사 코드로 공급사 ID 조회
+                        var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
+                        int supplierId = supplier.SupplierId;
 
-                    // 1. applicableDates 생성
-                    IEnumerable<string> applicableDates;
-
-                    // 날짜적용방법에 따라 조건 생성 ( 1: 기간 , 2: 특정날짜 )
-                    if (request.dateApplyType == 1) // dateApplyType이 1인 경우: startDate부터 endDate까지의 날짜 생성
-                    {
-                        if (!DateTime.TryParseExact(request.startPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime startDate))
+                        // 골프장 코드로 골프장 정보 조회
+                        var existingGolfclub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
+                        if (existingGolfclub == null)
                         {
-                            var startYear = int.Parse(request.startPlayDate.Substring(0, 4));
-                            var startMonth = int.Parse(request.startPlayDate.Substring(5, 2));
-                            startDate = new DateTime(startYear, startMonth, 1);
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "골프장 검색 코드 없음");
+                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfclubCode is invalid", null); // 골프장이 유효하지 않을때 처리
                         }
 
-                        if (!DateTime.TryParseExact(request.endPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime endDate))
+                        // 1. applicableDates 생성
+                        IEnumerable<string> applicableDates;
+
+                        // 날짜적용방법에 따라 조건 생성 ( 1: 기간 , 2: 특정날짜 )
+                        if (request.dateApplyType == 1) // dateApplyType이 1인 경우: startDate부터 endDate까지의 날짜 생성
                         {
-                            var endYear = int.Parse(request.endPlayDate.Substring(0, 4));
-                            var endMonth = int.Parse(request.endPlayDate.Substring(5, 2));
-                            int lastDay = DateTime.DaysInMonth(endYear, endMonth);
-                            endDate = new DateTime(endYear, endMonth, lastDay);
-                        }
-
-                        // 요청한 기간 에서 요일, 특정일, 예외일 처리
-                        applicableDates = Enumerable.Range(0, (endDate - startDate).Days + 1)
-                            .Select(offset => startDate.AddDays(offset))
-                            .Where(date => (request.week.Contains((int)date.DayOfWeek) || request.effectiveDate.Contains(date.ToString("yyyy-MM-dd"))) && !request.exceptionDate.Contains(date.ToString("yyyy-MM-dd")))
-                            .Select(date => date.ToString("yyyyMMdd"))
-                            .ToList();
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 1로 검색");
-                    }
-                    else // dateApplyType이 1이 아닌 경우: effectiveDate 리스트의 날짜들 사용
-                    {
-                        applicableDates = request.effectiveDate
-                            .Where(date => !string.IsNullOrWhiteSpace(date) && DateTime.TryParseExact(date, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
-                            .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
-                            .ToList();
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 2로 검색");
-                    }
-
-                    // 1. 기존 데이터 조회 (요금 정책, 환불 정책, 날짜 슬롯, 시간 슬롯, 코스정보, 티타임 정보 등)
-                    var existingTeeTimePricePolicies = await _context.TeetimePricePolicies.ToListAsync();
-                    var existingTeeTimeRefundPolicies = await _context.TeetimeRefundPolicies.ToListAsync();
-                    var dateSlots = await _context.DateSlots.Where(ds => applicableDates.Contains(ds.PlayDate)).ToListAsync();
-                    var timeSlots = await _context.TimeSlots.ToListAsync();
-                    var golfClubCourses = await _context.GolfClubs
-                        .Where(gc => gc.GolfClubCode == golfClubCode && gc.SupplierId == supplierId)
-                        .Include(gc => gc.Courses)
-                        .SelectMany(gc => gc.Courses)
-                        .ToListAsync();
-                    var teeTimes = await _context.TeeTimes.Where(tt => tt.SupplierId == supplierId).ToListAsync();
-                    var existingTeeTimeMappings = await _context.TeeTimeMappings
-                        .Where(ttm => ttm.TeeTime.SupplierId == supplierId &&
-                                      ttm.TeeTime.GolfClubId == existingGolfclub.GolfClubId &&
-                                      applicableDates.Contains(ttm.DateSlot.PlayDate))
-                        .ToListAsync();
-
-                    // 골프장 코스, 날짜 슬롯, 시간 슬롯, 기존 매핑을 딕셔너리로 변환하여 조회 성능 향상
-                    var golfClubCourseMap = golfClubCourses.ToDictionary(gc => gc.CourseCode, gc => gc.GolfClubCourseId); // CourseCode와 GolfClubCourseId의 매핑 딕셔너리 생성
-                    var dateSlotMap = dateSlots.ToDictionary(ds => ds.PlayDate, ds => ds.DateSlotId); // PlayDate와 DateSlotId의 매핑 딕셔너리 생성
-                    var timeSlotMap = timeSlots.ToDictionary(ts => ts.StartTime, ts => ts.TimeSlotId); // StartTime과 TimeSlotId의 매핑 딕셔너리 생성
-                    var existingTeeTimeMappingsMap = existingTeeTimeMappings.ToDictionary(ttm => (ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId));
-
-                    // 기존 매핑된 티타임의 중복 체크를 위한 ConcurrentDictionary 생성
-                    var existingTeeTimeMappingsSet = new ConcurrentDictionary<(int TeetimeId, int DateSlotId, int TimeSlotId), bool>(existingTeeTimeMappings.Select(ttm => new KeyValuePair<(int, int, int), bool>((ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId), true)));
-
-                    // 코스 코드 수 만큼 티타임 추가
-                    foreach (var teeTimeInfo in request.teeTimeInfo)
-                    {
-                        foreach (var courseCode in teeTimeInfo.courseCode)
-                        {
-                            // 골프장 코스 조회
-                            var golfClubCourse = golfClubCourses.FirstOrDefault(gc => gc.CourseCode == courseCode);
-                            if (golfClubCourse == null) //골프장 코스 없을시
+                            if (!DateTime.TryParseExact(request.startPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime startDate))
                             {
-                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "코스 코드 없음");
-                                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
+                                var startYear = int.Parse(request.startPlayDate.Substring(0, 4));
+                                var startMonth = int.Parse(request.startPlayDate.Substring(5, 2));
+                                startDate = new DateTime(startYear, startMonth, 1);
                             }
 
-                            // 기존 티타임 조회 또는 신규 티타임 추가
-                            var teeTime = teeTimes.FirstOrDefault(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId && tt.MinMembers == teeTimeInfo.minMembers && tt.MaxMembers == teeTimeInfo.maxMembers);
-                            if (teeTime == null)
+                            if (!DateTime.TryParseExact(request.endPlayDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime endDate))
                             {
-                                // 새로운 티타임 추가
-                                var newTeeTime = new OAPI_TeeTime
+                                var endYear = int.Parse(request.endPlayDate.Substring(0, 4));
+                                var endMonth = int.Parse(request.endPlayDate.Substring(5, 2));
+                                int lastDay = DateTime.DaysInMonth(endYear, endMonth);
+                                endDate = new DateTime(endYear, endMonth, lastDay);
+                            }
+
+                            // 요청한 기간 에서 요일, 특정일, 예외일 처리
+                            applicableDates = Enumerable.Range(0, (endDate - startDate).Days + 1)
+                                .Select(offset => startDate.AddDays(offset))
+                                .Where(date => (request.week.Contains((int)date.DayOfWeek) || request.effectiveDate.Contains(date.ToString("yyyy-MM-dd"))) && !request.exceptionDate.Contains(date.ToString("yyyy-MM-dd")))
+                                .Select(date => date.ToString("yyyyMMdd"))
+                                .ToList();
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 1로 검색");
+                        }
+                        else // dateApplyType이 1이 아닌 경우: effectiveDate 리스트의 날짜들 사용
+                        {
+                            applicableDates = request.effectiveDate
+                                .Where(date => !string.IsNullOrWhiteSpace(date) && DateTime.TryParseExact(date, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
+                                .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
+                                .ToList();
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 2로 검색");
+                        }
+
+                        // 1. 기존 데이터 조회 (요금 정책, 환불 정책, 날짜 슬롯, 시간 슬롯, 코스정보, 티타임 정보 등)
+                        var existingTeeTimePricePolicies = await _context.TeetimePricePolicies.ToListAsync();
+                        var existingTeeTimeRefundPolicies = await _context.TeetimeRefundPolicies.ToListAsync();
+                        var dateSlots = await _context.DateSlots.Where(ds => applicableDates.Contains(ds.PlayDate)).ToListAsync();
+                        var timeSlots = await _context.TimeSlots.ToListAsync();
+                        var golfClubCourses = await _context.GolfClubs
+                            .Where(gc => gc.GolfClubCode == golfClubCode && gc.SupplierId == supplierId)
+                            .Include(gc => gc.Courses)
+                            .SelectMany(gc => gc.Courses)
+                            .ToListAsync();
+                        var teeTimes = await _context.TeeTimes.Where(tt => tt.SupplierId == supplierId).ToListAsync();
+                        var existingTeeTimeMappings = await _context.TeeTimeMappings
+                            .Where(ttm => ttm.TeeTime.SupplierId == supplierId &&
+                                          ttm.TeeTime.GolfClubId == existingGolfclub.GolfClubId &&
+                                          applicableDates.Contains(ttm.DateSlot.PlayDate))
+                            .ToListAsync();
+
+                        // 골프장 코스, 날짜 슬롯, 시간 슬롯, 기존 매핑을 딕셔너리로 변환하여 조회 성능 향상
+                        var golfClubCourseMap = golfClubCourses.ToDictionary(gc => gc.CourseCode, gc => gc.GolfClubCourseId); // CourseCode와 GolfClubCourseId의 매핑 딕셔너리 생성
+                        var dateSlotMap = dateSlots.ToDictionary(ds => ds.PlayDate, ds => ds.DateSlotId); // PlayDate와 DateSlotId의 매핑 딕셔너리 생성
+                        var timeSlotMap = timeSlots.ToDictionary(ts => ts.StartTime, ts => ts.TimeSlotId); // StartTime과 TimeSlotId의 매핑 딕셔너리 생성
+                        var existingTeeTimeMappingsMap = existingTeeTimeMappings.ToDictionary(ttm => (ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId));
+
+                        // 기존 매핑된 티타임의 중복 체크를 위한 ConcurrentDictionary 생성
+                        var existingTeeTimeMappingsSet = new ConcurrentDictionary<(int TeetimeId, int DateSlotId, int TimeSlotId), bool>(existingTeeTimeMappings.Select(ttm => new KeyValuePair<(int, int, int), bool>((ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId), true)));
+
+                        // 코스 코드 수 만큼 티타임 추가
+                        foreach (var teeTimeInfo in request.teeTimeInfo)
+                        {
+                            foreach (var courseCode in teeTimeInfo.courseCode)
+                            {
+                                // 골프장 코스 조회
+                                var golfClubCourse = golfClubCourses.FirstOrDefault(gc => gc.CourseCode == courseCode);
+                                if (golfClubCourse == null) //골프장 코스 없을시
                                 {
-                                    GolfClubCourseId = golfClubCourse.GolfClubCourseId,
-                                    SupplierId = supplierId,
-                                    GolfClubId = existingGolfclub.GolfClubId,
-                                    MinMembers = teeTimeInfo.minMembers,
-                                    MaxMembers = teeTimeInfo.maxMembers,
-                                    IncludeCart = teeTimeInfo.includeCart,
-                                    IncludeCaddie = teeTimeInfo.includeCaddie,
-                                    ReservationType = teeTimeInfo.reservationType,
-                                    CreatedDate = DateTime.UtcNow
-                                };
-                                _context.TeeTimes.Add(newTeeTime);
-                                await _context.SaveChangesAsync();
-                                teeTime = newTeeTime;
-                                teeTimes.Add(newTeeTime);
-                            }
-                        }
+                                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "코스 코드 없음");
+                                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
+                                }
 
-                        // 검색용 딕셔너리 현재 위치에서 만들어야 검색한 티타임 + 추가된 티타임 으로 만들수 있음
-                        Dictionary<(int GolfClubCourseId, int MinMembers, int MaxMembers), OAPI_TeeTime> teeTimesDictionary = teeTimes.ToDictionary(t => (t.GolfClubCourseId, t.MinMembers, t.MaxMembers));
-
-                        // 요금 정책 중복 확인 후 추가
-                        var existingTeeTimePricePolicy = existingTeeTimePricePolicies.FirstOrDefault(p =>
-                            Enumerable.Range(1, 6).All(count =>
-                                p.GetType().GetProperty($"GreenFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.greenFee &&
-                                p.GetType().GetProperty($"CartFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.cartFee &&
-                                p.GetType().GetProperty($"CaddyFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.caddyFee &&
-                                p.GetType().GetProperty($"Tax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.tax &&
-                                p.GetType().GetProperty($"AdditionalTax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.additionalTax &&
-                                p.GetType().GetProperty($"UnitPrice_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.unitPrice
-                            ));
-
-                        int pricePolicyId;
-                        if (existingTeeTimePricePolicy != null)
-                        {
-                            pricePolicyId = existingTeeTimePricePolicy.PricePolicyId;
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "요금 정책 있음");
-                        }
-                        else
-                        {
-                            var newTeeTimePricePolicy = new OAPI_TeetimePricePolicy();
-                            foreach (var price in teeTimeInfo.price)
-                            {
-                                var count = price.playerCount;
-                                newTeeTimePricePolicy.GetType().GetProperty($"GreenFee_{count}")?.SetValue(newTeeTimePricePolicy, price.greenFee);
-                                newTeeTimePricePolicy.GetType().GetProperty($"CartFee_{count}")?.SetValue(newTeeTimePricePolicy, price.cartFee);
-                                newTeeTimePricePolicy.GetType().GetProperty($"CaddyFee_{count}")?.SetValue(newTeeTimePricePolicy, price.caddyFee);
-                                newTeeTimePricePolicy.GetType().GetProperty($"Tax_{count}")?.SetValue(newTeeTimePricePolicy, price.tax);
-                                newTeeTimePricePolicy.GetType().GetProperty($"AdditionalTax_{count}")?.SetValue(newTeeTimePricePolicy, price.additionalTax);
-                                newTeeTimePricePolicy.GetType().GetProperty($"UnitPrice_{count}")?.SetValue(newTeeTimePricePolicy, price.unitPrice);
-                            }
-                            newTeeTimePricePolicy.CreatedDate = DateTime.UtcNow;
-
-                            _context.TeetimePricePolicies.Add(newTeeTimePricePolicy);
-                            await _context.SaveChangesAsync();
-                            pricePolicyId = newTeeTimePricePolicy.PricePolicyId;
-
-                            // 새로운 정책 추가 후 리스트에 포함
-                            existingTeeTimePricePolicies.Add(newTeeTimePricePolicy);
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "요금 정책 없어서 추가");
-                        }
-
-                        // 환불 정책 중복 확인 후 추가
-                        var sortedRefundPolicies = teeTimeInfo.refundPolicy.OrderByDescending(rp => rp.refundDate).ToList();
-                        var existingRefundPolicy = existingTeeTimeRefundPolicies.FirstOrDefault(rp =>
-                            sortedRefundPolicies.Count <= 5 && Enumerable.Range(1, sortedRefundPolicies.Count).All(i =>
-                                (rp.GetType().GetProperty($"RefundDate_{i}")?.GetValue(rp) as int?) == sortedRefundPolicies[i - 1].refundDate &&
-                                (rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == sortedRefundPolicies[i - 1].refundFee &&
-                                (rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == sortedRefundPolicies[i - 1].refundUnit
-                            )
-                        );
-
-                        int refundPolicyId;
-                        if (existingRefundPolicy != null)
-                        {
-                            refundPolicyId = existingRefundPolicy.RefundPolicyId;
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 있음");
-                        }
-                        else
-                        {
-                            var newRefundPolicy = new OAPI_TeetimeRefundPolicy();
-                            var sortedRefundPolicy = teeTimeInfo.refundPolicy.OrderByDescending(r => r.refundDate).ToList();
-                            for (int i = 0; i < teeTimeInfo.refundPolicy.Count; i++)
-                            {
-                                var refund = teeTimeInfo.refundPolicy[i];
-                                newRefundPolicy.GetType().GetProperty($"RefundDate_{i + 1}")?.SetValue(newRefundPolicy, refund.refundDate);
-                                //newRefundPolicy.GetType().GetProperty($"RefundHour_{i + 1}")?.SetValue(newRefundPolicy, "0000");
-                                newRefundPolicy.GetType().GetProperty($"RefundFee_{i + 1}")?.SetValue(newRefundPolicy, refund.refundFee);
-                                newRefundPolicy.GetType().GetProperty($"RefundUnit_{i + 1}")?.SetValue(newRefundPolicy, (byte?)refund.refundUnit);
-                            }
-                            newRefundPolicy.CreatedDate = DateTime.UtcNow;
-
-                            _context.TeetimeRefundPolicies.Add(newRefundPolicy);
-                            await _context.SaveChangesAsync();
-                            refundPolicyId = newRefundPolicy.RefundPolicyId;
-
-                            // 새로운 정책 추가 후 리스트에 포함
-                            existingTeeTimeRefundPolicies.Add(newRefundPolicy);
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 없어서 추가");
-                        }
-
-                        // 병렬로 티타임 매핑 생성
-                        var teeTimeMappings = new ConcurrentBag<OAPI_TeeTimeMapping>();
-                        Parallel.ForEach(Partitioner.Create(applicableDates), date => // 최상위 루프에서만 병렬화 적용
-                        {
-                            foreach (var time in teeTimeInfo.time)
-                            {
-                                foreach (var (course, code) in teeTimeInfo.courseCode.Zip(time.teeTimeCode))
+                                // 기존 티타임 조회 또는 신규 티타임 추가
+                                var teeTime = teeTimes.FirstOrDefault(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId && tt.MinMembers == teeTimeInfo.minMembers && tt.MaxMembers == teeTimeInfo.maxMembers);
+                                if (teeTime == null)
                                 {
-                                    if (!golfClubCourseMap.TryGetValue(course, out var golfClubCourseId) ||
-                                        !teeTimesDictionary.TryGetValue((golfClubCourseId, teeTimeInfo.minMembers, teeTimeInfo.maxMembers), out var teeTimeDictionary) ||
-                                        !dateSlotMap.TryGetValue(date, out var dateSlotId) ||
-                                        !timeSlotMap.TryGetValue(time.startTime, out var timeSlotId))
-                                        continue;
-
-                                    var key = (teeTimeDictionary.TeetimeId, dateSlotId, timeSlotId);
-
-                                    if (existingTeeTimeMappingsMap.TryGetValue(key, out var existingTeeTimeMapping))
+                                    // 새로운 티타임 추가
+                                    var newTeeTime = new OAPI_TeeTime
                                     {
-                                        // 기존 항목이 있을 경우 조건에 따라 업데이트
-                                        if (existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
-                                            existingTeeTimeMapping.RefundPolicyId != refundPolicyId ||
-                                            existingTeeTimeMapping.SupplierTeetimeCode != code)
-                                        {
-                                            existingTeeTimeMapping.PricePolicyId = pricePolicyId;
-                                            existingTeeTimeMapping.RefundPolicyId = refundPolicyId;
-                                            existingTeeTimeMapping.SupplierTeetimeCode = code;
-                                            existingTeeTimeMapping.UpdatedDate = DateTime.UtcNow;
-                                            teeTimeMappings.Add(existingTeeTimeMapping);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // 새로운 항목 추가
-                                        existingTeeTimeMappingsSet.TryAdd(key, true);
-                                        teeTimeMappings.Add(new OAPI_TeeTimeMapping
-                                        {
-                                            TeetimeId = teeTimeDictionary.TeetimeId,
-                                            DateSlotId = dateSlotId,
-                                            TimeSlotId = timeSlotId,
-                                            PricePolicyId = pricePolicyId,
-                                            RefundPolicyId = refundPolicyId,
-                                            SupplierTeetimeCode = code,
-                                            IsAvailable = true,
-                                            IsDisable = true,
-                                            IsDeleted = false,
-                                            CreatedDate = DateTime.UtcNow
-                                        });
-                                    }
+                                        GolfClubCourseId = golfClubCourse.GolfClubCourseId,
+                                        SupplierId = supplierId,
+                                        GolfClubId = existingGolfclub.GolfClubId,
+                                        MinMembers = teeTimeInfo.minMembers,
+                                        MaxMembers = teeTimeInfo.maxMembers,
+                                        IncludeCart = teeTimeInfo.includeCart,
+                                        IncludeCaddie = teeTimeInfo.includeCaddie,
+                                        ReservationType = teeTimeInfo.reservationType,
+                                        CreatedDate = DateTime.UtcNow
+                                    };
+                                    _context.TeeTimes.Add(newTeeTime);
+                                    await _context.SaveChangesAsync();
+                                    teeTime = newTeeTime;
+                                    teeTimes.Add(newTeeTime);
                                 }
                             }
-                        });
 
-                        var teeTimeMappingsList = teeTimeMappings.ToList();
-                        if (teeTimeMappingsList.Any())
-                        {
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "티타임 저장 시작");
-                            await _context.BulkInsertOrUpdateAsync(teeTimeMappingsList);
+                            // 검색용 딕셔너리 현재 위치에서 만들어야 검색한 티타임 + 추가된 티타임 으로 만들수 있음
+                            Dictionary<(int GolfClubCourseId, int MinMembers, int MaxMembers), OAPI_TeeTime> teeTimesDictionary = teeTimes.ToDictionary(t => (t.GolfClubCourseId, t.MinMembers, t.MaxMembers));
+
+                            // 요금 정책 중복 확인 후 추가
+                            var existingTeeTimePricePolicy = existingTeeTimePricePolicies.FirstOrDefault(p =>
+                                Enumerable.Range(1, 6).All(count =>
+                                    p.GetType().GetProperty($"GreenFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.greenFee &&
+                                    p.GetType().GetProperty($"CartFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.cartFee &&
+                                    p.GetType().GetProperty($"CaddyFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.caddyFee &&
+                                    p.GetType().GetProperty($"Tax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.tax &&
+                                    p.GetType().GetProperty($"AdditionalTax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.additionalTax &&
+                                    p.GetType().GetProperty($"UnitPrice_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.unitPrice
+                                ));
+
+                            int pricePolicyId;
+                            if (existingTeeTimePricePolicy != null)
+                            {
+                                pricePolicyId = existingTeeTimePricePolicy.PricePolicyId;
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "요금 정책 있음");
+                            }
+                            else
+                            {
+                                var newTeeTimePricePolicy = new OAPI_TeetimePricePolicy();
+                                foreach (var price in teeTimeInfo.price)
+                                {
+                                    var count = price.playerCount;
+                                    newTeeTimePricePolicy.GetType().GetProperty($"GreenFee_{count}")?.SetValue(newTeeTimePricePolicy, price.greenFee);
+                                    newTeeTimePricePolicy.GetType().GetProperty($"CartFee_{count}")?.SetValue(newTeeTimePricePolicy, price.cartFee);
+                                    newTeeTimePricePolicy.GetType().GetProperty($"CaddyFee_{count}")?.SetValue(newTeeTimePricePolicy, price.caddyFee);
+                                    newTeeTimePricePolicy.GetType().GetProperty($"Tax_{count}")?.SetValue(newTeeTimePricePolicy, price.tax);
+                                    newTeeTimePricePolicy.GetType().GetProperty($"AdditionalTax_{count}")?.SetValue(newTeeTimePricePolicy, price.additionalTax);
+                                    newTeeTimePricePolicy.GetType().GetProperty($"UnitPrice_{count}")?.SetValue(newTeeTimePricePolicy, price.unitPrice);
+                                }
+                                newTeeTimePricePolicy.CreatedDate = DateTime.UtcNow;
+
+                                _context.TeetimePricePolicies.Add(newTeeTimePricePolicy);
+                                await _context.SaveChangesAsync();
+                                pricePolicyId = newTeeTimePricePolicy.PricePolicyId;
+
+                                // 새로운 정책 추가 후 리스트에 포함
+                                existingTeeTimePricePolicies.Add(newTeeTimePricePolicy);
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "요금 정책 없어서 추가");
+                            }
+
+                            // 환불 정책 중복 확인 후 추가
+                            var sortedRefundPolicies = teeTimeInfo.refundPolicy.OrderByDescending(rp => rp.refundDate).ToList();
+                            var existingRefundPolicy = existingTeeTimeRefundPolicies.FirstOrDefault(rp =>
+                                sortedRefundPolicies.Count <= 5 && Enumerable.Range(1, sortedRefundPolicies.Count).All(i =>
+                                    (rp.GetType().GetProperty($"RefundDate_{i}")?.GetValue(rp) as int?) == sortedRefundPolicies[i - 1].refundDate &&
+                                    (rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == sortedRefundPolicies[i - 1].refundFee &&
+                                    (rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == sortedRefundPolicies[i - 1].refundUnit
+                                )
+                            );
+
+                            int refundPolicyId;
+                            if (existingRefundPolicy != null)
+                            {
+                                refundPolicyId = existingRefundPolicy.RefundPolicyId;
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 있음");
+                            }
+                            else
+                            {
+                                var newRefundPolicy = new OAPI_TeetimeRefundPolicy();
+                                var sortedRefundPolicy = teeTimeInfo.refundPolicy.OrderByDescending(r => r.refundDate).ToList();
+                                for (int i = 0; i < teeTimeInfo.refundPolicy.Count; i++)
+                                {
+                                    var refund = teeTimeInfo.refundPolicy[i];
+                                    newRefundPolicy.GetType().GetProperty($"RefundDate_{i + 1}")?.SetValue(newRefundPolicy, refund.refundDate);
+                                    //newRefundPolicy.GetType().GetProperty($"RefundHour_{i + 1}")?.SetValue(newRefundPolicy, "0000");
+                                    newRefundPolicy.GetType().GetProperty($"RefundFee_{i + 1}")?.SetValue(newRefundPolicy, refund.refundFee);
+                                    newRefundPolicy.GetType().GetProperty($"RefundUnit_{i + 1}")?.SetValue(newRefundPolicy, (byte?)refund.refundUnit);
+                                }
+                                newRefundPolicy.CreatedDate = DateTime.UtcNow;
+
+                                _context.TeetimeRefundPolicies.Add(newRefundPolicy);
+                                await _context.SaveChangesAsync();
+                                refundPolicyId = newRefundPolicy.RefundPolicyId;
+
+                                // 새로운 정책 추가 후 리스트에 포함
+                                existingTeeTimeRefundPolicies.Add(newRefundPolicy);
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 없어서 추가");
+                            }
+
+                            // 병렬로 티타임 매핑 생성
+                            var teeTimeMappings = new ConcurrentBag<OAPI_TeeTimeMapping>();
+                            Parallel.ForEach(Partitioner.Create(applicableDates), date => // 최상위 루프에서만 병렬화 적용
+                            {
+                                foreach (var time in teeTimeInfo.time)
+                                {
+                                    foreach (var (course, code) in teeTimeInfo.courseCode.Zip(time.teeTimeCode))
+                                    {
+                                        if (!golfClubCourseMap.TryGetValue(course, out var golfClubCourseId) ||
+                                            !teeTimesDictionary.TryGetValue((golfClubCourseId, teeTimeInfo.minMembers, teeTimeInfo.maxMembers), out var teeTimeDictionary) ||
+                                            !dateSlotMap.TryGetValue(date, out var dateSlotId) ||
+                                            !timeSlotMap.TryGetValue(time.startTime, out var timeSlotId))
+                                            continue;
+
+                                        var key = (teeTimeDictionary.TeetimeId, dateSlotId, timeSlotId);
+
+                                        if (existingTeeTimeMappingsMap.TryGetValue(key, out var existingTeeTimeMapping))
+                                        {
+                                            // 기존 항목이 있을 경우 조건에 따라 업데이트
+                                            if (existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
+                                                existingTeeTimeMapping.RefundPolicyId != refundPolicyId ||
+                                                existingTeeTimeMapping.SupplierTeetimeCode != code)
+                                            {
+                                                existingTeeTimeMapping.PricePolicyId = pricePolicyId;
+                                                existingTeeTimeMapping.RefundPolicyId = refundPolicyId;
+                                                existingTeeTimeMapping.SupplierTeetimeCode = code;
+                                                existingTeeTimeMapping.UpdatedDate = DateTime.UtcNow;
+                                                teeTimeMappings.Add(existingTeeTimeMapping);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // 새로운 항목 추가
+                                            existingTeeTimeMappingsSet.TryAdd(key, true);
+                                            teeTimeMappings.Add(new OAPI_TeeTimeMapping
+                                            {
+                                                TeetimeId = teeTimeDictionary.TeetimeId,
+                                                DateSlotId = dateSlotId,
+                                                TimeSlotId = timeSlotId,
+                                                PricePolicyId = pricePolicyId,
+                                                RefundPolicyId = refundPolicyId,
+                                                SupplierTeetimeCode = code,
+                                                IsAvailable = true,
+                                                IsDisable = true,
+                                                IsDeleted = false,
+                                                CreatedDate = DateTime.UtcNow
+                                            });
+                                        }
+                                    }
+                                }
+                            });
+
+                            var teeTimeMappingsList = teeTimeMappings.ToList();
+                            if (teeTimeMappingsList.Any())
+                            {
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "티타임 저장 시작");
+                                await _context.BulkInsertOrUpdateAsync(teeTimeMappingsList);
+                            }
                         }
+
+                        //Debug.WriteLine("ProcessTeeTime is running.");
+                        // 트랜잭션 커밋
+                        await transaction.CommitAsync();
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "티타임 처리 완료");
+
+                        return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
                     }
+                    catch (Exception ex)
+                    {
+                        // 오류 발생 시 트랜잭션 롤백
+                        await transaction.RollbackAsync();
 
-                    //Debug.WriteLine("ProcessTeeTime is running.");
-                    // 트랜잭션 커밋
-                    await transaction.CommitAsync();
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "티타임 처리 완료");
-
-                    return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
+                        return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    // 오류 발생 시 트랜잭션 롤백
-                    await transaction.RollbackAsync();
-
-                    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-                }
-            }
+            });
         }
 
     }
