@@ -101,7 +101,7 @@ namespace AGL.Api.Schedulers_API
             app.ExceptionHandler();
             app.UseRequestLoggerMiddleware();
 
-            if (env.EnvironmentName == "SendBox" || env.EnvironmentName == "Development")
+            if (env.EnvironmentName == "SandBox" || env.EnvironmentName == "Development")
             {
                 // 스웨거는 테스트를 위한 API만 제공. 리얼은 스웨거 제공하지 않음
                 app.UseDeveloperExceptionPage();
