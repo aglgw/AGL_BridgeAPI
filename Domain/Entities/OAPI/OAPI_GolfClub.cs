@@ -15,7 +15,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         [ForeignKey("OAPI_Supplier")]
         public int? SupplierId { get; set; } // 공급자ID (FK)
 
-        [Required, StringLength(100)]
+        [Required, StringLength(64)]
         public string GolfClubCode { get; set; } // 골프장코드
 
         [Required, StringLength(512)]

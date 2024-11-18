@@ -12,11 +12,11 @@ namespace AGL.Api.Bridge_API.Interfaces
     public interface IBookingService
     {
         /// <summary>
-        /// 예약조회
+        /// 예약요청
         /// </summary>
         /// <param name="Req"></param>
         /// <returns></returns>
-        Task<IDataResult> POSTBookingRequest(ReqBookingRequest Req, string ClientCode);
+        Task<IDataResult> POSTBookingRequest(ReqBookingRequest Req);
 
         /// <summary>
         /// 예약조회
@@ -37,7 +37,8 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// </summary>
         /// <param name="Req"></param>
         /// <returns></returns>
-        Task<IDataResult> GetBookingCancel(ReservationRequest Req);
+        Task<IDataResult> PostBookingCancel(ReservationDaemonRequest Req);
+
         /// <summary>
         /// 예약확정
         /// </summary>

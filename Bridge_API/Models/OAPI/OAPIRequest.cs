@@ -146,6 +146,19 @@ namespace AGL.Api.Bridge_API.Models.OAPI
     }
 
 
+    /// <summary>
+    /// 예약확정
+    /// </summary>
+    [DataContract]
+    public class ReservationDaemonRequest : ReservationRequest
+    {
+        /// <summary>
+        /// 데몬 아이디 - 연동용
+        /// </summary>
+        [DataMember]
+        public string? daemonId { get; set; }
+    }
+
 
     /// <summary>
     ///예약 목록 조회
@@ -185,6 +198,16 @@ namespace AGL.Api.Bridge_API.Models.OAPI
     /// </summary>
     public class ReqBookingRequest : TeeTimeBaseRequest
     {
+        /// <summary>
+        /// 데몬 아이디 - 연동용
+        /// </summary>
+        [DataMember]
+        public string? daemonId { get; set; }
+        /// <summary>
+        /// 공급사 코드 - 연동용
+        /// </summary>
+        [DataMember]
+        public string? supplierCode { get; set; }
         /// <summary>
         /// 코스 코드
         /// </summary>

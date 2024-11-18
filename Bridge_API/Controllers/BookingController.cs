@@ -43,16 +43,16 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation")]
         [HttpPost]
         public async Task<IDataResult> POSTBookingRequest(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, ReqBookingRequest request)
+            [FromBody] ReqBookingRequest request)
         {
-            var result = await _bookingService.POSTBookingRequest(request, SupplierCode);
+            var result = await _bookingService.POSTBookingRequest(request);
 
             return result;
         }
 
-        /// <summary>
         /// 예약 조회
-        /// </summary>
+        /// </summary>        /// <summary>
+
         /// <returns></returns>
         [Route("reservation/list")]
         [HttpGet]
@@ -74,7 +74,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation/confirm/{reservationId}")]
         [HttpGet]
         public async Task<IDataResult> GetConfirmBookingInquiry(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromRoute] string reservationId)
+            [FromRoute] string reservationId)
         {
             var result = await _bookingService.GetConfirmBookingInquiry(reservationId);
 
@@ -88,11 +88,11 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/cancel")]
         [HttpPost]
-        public async Task<IDataResult> GetBookingCancel(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody] ReservationRequest Req)
+        public async Task<IDataResult> PostBookingCancel(
+            [FromBody] ReservationDaemonRequest Req)
         {
 
-            var result = await _bookingService.GetBookingCancel(Req);
+            var result = await _bookingService.PostBookingCancel(Req);
 
             return result;
         }
