@@ -31,7 +31,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public int RefundPolicyId { get; set; }
 
         [StringLength(100)]
-        public string SupplierTeetimeCode { get; set; }
+        public string? SupplierTeetimeCode { get; set; }
 
         [Required]
         public bool IsAvailable { get; set; } // 판매 여부

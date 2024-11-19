@@ -25,10 +25,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public string TokenAglToSupplier { get; set; } // AGL 발급토큰
 
         [StringLength(50)]
-        public string EndPointDev { get; set; } // 개발 엔드포인트
-
-        [StringLength(50)]
-        public string EndPointProd { get; set; } // 상용 엔드포인트
+        public string EndPoint { get; set; } // 엔드포인트
 
         [Required]
         public DateTime CreatedDate { get; set; } // 생성일

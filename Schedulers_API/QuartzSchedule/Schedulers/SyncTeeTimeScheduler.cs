@@ -49,7 +49,7 @@ namespace AGL.Api.Schedulers_API.Schedulers
             var trigger = TriggerBuilder
                 .Create()
                 .StartNow()
-                .WithCronSchedule($"0 */1 * * * ?")  // 1분 마다 실행
+                .WithCronSchedule($"*/30 * * * * ?")  // 30초 마다 실행
                 .Build();
 
             var result = _scheduler.ScheduleJob(jobDetails, trigger);

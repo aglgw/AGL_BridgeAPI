@@ -325,7 +325,7 @@ namespace AGL.Api.ApplicationCore.Helpers
                     }
 
                     // form
-                    var content = new FormUrlEncodedContent(query);
+                    var content = new FormUrlEncodedContent(query); 
 
                     //HTTP POST
                     var result = await client.PostAsync(url, content);
@@ -451,6 +451,88 @@ namespace AGL.Api.ApplicationCore.Helpers
                 //Debug.WriteLine("EX:" + ex.Message);
                 Logs.LogRegDay("ApplicationCore", "RestfulClient", "RestfulClient", "RestfulClient > PUTAPIHeaderForm Exception ex : ", ex.Message, true);
                 LogService.logInformation($"fail RestfulClient > PUTAPIHeaderForm Exception ex : {ex.Message}");
+            }
+            action(httpStatusCode, reasonPhrase, retValue);
+        }
+
+        /// <summary>
+        /// Header[key,value], Form[key,value] POST
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="url"></param>
+        /// <param name="header"></param>
+        /// <param name="query"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public static async Task POSTAPIHeaderObject<T>(string url, Dictionary<string, string> header, object obj, Action<HttpStatusCode, string, T> action) where T : new()
+        {
+            HttpStatusCode httpStatusCode = HttpStatusCode.OK;
+            string reasonPhrase = string.Empty;
+            T retValue = new T();
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    // 타임아웃 30초
+                    client.Timeout = TimeSpan.FromSeconds(30);
+
+                    //header
+                    foreach (var kv in header)
+                    {
+                        client.DefaultRequestHeaders.Add(kv.Key, kv.Value);
+                    }
+
+                    // form
+                    string json = JsonSerializer.Serialize(obj);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    //HTTP POST
+                    var result = await client.PostAsync(url, content);
+
+                    //Logs.LogRegDay("RestfulClient", "RestfulClient > POSTFormAPI > result : ", result.ToString());
+
+                    if (result.IsSuccessStatusCode)
+                    {
+                        var readTask = result.Content.ReadAsStringAsync().Result;
+                        //결과값확인
+                        //Logs.LogRegDay("RestfulClient", $"RestfulClient > POSTFormAPI > result readTask", readTask);
+                        readTask = readTask.Replace(",]", "]");
+                        retValue = System.Text.Json.JsonSerializer.Deserialize<T>(readTask);
+                    }
+                    else
+                    {
+                        httpStatusCode = HttpStatusCode.InternalServerError;
+                        reasonPhrase = result.ReasonPhrase;
+                    }
+                }
+            }
+            catch (WebException ex)
+            {
+                HttpWebResponse response = (System.Net.HttpWebResponse)ex.Response;
+
+                if (response != null)
+                {
+                    httpStatusCode = response.StatusCode;
+                }
+                else
+                {
+                    Debug.WriteLine("EX:" + ex.Message);
+                    httpStatusCode = HttpStatusCode.InternalServerError;
+                }
+
+                reasonPhrase = ex.Message;
+                Logs.LogRegDay("ApplicationCore", "RestfulClient", "RestfulClient", "RestfulClient > POSTAPIHeaderForm WebException ex : ", ex.Message, true);
+                Logs.LogRegDay("ApplicationCore", "RestfulClient", "RestfulClient", "RestfulClient > POSTAPIHeaderForm WebException ex.Response : ", ex.Response.ToString(), true);
+                LogService.logInformation($"fail RestfulClient > POSTAPIHeaderForm WebException ex : {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                httpStatusCode = HttpStatusCode.InternalServerError;
+                reasonPhrase = ex.Message;
+                //Debug.WriteLine("EX:" + ex.Message);
+                Logs.LogRegDay("ApplicationCore", "RestfulClient", "RestfulClient", "RestfulClient > POSTAPIHeaderForm Exception ex : ", ex.Message, true);
+                LogService.logInformation($"fail RestfulClient > POSTAPIHeaderForm Exception ex : {ex.Message}");
             }
             action(httpStatusCode, reasonPhrase, retValue);
         }

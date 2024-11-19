@@ -260,7 +260,28 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasOne(e => e.Supplier)
                    .WithMany(s => s.ReservationManagements)
                    .HasForeignKey(s => s.SupplierId);
+            
+            builder.HasMany(e => e.Guests)
+                   .WithOne(g => g.ReservationManagement)
+                   .HasForeignKey(g => g.ReservationManagementId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             builder.Property(e => e.ReservationStatus).HasColumnType("TINYINT");
+            builder.Property(e => e.ReservationMembers).HasColumnType("TINYINT");
+        }
+    }
+    public class OAPIReservationManagementGuestConfiguration : IEntityTypeConfiguration<OAPI_ReservationmanagementGuest>
+    {
+        public void Configure(EntityTypeBuilder<OAPI_ReservationmanagementGuest> builder)
+        {
+            builder.ToTable("OAPI_ReservationmanagementGuest");
+            builder.HasKey(e => e.ReservationManagementGuestId);
+
+            builder.HasOne(g => g.ReservationManagement)
+                   .WithMany(r => r.Guests)
+                   .HasForeignKey(g => g.ReservationManagementId);
+
+            builder.Property(e => e.Idx).HasColumnType("TINYINT");
         }
     }
 

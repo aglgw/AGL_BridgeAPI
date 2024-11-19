@@ -33,7 +33,8 @@ namespace AGL.Api.Infrastructure.Data
         public DbSet<OAPI_TeetimeRefundPolicy> TeetimeRefundPolicies { get; set; } // 환불 정책
         public DbSet<OAPI_TeetimePricePolicy> TeetimePricePolicies { get; set; } // 가격 정책
 
-        public DbSet<OAPI_ReservationManagement> ReservationManagements { get; set; } // 가격 정책
+        public DbSet<OAPI_ReservationManagement> ReservationManagements { get; set; } // 예약 관리
+        public DbSet<OAPI_ReservationmanagementGuest> ReservationManagementGuests { get; set; } // 예약 관리 이용객
 
         public DbSet<OAPI_SyncClient> SyncClients { get; set; } // 싱크 클라이언트 (내부 혹은 외부 채널)
         public DbSet<OAPI_SyncTeeTimeMapping> SyncTeeTimeMappings { get; set; } // 싱크 티타임 날짜시간정보

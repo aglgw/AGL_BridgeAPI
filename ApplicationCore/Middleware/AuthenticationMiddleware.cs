@@ -24,8 +24,16 @@ namespace AGL.Api.ApplicationCore.Middleware
         }
         public async Task InvokeAsync(HttpContext context)
         {
-            // 특정 경로나 컨트롤러에서 미들웨어 제외
+            // /api/inbound 경로는 예외 처리
             if (context.Request.Path.StartsWithSegments("/api/inbound"))
+            {
+                await _next(context); // 미들웨어 건너뛰기
+                return;
+            }
+
+            // /api/reservation/confirm 경로는 예외 처리 대상에서 제외
+            if (context.Request.Path.StartsWithSegments("/api/reservation") &&
+                !context.Request.Path.Equals("/api/reservation/confirm", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context); // 미들웨어 건너뛰기
                 return;
