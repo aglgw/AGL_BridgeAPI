@@ -30,7 +30,7 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// </summary>
         /// <param name="reservationId"></param>
         /// <returns></returns>
-        Task<IDataResult> GetConfirmBookingInquiry(string reservationId);
+        Task<IDataResult> GetConfirmBookingInquiry(string reservationId, string daemonId);
 
         /// <summary>
         /// 예약 취소

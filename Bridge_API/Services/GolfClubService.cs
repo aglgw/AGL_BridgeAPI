@@ -111,10 +111,12 @@ namespace AGL.Api.Bridge_API.Services
                     }).ToList()
                 }).ToList();
 
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 검색 성공");
                 return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);
             }
             catch (Exception ex)
             {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 검색 실패 {ex.Message}", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
@@ -300,7 +302,9 @@ namespace AGL.Api.Bridge_API.Services
                             foreach (var hole in request.holeInfo)
                             {
                                 if (hole.holeNumber <= 0)
+                                {
                                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "HoleNumber is invalid", null);
+                                }
 
                                 var existingHole = existingHoles.FirstOrDefault(h => h.HoleNumber.ToString() == hole.holeNumber.ToString());
                                 if (existingHole != null)
@@ -358,7 +362,7 @@ namespace AGL.Api.Bridge_API.Services
                     }
                     catch (Exception ex)
                     {
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 저장 실패",true);
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 저장 실패 {ex.Message}",true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
                     }
                 };

@@ -74,9 +74,10 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation/confirm/{reservationId}")]
         [HttpGet]
         public async Task<IDataResult> GetConfirmBookingInquiry(
-            [FromRoute] string reservationId)
+            [FromRoute] string reservationId,
+            [FromQuery] string daemonId)
         {
-            var result = await _bookingService.GetConfirmBookingInquiry(reservationId);
+            var result = await _bookingService.GetConfirmBookingInquiry(reservationId, daemonId);
 
             return result;
         }
