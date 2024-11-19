@@ -74,14 +74,76 @@ namespace AGL.Api.Bridge_API.Services
                     .Where(rp => rp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode))
                     .ToDictionaryAsync(rp => rp.RefundPolicyId);
 
-                // 주어진 골프장 코드와 날짜 범위에 해당하는 티타임 매핑 가져오기
-                var teeTimeMappings = await _context.TeeTimeMappings
-                    .Include(tm => tm.TeeTime).ThenInclude(t => t.GolfClub)
-                    .Include(tm => tm.TeeTime).ThenInclude(t => t.GolfClubCourse)
-                    .Include(tm => tm.TimeSlot)
-                    .Include(tm => tm.DateSlot)
-                    .Where(tm => tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode && string.Compare(tm.DateSlot.PlayDate, startDateParsed) >= 0 && string.Compare(tm.DateSlot.PlayDate, endDateParsed) <= 0 && tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode)
+                // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
+                var dateSlotIds = await _context.DateSlots
+                    .Where(ds => string.Compare(ds.PlayDate, startDateParsed) >= 0 && string.Compare(ds.PlayDate, endDateParsed) <= 0)
+                    .Select(ds => ds.DateSlotId)
                     .ToListAsync();
+
+                // 골프장 코드와 공급자 코드에 해당하는 골프장 가져오기
+                var golfClub = await _context.GolfClubs
+                    .Where(gc => gc.GolfClubCode == request.golfClubCode)
+                    .Select(gc => new { gc.GolfClubId, gc.SupplierId })
+                    .FirstOrDefaultAsync();
+
+                if (golfClub == null)
+                {
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Invalid GolfClubCode", null);
+                }
+
+                // 주어진 골프장 코드와 날짜 범위에 해당하는 티타임 매핑 가져오기 (필요한 필드만 선택적으로 가져오기)
+                var teeTimeMappings = new List<OAPI_TeeTimeMapping>();
+                int batchSize = 10000;
+                var query = _context.TeeTimeMappings
+                    .Where(tm => tm.TeeTime.GolfClubId == golfClub.GolfClubId
+                    && dateSlotIds.Contains(tm.DateSlotId)
+                    && tm.TeeTime.SupplierId == golfClub.SupplierId)
+                    .Select(tm => new
+                    {
+                        TeeTime = new
+                        {
+                            tm.TeeTime.MinMembers,
+                            tm.TeeTime.MaxMembers,
+                            tm.TeeTime.IncludeCart,
+                            tm.TeeTime.IncludeCaddie,
+                            tm.TeeTime.ReservationType,
+                            tm.TeeTime.GolfClubCourse.CourseCode
+                        },
+                        tm.TimeSlot.StartTime,
+                        tm.SupplierTeetimeCode,
+                        tm.DateSlot.PlayDate,
+                        tm.PricePolicyId,
+                        tm.RefundPolicyId
+                    });
+
+                // 배치 단위로 티타임 매핑을 가져와 리스트에 추가
+                int totalRecords = await query.CountAsync();
+                if (totalRecords == 0)
+                {
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "No TeeTime records found", null);
+                }
+
+                for (int i = 0; i < totalRecords; i += batchSize)
+                {
+                    var batch = await query.Skip(i).Take(batchSize).ToListAsync();
+                    teeTimeMappings.AddRange(batch.Select(tm => new OAPI_TeeTimeMapping
+                    {
+                        TeeTime = new OAPI_TeeTime
+                        {
+                            MinMembers = tm.TeeTime.MinMembers,
+                            MaxMembers = tm.TeeTime.MaxMembers,
+                            IncludeCart = tm.TeeTime.IncludeCart,
+                            IncludeCaddie = tm.TeeTime.IncludeCaddie,
+                            ReservationType = tm.TeeTime.ReservationType,
+                            GolfClubCourse = new OAPI_GolfClubCourse { CourseCode = tm.TeeTime.CourseCode }
+                        },
+                        TimeSlot = new OAPI_TimeSlot { StartTime = tm.StartTime },
+                        SupplierTeetimeCode = tm.SupplierTeetimeCode,
+                        DateSlot = new OAPI_DateSlot { PlayDate = tm.PlayDate },
+                        PricePolicyId = tm.PricePolicyId,
+                        RefundPolicyId = tm.RefundPolicyId
+                    }));
+                }
 
                 // 특정 속성들(최소/최대 인원, 가격 정책, 환불 정책)으로 티타임 그룹화
                 var groupedTeeTimes = teeTimeMappings
