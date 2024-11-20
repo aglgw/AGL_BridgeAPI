@@ -77,10 +77,7 @@ namespace AGL.Api.Bridge_API.Services
 
 
                 // 응답 데이터 준비
-                var responseData = new Dictionary<string, List<InboundTeeTimeResponse>>
-                {
-                    ["resultData"] = new List<InboundTeeTimeResponse>()
-                };
+                var responseData = new List<InboundTeeTimeResponse>();
 
                 foreach ( var tm in teeTimeMappings )
                 {
@@ -95,7 +92,7 @@ namespace AGL.Api.Bridge_API.Services
                         sumAmt_3 = pricePolicy?.UnitPrice_3,
                         sumAmt_4 = pricePolicy?.UnitPrice_4,
                     };
-                    responseData["resultData"].Add(InboundData);
+                    responseData.Add(InboundData);
                 }
 
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime List successfully", responseData);
