@@ -37,5 +37,20 @@ namespace AGL.Api.Bridge_API.Controllers
             return result;
         }
 
+        /// <summary>
+        /// 골프장 조회
+        /// </summary>
+        /// <returns></returns>
+        [Route("inbound/golfclub/list")]
+        [HttpGet]
+        //[DisableValidation]
+        public async Task<IDataResult> GetInboundGolfClub(
+            [FromQuery(Name = "GolfclubCode")] string? GolfclubCode)
+        {
+            var result = await _InboundService.GetInboundGolfClub(GolfclubCode);
+
+            return result;
+        }
+
     }
 }

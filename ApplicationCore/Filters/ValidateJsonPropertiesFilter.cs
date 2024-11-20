@@ -39,8 +39,32 @@ namespace AGL.Api.ApplicationCore.Filters
             var body = await reader.ReadToEndAsync();
             context.HttpContext.Request.Body.Position = 0; // 스트림 위치를 초기화하여 다른 미들웨어가 사용할 수 있도록 함
 
+            var options = new JsonSerializerOptions
+            {
+                AllowTrailingCommas = true
+            };
+
             // 요청 본문을 Dictionary로 변환
-            var requestData = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
+            Dictionary<string, object> requestData;
+            try
+            {
+                requestData = JsonSerializer.Deserialize<Dictionary<string, object>>(body, options);
+            }
+            catch (Exception ex)
+            {
+                context.Result = new JsonResult(new
+                {
+                    isSuccess = false,
+                    rstCd = "ERROR",
+                    rstMsg = "Invalid JSON format: " + ex.Message,
+                    statusCode = 400
+                })
+                {
+                    StatusCode = 400
+                };
+                return;
+            }
+
             if (requestData == null)
             {
                 // JSON 요청 본문이 없는 경우
