@@ -49,7 +49,7 @@ namespace AGL.Api.ApplicationCore.Interfaces
 
         public async Task<OAPI_Supplier> GetSupplierByCodeAsync(string supplierCode)
         {
-            return await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
+            return await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
         }
     }
 }

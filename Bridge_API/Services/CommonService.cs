@@ -90,9 +90,20 @@ namespace AGL.Api.Bridge_API.Services
                     data = keyValueStringData
                 };
             }
-            else if (data is List<GolfClubInfoWithInboundCode> golfClubInfoList)
+            else if (data is List<GolfClubInfoWithInboundCode> golfClubInfoWithInboundCodeList)
             {
                 return new OAPICommonListResponse<GolfClubInfoWithInboundCode>
+                {
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode,
+                    data = golfClubInfoWithInboundCodeList
+                };
+            }
+            else if (data is List<GolfClubInfo> golfClubInfoList)
+            {
+                return new OAPICommonListResponse<GolfClubInfo>
                 {
                     isSuccess = isSuccess,
                     rstCd = description,

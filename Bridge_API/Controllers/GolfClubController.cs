@@ -62,7 +62,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("golfclub/list")]
         [HttpGet]
         //[DisableValidation]
-        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(
+        public async Task<OAPICommonListResponse<GolfClubInfo>> GetGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
             [FromQuery(Name = "GolfclubCode")] string? GolfclubCode)
         {

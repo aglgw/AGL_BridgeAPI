@@ -52,6 +52,9 @@ namespace AGL.Api.Bridge_API.Services
         /// <returns></returns>
         public async Task<IDataResult> POSTBookingRequest(ReqBookingRequest Req)
         {
+            //ComputeSha256.ComputeSha256Hash
+
+
             var inboundCode = Req.inboundCode;
             if (string.IsNullOrWhiteSpace(inboundCode))
             {
@@ -84,8 +87,9 @@ namespace AGL.Api.Bridge_API.Services
             Req.reservationStartTime = parsedStartTime.ToString("hhmm");
 
             // 인증 정보 설정
-            string clientCode = supplier.AglCode;
-            string token = GenerateSHA256Hash(supplier.TokenAglToSupplier);
+            var authentication = supplier.Authentication;
+            string clientCode = authentication.AglCode;
+            string token = GenerateSHA256Hash(authentication.TokenAgl);
 
             // 엔드포인트 설정
             string EndpointUrl = supplier.EndPoint;
@@ -287,28 +291,31 @@ namespace AGL.Api.Bridge_API.Services
         /// </summary>
         /// <param name="reservationId"></param>
         /// <returns></returns>
-        public async Task<IDataResult> GetConfirmBookingInquiry(string reservationId, string daemonId)
+        public async Task<IDataResult> GetConfirmBookingInquiry(string reservationId, string inboundCode)
         {
 
-            if (string.IsNullOrWhiteSpace(daemonId))
+            if (string.IsNullOrWhiteSpace(inboundCode))
             {
-                Utils.UtilLogs.LogRegHour(daemonId, daemonId, "Booking", "inboundCode 키 없음");
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, "Booking", "inboundCode 키 없음");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "daemonId or supplierCode not found", null);
             }
 
             OAPI_Supplier? supplier;
 
-            supplier = _context.Suppliers.Where(s => s.DaemonId == daemonId).FirstOrDefault();
+            string supplierCode = inboundCode.Split("_").Last();
+
+            supplier = _context.Suppliers.Where(s => s.SupplierCode == supplierCode).FirstOrDefault();
 
             if (supplier == null)
             {
-                Utils.UtilLogs.LogRegHour(daemonId, daemonId, $"Booking", $"예약 요청 공급사 누락");
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"예약 요청 공급사 누락");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
             }
 
             // 인증 정보 설정
-            string clientCode = supplier.AglCode;
-            string token = GenerateSHA256Hash(supplier.TokenAglToSupplier);
+            var authentication = supplier.Authentication;
+            string clientCode = authentication.AglCode;
+            string token = GenerateSHA256Hash(authentication.TokenAgl);
 
             // 엔드포인트 설정
             string EndpointUrl = $"{supplier.EndPoint.TrimEnd('/')}/reservation";
@@ -341,7 +348,7 @@ namespace AGL.Api.Bridge_API.Services
                     else
                     {
                         strReaponse = reasonPhrase;
-                        Utils.UtilLogs.LogRegHour(daemonId, daemonId, $"Booking", $"확정 목록 조회 실패 statusCode : {status} : {strReaponse} ",true);
+                        Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 조회 실패 statusCode : {status} : {strReaponse} ",true);
                     }
                 });
 
@@ -349,18 +356,18 @@ namespace AGL.Api.Bridge_API.Services
                 {
 
 
-                    Utils.UtilLogs.LogRegHour(daemonId, daemonId, $"Booking", $"확정 목록 조회 성공");
+                    Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 조회 성공");
                 }
                 else
                 {
-                    Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "확정 목록 정보 없음", true);
+                    Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "확정 목록 정보 없음", true);
                     return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Confirmation Reservation was fail", null);
                 }
 
             }
             catch (Exception ex)
             {
-                Utils.UtilLogs.LogRegHour(daemonId, daemonId, "Booking", "예약요청 저장 실패", true);
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, "Booking", "예약요청 저장 실패", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
 
@@ -393,8 +400,9 @@ namespace AGL.Api.Bridge_API.Services
             }
 
             // 인증 정보 설정
-            string clientCode = supplier.AglCode;
-            string token = GenerateSHA256Hash(supplier.TokenAglToSupplier);
+            var authentication = supplier.Authentication;
+            string clientCode = authentication.AglCode;
+            string token = GenerateSHA256Hash(authentication.TokenAgl);
 
             // 엔드포인트 설정
             string EndpointUrl = supplier.EndPoint;

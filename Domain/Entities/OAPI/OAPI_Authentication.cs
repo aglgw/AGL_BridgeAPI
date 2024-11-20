@@ -42,9 +42,9 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         // 네비게이션 속성
         [JsonIgnore]
-        public virtual OAPI_Supplier supplier { get; set; } = new OAPI_Supplier();
+        public virtual OAPI_Supplier supplier { get; set; }
 
         [JsonIgnore]
-        public virtual OAPI_SyncClient syncClient { get; set; } = new OAPI_SyncClient();
+        public virtual OAPI_SyncClient syncClient { get; set; }
     }
 }

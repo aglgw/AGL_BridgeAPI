@@ -52,7 +52,7 @@ namespace AGL.Api.Bridge_API.Services
             return await ValidateTeeTime(request, supplierCode, request.golfClubCode, "PUT");
         }
 
-        public async Task<OAPIDataResponse<List<TeeTimeInfo>>> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
+        public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
         {
             if (string.IsNullOrEmpty(request.startDate) && string.IsNullOrEmpty(request.endDate))
             {
@@ -674,10 +674,12 @@ namespace AGL.Api.Bridge_API.Services
                                         if (existingTeeTimeMappingsMap.TryGetValue(key, out var existingTeeTimeMapping))
                                         {
                                             // 기존 항목이 있을 경우 조건에 따라 업데이트
-                                            if (existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
+                                            if (existingTeeTimeMapping.TeetimeId != teeTimeDictionary.TeetimeId || 
+                                                existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
                                                 existingTeeTimeMapping.RefundPolicyId != refundPolicyId ||
                                                 existingTeeTimeMapping.SupplierTeetimeCode != code)
                                             {
+                                                existingTeeTimeMapping.TeetimeId = teeTimeDictionary.TeetimeId;
                                                 existingTeeTimeMapping.PricePolicyId = pricePolicyId;
                                                 existingTeeTimeMapping.RefundPolicyId = refundPolicyId;
                                                 existingTeeTimeMapping.SupplierTeetimeCode = code;

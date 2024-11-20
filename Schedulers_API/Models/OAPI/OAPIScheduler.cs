@@ -16,7 +16,7 @@ namespace AGL.Api.API_Schedulers.Models.OAPI
             /// 데몬 ID
             /// </summary>
             [DataMember]
-            public string daemonId { get; set; }
+            public string inboundCode { get; set; }
             /// <summary>
             /// 골프장 코드
             /// </summary>

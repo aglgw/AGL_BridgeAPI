@@ -54,7 +54,7 @@ namespace AGL.Api.API_Schedulers.Services
                                 stm.SyncTeeTimeMappingId,
                                 TeeTime = new
                                 {
-                                    stm.TeeTimeMapping.TeeTime.Supplier.DaemonId,
+                                    stm.TeeTimeMapping.TeeTime.GolfClub.InboundCode,
                                     stm.TeeTimeMapping.TeeTime.GolfClub.GolfClubCode,
                                     stm.TeeTimeMapping.TeeTime.GolfClubCourse.CourseCode,
                                     stm.TeeTimeMapping.TeeTime.MinMembers
@@ -88,7 +88,7 @@ namespace AGL.Api.API_Schedulers.Services
                                 {
                                     request = new SyncTeeTimeRequest
                                     {
-                                        daemonId = stm.TeeTime.DaemonId,
+                                        inboundCode = stm.TeeTime.InboundCode,
                                         golfClubCode = stm.TeeTime.GolfClubCode,
                                         playDate = stm.DateSlot.PlayDate,
                                         startTime = stm.TimeSlot.StartTime,
@@ -99,7 +99,7 @@ namespace AGL.Api.API_Schedulers.Services
                                 {
                                     request = new SyncTeeTimeRequest
                                     {
-                                        daemonId = stm.TeeTime.DaemonId,
+                                        inboundCode = stm.TeeTime.InboundCode,
                                         golfClubCode = stm.TeeTime.GolfClubCode,
                                         courseCode = stm.TeeTime.CourseCode,
                                         playDate = stm.DateSlot.PlayDate,

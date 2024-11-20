@@ -60,7 +60,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("teetime/list")]
         [HttpGet]
         [DisableValidation]
-        public async Task<OAPIDataResponse<List<TeeTimeInfo>>> GetTeeTime(
+        public async Task<IDataResult> GetTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
             [FromQuery][Required] TeeTimeGetRequest request)
         {

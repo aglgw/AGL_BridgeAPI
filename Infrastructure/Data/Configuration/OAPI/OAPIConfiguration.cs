@@ -10,13 +10,32 @@ using AGL.Api.Infrastructure.Data;
 
 namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 {
+    public class OAPIAuthenticationConfiguration : IEntityTypeConfiguration<OAPI_Authentication>
+    {
+        public void Configure(EntityTypeBuilder<OAPI_Authentication> builder)
+        {
+            builder.ToTable("OAPI_Authentication");
+            builder.HasKey(e => e.AuthenticationId);
+
+            // Supplier 관계 설정 (선택적 관계)
+            builder.HasOne(e => e.supplier)
+                   .WithOne() // 역방향 네비게이션이 없는 경우
+                   .IsRequired(false); // 관계를 선택적으로 설정 (nullable)
+
+            // SyncClient 관계 설정 (선택적 관계)
+            builder.HasOne(e => e.syncClient)
+                   .WithOne() // 역방향 네비게이션이 없는 경우
+                   .IsRequired(false); // 관계를 선택적으로 설정 (nullable)
+        }
+    }
+
     public class OAPISupplierConfiguration : IEntityTypeConfiguration<OAPI_Supplier>
     {
         public void Configure(EntityTypeBuilder<OAPI_Supplier> builder)
         {
             builder.ToTable("OAPI_Supplier");
             builder.HasKey(e => e.SupplierId);
-            builder.Property(e => e.DaemonId).IsRequired().HasMaxLength(50);
+            //builder.Property(e => e.DaemonId).IsRequired().HasMaxLength(50);
 
             builder.HasMany(e => e.GolfClubs)
                    .WithOne(g => g.Supplier)
@@ -31,7 +50,11 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasMany(e => e.TeeTimes)
                    .WithOne(t => t.Supplier)
                    .HasPrincipalKey(t => t.SupplierId);
-                   //.OnDelete(DeleteBehavior.Cascade);
+            //.OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(e => e.Authentication)
+                   .WithOne()
+                   .HasForeignKey<OAPI_Authentication>(a => a.AuthenticationId);
         }
     }
 

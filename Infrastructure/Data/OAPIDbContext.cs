@@ -17,6 +17,7 @@ namespace AGL.Api.Infrastructure.Data
             _logger = logger;
         }
 
+        public DbSet<OAPI_Authentication> Authentications { get; set; } // 인증
         public DbSet<OAPI_Supplier> Suppliers { get; set; } // 공급사
 
         public DbSet<OAPI_GolfClub> GolfClubs { get; set; } // 골프장

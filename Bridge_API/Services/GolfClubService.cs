@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+using System.Diagnostics;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -35,7 +36,7 @@ namespace AGL.Api.Bridge_API.Services
             return await ProcessGolfClub(request, supplierCode, request.golfClubCode);
         }
 
-        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(string supplierCode, string golfClubCode)
+        public async Task<OAPICommonListResponse<GolfClubInfo>> GetGolfClub(string supplierCode, string golfClubCode)
         {
             try
             {
@@ -49,7 +50,7 @@ namespace AGL.Api.Bridge_API.Services
                     .Include(g => g.RefundPolicies)
                     .Include(g => g.Courses)
                     .Include(g => g.Holes)
-                    .Where(g => g.Supplier == supplier);
+                    .Where(g => g.Supplier != null && g.SupplierId == supplierId);
 
                 // 골프장 코드가 있을 경우 해당 코드들에 대한 조건 추가
                 if (golfClubCode != null)
@@ -74,42 +75,43 @@ namespace AGL.Api.Bridge_API.Services
                     currency = golfClub.Currency,
                     description = golfClub.Description,
                     address = golfClub.Address,
-                    latitude = golfClub.Latitude?.ToString(),
-                    longitude = golfClub.Longitude?.ToString(),
+                    latitude = golfClub.Latitude?.ToString() ?? "0",
+                    longitude = golfClub.Longitude?.ToString() ?? "0",
                     phone = golfClub.Phone,
                     fax = golfClub.Fax,
                     email = golfClub.Email,
                     homepage = golfClub.Homepage,
-                    totalHoleCount = golfClub.TotalHoleCount,
-                    totalCourseCount = golfClub.Courses.Count,
+                    totalHoleCount = golfClub.TotalHoleCount ?? 0,
+                    totalCourseCount = golfClub.Courses?.Count ?? 0,
                     isGuestInfoRequired = golfClub.isGuestInfoRequired,
-                    image = golfClub.GolfClubImages.Select(img => new Images
+                    image = golfClub.GolfClubImages?.Select(img => new Images
                     {
                         id = img.Idx,
                         url = img.Url,
                         title = img.Title,
                         description = img.ImageDescription
-                    }).ToList(),
-                    refundPolicy = golfClub.RefundPolicies.Select(rp => new RefundPolicy { 
+                    }).ToList() ?? new List<Images>(),
+                    refundPolicy = golfClub.RefundPolicies?.Select(rp => new RefundPolicy
+                    {
                         refundDate = rp.RefundDate,
                         refundFee = rp.RefundFee,
-                        refundUnit = rp.RefundUnit,
-                    }).ToList(),
-                    course = golfClub.Courses.Select(c => new Course
+                        refundUnit = rp.RefundUnit
+                    }).ToList() ?? new List<RefundPolicy>(),
+                    course = golfClub.Courses?.Select(c => new Course
                     {
                         courseCode = c.CourseCode,
                         courseName = c.CourseName,
                         courseHoleCount = c.CourseHoleCount,
-                        startHole = c.StartHole,
-                    }).ToList(),
-                    holeInfo = golfClub.Holes.Select(h => new HoleInfo
+                        startHole = c.StartHole
+                    }).ToList() ?? new List<Course>(),
+                    holeInfo = golfClub.Holes?.Select(h => new HoleInfo
                     {
                         holeNumber = h.HoleNumber,
                         holeName = h.HoleName,
                         par = h.Par,
                         distanceUnit = h.DistanceUnit,
                         distance = h.Distance
-                    }).ToList()
+                    }).ToList() ?? new List<HoleInfo>()
                 }).ToList();
 
                 Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 검색 성공");
