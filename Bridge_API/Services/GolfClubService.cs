@@ -7,6 +7,7 @@ using AGL.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -34,7 +35,7 @@ namespace AGL.Api.Bridge_API.Services
             return await ProcessGolfClub(request, supplierCode, request.golfClubCode);
         }
 
-        public async Task<IDataResult> GetGolfClub(string supplierCode, string golfClubCode)
+        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(string supplierCode, string golfClubCode)
         {
             try
             {

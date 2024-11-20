@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using AGL.Api.ApplicationCore.Filters;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -59,7 +60,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("teetime/list")]
         [HttpGet]
         [DisableValidation]
-        public async Task<IDataResult> GetTeeTime(
+        public async Task<OAPIDataResponse<List<TeeTimeInfo>>> GetTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
             [FromQuery][Required] TeeTimeGetRequest request)
         {

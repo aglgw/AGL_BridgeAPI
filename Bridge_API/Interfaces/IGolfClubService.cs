@@ -1,6 +1,7 @@
 ﻿using AGL.Api.Bridge_API.Models.OAPI;
 using AGL.Api.ApplicationCore.Interfaces;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 
 namespace AGL.Api.Bridge_API.Interfaces
@@ -26,6 +27,6 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<IDataResult> GetGolfClub(string supplierCode, string? GolfclubCode);
+        Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(string supplierCode, string? GolfclubCode);
     }
 }

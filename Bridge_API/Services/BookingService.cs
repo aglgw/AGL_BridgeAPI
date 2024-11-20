@@ -147,6 +147,7 @@ namespace AGL.Api.Bridge_API.Services
                             }
                         });
 
+                        Dictionary<string, string> tmpData = new Dictionary<string, string>();
                         if (response != null)
                         {
                             // 예약 관리 DB에 추가
@@ -213,14 +214,14 @@ namespace AGL.Api.Bridge_API.Services
                                 }
 
                             }
-
+                            tmpData.Add("reservationId", response?.reservationId);
                             Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, "Booking", "예약 정보 전송 종료");
                         }
 
                         await _context.SaveChangesAsync();
                         await transaction.CommitAsync();
 
-                        return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation Request was successfully", null);
+                        return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation Request was successfully", tmpData);
                     }
                     catch (Exception ex)
                     {
@@ -414,12 +415,12 @@ namespace AGL.Api.Bridge_API.Services
                 reservationId = Req.reservationId,
             };
 
-            var response = new OAPIReservationCancelResponse();
+            var response = new OAPIDataResponse<cancelResponse>();
             string strReaponse = string.Empty;
 
             try
             {
-                await RestfulClient.POSTAPIHeaderObject<OAPIReservationCancelResponse>(EndpointUrl, header, reservationRequest, async (httpStatusCode, reasonPhrase, apiResponse) =>
+                await RestfulClient.POSTAPIHeaderObject<OAPIDataResponse<cancelResponse>>(EndpointUrl, header, reservationRequest, async (httpStatusCode, reasonPhrase, apiResponse) =>
                 {
                     if (httpStatusCode == System.Net.HttpStatusCode.OK)
                     {

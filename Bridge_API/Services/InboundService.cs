@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using AGL.Api.Domain.Entities.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -23,7 +24,7 @@ namespace AGL.Api.Bridge_API.Services
             _commonService = commonService;
         }
 
-        public async Task<IDataResult> GetInboundTeeTime(InboundTeeTimeRequest request)
+        public async Task<OAPIDataResponse<List<InboundTeeTimeResponse>>> GetInboundTeeTime(InboundTeeTimeRequest request)
         {
             var startDate = request.startDate;
             var endDate = request.endDate;
@@ -105,7 +106,7 @@ namespace AGL.Api.Bridge_API.Services
             }
         }
 
-        public async Task<IDataResult> GetInboundGolfClub(string golfClubCode)
+        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetInboundGolfClub(string golfClubCode)
         {
             try
             {

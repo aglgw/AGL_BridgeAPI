@@ -50,9 +50,9 @@ namespace AGL.Api.Bridge_API.Controllers
             return result;
         }
 
+        /// <summary>
         /// 예약 조회
-        /// </summary>        /// <summary>
-
+        /// </summary>        
         /// <returns></returns>
         [Route("reservation/list")]
         [HttpGet]

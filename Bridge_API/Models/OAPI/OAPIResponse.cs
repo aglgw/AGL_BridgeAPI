@@ -76,7 +76,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 예약 취소 응답
         /// </summary>
         [DataContract]
-        public class OAPIReservationCancelResponse : IDataResult
+        public class OAPIDataResponse<T> : IDataResult
         {
             /// <summary>
             /// 성공여부
@@ -105,7 +105,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// </summary>
             [DataMember]
             //public Dictionary<string, List<T>>? data { get; set; }
-            public cancelResponse data { get; set; }
+            public T data { get; set; }
         }
 
         /// <summary>

@@ -78,6 +78,17 @@ namespace AGL.Api.Bridge_API.Services
                     data = singleString
                 };
             }
+            else if (data is Dictionary<string, string> keyValueStringData)
+            {
+                return new OAPICommonResponse<Dictionary<string, string>>
+                {
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode,
+                    data = keyValueStringData
+                };
+            }
             else
             {
                 // 기타 타입에 대한 공통 응답

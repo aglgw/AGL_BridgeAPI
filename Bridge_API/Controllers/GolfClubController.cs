@@ -8,6 +8,7 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.Bridge_API.Utils;
 using AGL.Api.ApplicationCore.Filters;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 
 namespace AGL.Api.Bridge_API.Controllers
@@ -61,7 +62,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("golfclub/list")]
         [HttpGet]
         //[DisableValidation]
-        public async Task<IDataResult> GetGolfClub(
+        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
             [FromQuery(Name = "GolfclubCode")] string? GolfclubCode)
         {

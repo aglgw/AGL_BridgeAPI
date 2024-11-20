@@ -52,7 +52,7 @@ namespace AGL.Api.Bridge_API.Services
             return await ValidateTeeTime(request, supplierCode, request.golfClubCode, "PUT");
         }
 
-        public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
+        public async Task<OAPIDataResponse<List<TeeTimeInfo>>> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
         {
             if (string.IsNullOrEmpty(request.startDate) && string.IsNullOrEmpty(request.endDate))
             {

@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
 using AGL.Api.ApplicationCore.Filters;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -30,7 +32,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [DisableValidation]
         [Route("inbound/TeeTimeTable")]
         [HttpGet]
-        public async Task<IDataResult> GetInboundTeeTime([FromQuery] InboundTeeTimeRequest request)
+        public async Task<OAPIDataResponse<List<InboundTeeTimeResponse>>> GetInboundTeeTime([FromQuery] InboundTeeTimeRequest request)
         {
             var result = await _InboundService.GetInboundTeeTime(request);
 
@@ -44,7 +46,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("inbound/golfclub/list")]
         [HttpGet]
         //[DisableValidation]
-        public async Task<IDataResult> GetInboundGolfClub(
+        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetInboundGolfClub(
             [FromQuery(Name = "GolfclubCode")] string? GolfclubCode)
         {
             var result = await _InboundService.GetInboundGolfClub(GolfclubCode);

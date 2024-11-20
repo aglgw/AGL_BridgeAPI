@@ -25,7 +25,7 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// 티타임 조회
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode);
+        Task<OAPIDataResponse<List<TeeTimeInfo>>> GetTeeTime(TeeTimeGetRequest request, string supplierCode);
         /// <summary>
         /// 티타임 상태수정
         /// </summary>
