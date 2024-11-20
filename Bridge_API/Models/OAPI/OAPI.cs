@@ -138,11 +138,8 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public decimal? unitPrice { get; set; }
         }
 
-        /// <summary>
-        /// 골프장 등록/수정/조회
-        /// </summary>
         [DataContract]
-        public class GolfClubInfo
+        public class GolfClubInfo : GolfClubBaseInfo
         {
             /// <summary>
             /// 골프장의 고유 코드
@@ -150,7 +147,24 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             [DataMember]
             [Required(ErrorMessage = "GolfclubCode is required")]
             public string golfClubCode { get; set; }
+        }
 
+        [DataContract]
+        public class GolfClubInfoWithInboundCode : GolfClubBaseInfo
+        {
+            /// <summary>
+            /// 골프장의 인바운드 코드
+            /// </summary>
+            [DataMember]
+            public string InboundCode { get; set; }
+        }
+
+        /// <summary>
+        /// 골프장 등록/수정/조회
+        /// </summary>
+        [DataContract]
+        public class GolfClubBaseInfo
+        {
             /// <summary>
             /// 골프장 이름
             /// </summary>

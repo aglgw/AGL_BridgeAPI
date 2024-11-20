@@ -52,20 +52,20 @@ namespace AGL.Api.Bridge_API.Services
         /// <returns></returns>
         public async Task<IDataResult> POSTBookingRequest(ReqBookingRequest Req)
         {
-            var daemonId = Req.daemonId;
-            if (string.IsNullOrWhiteSpace(daemonId))
+            var inboundCode = Req.inboundCode;
+            if (string.IsNullOrWhiteSpace(inboundCode))
             {
-                Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "Booking 연동 키 없음");
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "daemonId or supplierCode not found", null);
+                Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "inboundCode 키 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "inboundCode not found", null);
             }
 
             OAPI_Supplier? supplier;
 
-            supplier = _context.Suppliers.Where(s => s.DaemonId == daemonId).FirstOrDefault();
+            supplier = _context.Suppliers.FirstOrDefault(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null) // 공급사 유효성 검사
             {
-                Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, $"Booking", $"예약 요청 공급사 누락");
+                Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, $"Booking", $"예약 요청 공급사 누락");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
             }
 
@@ -92,7 +92,7 @@ namespace AGL.Api.Bridge_API.Services
 
             EndpointUrl = $"{EndpointUrl.TrimEnd('/')}/reservation";
 
-            Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, "Booking", "예약 정보 전송 시작");
+            Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, "Booking", "예약 정보 전송 시작");
             // HTTP 요청 설정
 
             var header = new Dictionary<string, string>
@@ -102,10 +102,12 @@ namespace AGL.Api.Bridge_API.Services
                 //{ "Content-Type", "application/json" }
             };
 
+            string golfClubCode = Req.inboundCode.Split('_').Last();
+
             // JSON 컨텐츠 생성
             var reservationRequest = new
             {
-                Req.golfClubCode,
+                golfClubCode,
                 Req.courseCode,
                 Req.reservationDate,
                 Req.reservationStartTime,
@@ -137,12 +139,12 @@ namespace AGL.Api.Bridge_API.Services
                             {
                                 response = apiResponse;
                                 string jsonString = System.Text.Json.JsonSerializer.Serialize(response);
-                                Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, $"Booking", $"예약 요청 성공 statusCode : {httpStatusCode} : {jsonString} ");
+                                Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, $"Booking", $"예약 요청 성공 statusCode : {httpStatusCode} : {jsonString} ");
                             }
                             else
                             {
                                 strReaponse = reasonPhrase;
-                                Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, "Booking", $"예약 요청 실패 statusCode : {httpStatusCode} : {strReaponse} ");
+                                Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, "Booking", $"예약 요청 실패 statusCode : {httpStatusCode} : {strReaponse} ");
                                 await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, $"Reservation request failed with status code: {httpStatusCode}", null);
                             }
                         });
@@ -156,7 +158,7 @@ namespace AGL.Api.Bridge_API.Services
                                 SupplierId = supplier.SupplierId,
                                 ReservationId = response?.reservationId,
                                 ReservationStatus = (byte)StatusCode.REQUEST,
-                                GolfClubCode = Req.golfClubCode,
+                                GolfClubCode = golfClubCode,
                                 CourseCode = Req.courseCode,
                                 ReservationDate = Req.reservationDate,
                                 ReservationStartTime = Req.reservationStartTime,
@@ -173,7 +175,7 @@ namespace AGL.Api.Bridge_API.Services
                             await _context.SaveChangesAsync();
                             int reservationManagementId = reservation.ReservationManagementId;
 
-                            Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, "Booking", "예약 정보 저장");
+                            Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, "Booking", "예약 정보 저장");
 
                             // 예약 관리 이용객 DB에 추가
                             var newGuestInfos = new List<OAPI_ReservationmanagementGuest>();
@@ -210,12 +212,12 @@ namespace AGL.Api.Bridge_API.Services
                                 if (newGuestInfos.Any())
                                 {
                                     _context.ReservationManagementGuests.AddRange(newGuestInfos);
-                                    Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, "Booking", "예약관리 이용객 저장");
+                                    Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, "Booking", "예약관리 이용객 저장");
                                 }
 
                             }
                             tmpData.Add("reservationId", response?.reservationId);
-                            Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, "Booking", "예약 정보 전송 종료");
+                            Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, "Booking", "예약 정보 전송 종료");
                         }
 
                         await _context.SaveChangesAsync();
@@ -226,7 +228,7 @@ namespace AGL.Api.Bridge_API.Services
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();
-                        Utils.UtilLogs.LogRegDay(daemonId, Req.golfClubCode, "Booking", "예약요청 저장 실패",true);
+                        Utils.UtilLogs.LogRegDay(inboundCode, Req.golfClubCode, "Booking", "예약요청 저장 실패",true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
                     }
                 }
@@ -290,7 +292,7 @@ namespace AGL.Api.Bridge_API.Services
 
             if (string.IsNullOrWhiteSpace(daemonId))
             {
-                Utils.UtilLogs.LogRegHour(daemonId, daemonId, "Booking", "Booking 연동 키 없음");
+                Utils.UtilLogs.LogRegHour(daemonId, daemonId, "Booking", "inboundCode 키 없음");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "daemonId or supplierCode not found", null);
             }
 
@@ -373,21 +375,20 @@ namespace AGL.Api.Bridge_API.Services
         /// <returns></returns>
         public async Task<IDataResult> PostBookingCancel(ReservationDaemonRequest Req)
         {
-
-            var daemonId = Req.daemonId;
-            if (string.IsNullOrWhiteSpace(daemonId))
+            var inboundCode = Req.inboundCode;
+            if (string.IsNullOrWhiteSpace(inboundCode))
             {
-                Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "Booking 연동 키 없음");
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "daemonId or supplierCode not found", null);
+                Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "Booking 연동 키 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "inboundCode not found", null);
             }
 
             OAPI_Supplier? supplier;
 
-            supplier = _context.Suppliers.Where(s => s.DaemonId == daemonId).FirstOrDefault();
+            supplier = _context.Suppliers.FirstOrDefault(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null)
             {
-                Utils.UtilLogs.LogRegDay(daemonId, daemonId, $"Booking", $"예약 요청 공급사 누락");
+                Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, $"Booking", $"예약 요청 공급사 누락");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
             }
 
@@ -400,7 +401,7 @@ namespace AGL.Api.Bridge_API.Services
 
             EndpointUrl = $"{EndpointUrl.TrimEnd('/')}/reservation/cancel";
 
-            Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "예약 정보 전송 시작");
+            Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "예약 정보 전송 시작");
             // HTTP 요청 설정
 
             var header = new Dictionary<string, string>
@@ -426,12 +427,12 @@ namespace AGL.Api.Bridge_API.Services
                     {
                         response = apiResponse;
                         string jsonString = System.Text.Json.JsonSerializer.Serialize(response);
-                        Utils.UtilLogs.LogRegDay(daemonId, daemonId, $"Booking", $"예약 요청 성공 statusCode : {httpStatusCode} : {jsonString} ");
+                        Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, $"Booking", $"예약 요청 성공 statusCode : {httpStatusCode} : {jsonString} ");
                     }
                     else
                     {
                         strReaponse = reasonPhrase;
-                        Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", $"예약 요청 실패 statusCode : {httpStatusCode} : {strReaponse} ");
+                        Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", $"예약 요청 실패 statusCode : {httpStatusCode} : {strReaponse} ");
                         await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, $"Reservation request failed with status code: {httpStatusCode}", null);
                     }
                 });
@@ -453,24 +454,24 @@ namespace AGL.Api.Bridge_API.Services
                         }
 
                         await _context.SaveChangesAsync();
-                        Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "예약 요청 저장 성공");
+                        Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "예약 요청 저장 성공");
                         return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation Request was successfully", null);
                     }
                     else
                     {
-                        Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "예약 관리 정보 없음", true);
+                        Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "예약 관리 정보 없음", true);
                         return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "No reservation management information found", null);
                     }
                 }
                 else
                 {
-                    Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "API 응답 없음", true);
+                    Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "API 응답 없음", true);
                     return await _commonService.CreateResponse<object>(true, ResultCode.SERVER_ERROR, "No response received from the API", null);
                 }
             }
             catch (Exception ex)
             {
-                Utils.UtilLogs.LogRegDay(daemonId, daemonId, "Booking", "예약 요청 저장 실패", true);
+                Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "예약 요청 저장 실패", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
 

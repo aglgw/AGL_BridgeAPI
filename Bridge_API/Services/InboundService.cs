@@ -24,11 +24,11 @@ namespace AGL.Api.Bridge_API.Services
             _commonService = commonService;
         }
 
-        public async Task<OAPIDataResponse<List<InboundTeeTimeResponse>>> GetInboundTeeTime(InboundTeeTimeRequest request)
+        public async Task<IDataResult> GetInboundTeeTime(InboundTeeTimeRequest request)
         {
             var startDate = request.startDate;
             var endDate = request.endDate;
-            var golfClubCode = request.golfclubCode;
+            var inboundCode = request.inboundCode;
             var token = request.token;
 
             if (string.IsNullOrEmpty(token) || token != InboundToken)
@@ -40,7 +40,7 @@ namespace AGL.Api.Bridge_API.Services
             {
                 // 공급자 코드에 따른 가격 정책 가져오기
                 var pricePolicies = await _context.TeetimePricePolicies
-                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.GolfClubCode == golfClubCode))
+                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.InboundCode == inboundCode))
                     .ToDictionaryAsync(pp => pp.PricePolicyId);
 
                 // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
@@ -51,13 +51,13 @@ namespace AGL.Api.Bridge_API.Services
 
                 // 골프장 코드와 공급자 코드에 해당하는 골프장 가져오기
                 var golfClub = await _context.GolfClubs
-                    .Where(gc => gc.GolfClubCode == golfClubCode)
+                    .Where(gc => gc.InboundCode == inboundCode)
                     .Select(gc => new { gc.GolfClubId, gc.SupplierId })
                     .FirstOrDefaultAsync();
 
                 if (golfClub == null)
                 {
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Invalid GolfClubCode", null);
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Invalid GolfClub", null);
                 }
 
                 // 주어진 골프장 코드와 날짜 범위에 해당하는 티타임 매핑 가져오기
@@ -106,7 +106,7 @@ namespace AGL.Api.Bridge_API.Services
             }
         }
 
-        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetInboundGolfClub(string golfClubCode)
+        public async Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(string inboundCode)
         {
             try
             {
@@ -119,10 +119,11 @@ namespace AGL.Api.Bridge_API.Services
                     .Where(g => true); // 검색 조건 없는 where 추가
 
                 // 골프장 코드가 있을 경우 해당 코드들에 대한 조건 추가
-                if (golfClubCode != null)
+                if (inboundCode != null)
                 {
-                    existingGolfclubQuery = existingGolfclubQuery.Where(g => g.GolfClubCode == golfClubCode);
+                    existingGolfclubQuery = existingGolfclubQuery.Where(g => g.InboundCode == inboundCode);
                 }
+
                 // 조건에 맞는 TeeTimePriceMappings 목록을 조회
                 var existingGolfclubs = await existingGolfclubQuery.ToListAsync();
 
@@ -133,9 +134,9 @@ namespace AGL.Api.Bridge_API.Services
                     return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
                 }
 
-                var golfClubDtos = existingGolfclubs.Select(golfClub => new GolfClubInfo
+                var golfClubDtos = existingGolfclubs.Select(golfClub => new GolfClubInfoWithInboundCode
                 {
-                    golfClubCode = golfClub.GolfClubCode,
+                    InboundCode = golfClub.InboundCode,
                     golfClubName = golfClub.GolfClubName,
                     countryCode = golfClub.CountryCode,
                     currency = golfClub.Currency,

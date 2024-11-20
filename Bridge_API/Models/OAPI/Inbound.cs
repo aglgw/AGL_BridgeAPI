@@ -22,8 +22,8 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             [FromQuery(Name = "EndDate"), Required]
             public string endDate { get; set; }
 
-            [FromQuery(Name = "GolfclubCode"), Required]
-            public string golfclubCode { get; set; }
+            [FromQuery(Name = "inboundCode"), Required]
+            public string inboundCode { get; set; }
         }
 
         /// <summary>

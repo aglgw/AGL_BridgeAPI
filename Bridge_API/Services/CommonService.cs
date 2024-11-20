@@ -17,6 +17,7 @@ using Microsoft.IdentityModel.Tokens;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -87,6 +88,17 @@ namespace AGL.Api.Bridge_API.Services
                     rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
                     statusCode = (int)resultCode,
                     data = keyValueStringData
+                };
+            }
+            else if (data is List<GolfClubInfoWithInboundCode> golfClubInfoList)
+            {
+                return new OAPICommonListResponse<GolfClubInfoWithInboundCode>
+                {
+                    isSuccess = isSuccess,
+                    rstCd = description,
+                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+                    statusCode = (int)resultCode,
+                    data = golfClubInfoList
                 };
             }
             else

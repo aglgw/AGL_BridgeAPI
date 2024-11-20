@@ -10,16 +10,16 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// <summary>
         /// 내부연동 골프장 조회
         /// </summary>
-        /// <param name="golfclubCode"></param>
+        /// <param name="inboundCode"></param>
         /// <returns></returns>
-        Task<OAPIDataResponse<List<GolfClubInfo>>> GetInboundGolfClub(string? golfclubCode);
+        Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(string? inboundCode);
 
         /// <summary>
         /// 내부연동 티타임 기간조회
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<OAPIDataResponse<List<InboundTeeTimeResponse>>> GetInboundTeeTime(InboundTeeTimeRequest request);
+        Task<IDataResult> GetInboundTeeTime(InboundTeeTimeRequest request);
 
 
     }

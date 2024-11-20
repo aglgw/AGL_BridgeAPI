@@ -18,6 +18,9 @@ namespace AGL.Api.Domain.Entities.OAPI
         [Required, StringLength(64)]
         public string GolfClubCode { get; set; } // 골프장코드
 
+        [Required, StringLength(100)]
+        public string InboundCode { get; set; } // 인바운드 연동 코드 공급자코드 _ 골프장코드 형식
+
         [Required, StringLength(512)]
         public string GolfClubName { get; set; } // 골프장명
 

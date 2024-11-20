@@ -156,7 +156,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 데몬 아이디 - 연동용
         /// </summary>
         [DataMember]
-        public string? daemonId { get; set; }
+        public string? inboundCode { get; set; }
     }
 
 
@@ -202,7 +202,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 데몬 아이디 - 연동용
         /// </summary>
         [DataMember]
-        public string? daemonId { get; set; }
+        public string inboundCode { get; set; }
         /// <summary>
         /// 공급사 코드 - 연동용
         /// </summary>
