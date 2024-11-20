@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
+using AGL.Api.ApplicationCore.Filters;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -26,6 +27,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// 내부연동 티타임 기간조회
         /// </summary>
         /// <returns></returns>
+        [DisableValidation]
         [Route("inbound/TeeTimeTable")]
         [HttpGet]
         public async Task<IDataResult> GetInboundTeeTime([FromQuery] InboundTeeTimeRequest request)
