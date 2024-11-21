@@ -119,12 +119,16 @@ namespace AGL.Api.Bridge_API
             app.ExceptionHandler();
             app.UseRequestLoggerMiddleware();
 
-            app.UseSwagger();
-            app.UseSwaggerUI(c => {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{openApi.Title} {openApi.Version}");
-                // https://stackoverflow.com/questions/60159998/how-to-configure-swashbuckle-to-omit-template-entity-schema-from-the-documen
-                c.DefaultModelsExpandDepth(-1); // 스키마 제거
-            });
+            if (env.EnvironmentName == "SandBox" || env.EnvironmentName == "Development")
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{openApi.Title} {openApi.Version}");
+                    // https://stackoverflow.com/questions/60159998/how-to-configure-swashbuckle-to-omit-template-entity-schema-from-the-documen
+                    c.DefaultModelsExpandDepth(-1); // 스키마 제거
+                });
+            }
 
             app.UseHttpsRedirection();
 
