@@ -390,7 +390,7 @@ namespace AGL.Api.Bridge_API.Services
             if (reservationManagement == null)
             {
                 Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, $"Booking", $"이미 취소했거나 예약 내역이 없습니다.");
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Reservation not found", null);
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Reservation has already been canceled or could not be found", null);
             }
 
             var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
