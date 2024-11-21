@@ -72,6 +72,7 @@ namespace AGL.Api.Bridge_API.Services
                     golfClubCode = golfClub.GolfClubCode,
                     golfClubName = golfClub.GolfClubName,
                     countryCode = golfClub.CountryCode,
+                    language = golfClub.Language,
                     currency = golfClub.Currency,
                     description = golfClub.Description,
                     address = golfClub.Address,
@@ -162,6 +163,7 @@ namespace AGL.Api.Bridge_API.Services
                             existingGolfclub.GolfClubName = request.golfClubName;
                             existingGolfclub.InboundCode = supplier.SupplierCode + "_" + request.golfClubCode;
                             existingGolfclub.CountryCode = request.countryCode;
+                            existingGolfclub.Language = request.language;
                             existingGolfclub.Currency = request.currency;
                             existingGolfclub.Description = request.description;
                             existingGolfclub.Address = request.address;
@@ -186,6 +188,7 @@ namespace AGL.Api.Bridge_API.Services
                                 InboundCode = supplier.SupplierCode + "_" + request.golfClubCode,
                                 GolfClubName = request.golfClubName,
                                 CountryCode = request.countryCode,
+                                Language = request.language,
                                 Currency = request.currency,
                                 Description = request.description,
                                 Address = request.address,

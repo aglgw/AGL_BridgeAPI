@@ -27,6 +27,9 @@ namespace AGL.Api.Domain.Entities.OAPI
         [Required, StringLength(3)]
         public string CountryCode { get; set; } // 국가코드
 
+        [Required, StringLength(2)]
+        public string Language { get; set; }
+
         [Required, StringLength(3)]
         public string Currency { get; set; } // 통화
 
