@@ -419,6 +419,7 @@ namespace AGL.Api.Bridge_API.Services
         public async Task<IDataResult> ProcessTeeTime(TeeTimeRequest request, string supplierCode, string golfClubCode)
         {
             var strategy = _context.Database.CreateExecutionStrategy();
+//var stopwatch = Stopwatch.StartNew();
 
             return await strategy.ExecuteAsync(async () =>
             {
@@ -493,7 +494,7 @@ namespace AGL.Api.Bridge_API.Services
                             })
                             .ToListAsync();
                         var teeTimes = await _context.TeeTimes.Where(tt => tt.SupplierId == supplierId).ToListAsync();
-
+//Debug.WriteLine($"[Step 1] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                         int batchSize = 10000; // 한 번에 처리할 ID 개수
                         List<OAPI_TeeTimeMapping> existingTeeTimeMappings = new List<OAPI_TeeTimeMapping>();
 
@@ -508,12 +509,12 @@ namespace AGL.Api.Bridge_API.Services
                                 .AsNoTracking()
                                 .Where(ttm => ttm.TeeTime.SupplierId == supplierId &&
                                               ttm.TeeTime.GolfClubId == existingGolfclub.GolfClubId &&
-                                              batch.Contains(ttm.DateSlot.DateSlotId))
+                                              batch.Contains(ttm.DateSlotId))
                                 .ToListAsync();
 
                             existingTeeTimeMappings.AddRange(batchMappings);
                         }
-
+//Debug.WriteLine($"[Step 2] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                         // 골프장 코스, 날짜 슬롯, 시간 슬롯, 기존 매핑을 딕셔너리로 변환하여 조회 성능 향상
                         var golfClubCourseMap = golfClubCourses.ToDictionary(gc => gc.CourseCode, gc => gc.GolfClubCourseId); // CourseCode와 GolfClubCourseId의 매핑 딕셔너리 생성
                         var dateSlotMap = dateSlots.ToDictionary(ds => ds.PlayDate, ds => ds.DateSlotId); // PlayDate와 DateSlotId의 매핑 딕셔너리 생성
@@ -645,41 +646,52 @@ namespace AGL.Api.Bridge_API.Services
 
                             // 병렬로 티타임 매핑 생성
                             var teeTimeMappings = new ConcurrentBag<OAPI_TeeTimeMapping>();
-                            Parallel.ForEach(Partitioner.Create(applicableDates), date => // 최상위 루프에서만 병렬화 적용
+//Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+                            var partitioner = Partitioner.Create(applicableDates.ToList(), true);
+                            Parallel.ForEach(partitioner, date =>
                             {
+                                if (!dateSlotMap.TryGetValue(date, out var dateSlotId))
+                                    return;
+
                                 foreach (var time in teeTimeInfo.time)
                                 {
+                                    if (!timeSlotMap.TryGetValue(time.startTime, out var timeSlotId))
+                                        continue;
+
+                                    var minMembers = teeTimeInfo.minMembers;
+                                    var maxMembers = teeTimeInfo.maxMembers;
+
                                     foreach (var course in teeTimeInfo.courseCode)
                                     {
-                                        // teeTimeCode의 길이가 courseCode의 길이와 다르거나, null일 수 있으므로 이를 처리합니다.
-                                        string code = null;
-
-                                        // 인덱스를 미리 저장하여 중복 계산을 피합니다.
-                                        int index = teeTimeInfo.courseCode.IndexOf(course);
+                                        if (!golfClubCourseMap.TryGetValue(course, out var golfClubCourseId))
+                                            continue;
 
                                         // time.teeTimeCode가 null이 아니고, 현재 인덱스가 teeTimeCode 리스트의 범위 내라면 값을 사용합니다.
+                                        string code = null;
+                                        int index = teeTimeInfo.courseCode.IndexOf(course);
                                         if (time.teeTimeCode != null && index < time.teeTimeCode.Count)
                                         {
                                             code = time.teeTimeCode[index];
                                         }
 
-                                        if (!golfClubCourseMap.TryGetValue(course, out var golfClubCourseId) ||
-                                            !teeTimesDictionary.TryGetValue((golfClubCourseId, teeTimeInfo.minMembers, teeTimeInfo.maxMembers), out var teeTimeDictionary) ||
-                                            !dateSlotMap.TryGetValue(date, out var dateSlotId) ||
-                                            !timeSlotMap.TryGetValue(time.startTime, out var timeSlotId))
+                                        var key = (golfClubCourseId, minMembers, maxMembers);
+                                        if (!teeTimesDictionary.TryGetValue(key, out var teeTimeDictionary))
                                             continue;
 
-                                        var key = (teeTimeDictionary.TeetimeId, dateSlotId, timeSlotId);
+                                        var teetimeId = teeTimeDictionary.TeetimeId;
+                                        var mappingKey = (teetimeId, dateSlotId, timeSlotId);
 
-                                        if (existingTeeTimeMappingsMap.TryGetValue(key, out var existingTeeTimeMapping))
+                                        if (existingTeeTimeMappingsMap.TryGetValue(mappingKey, out var existingTeeTimeMapping))
                                         {
                                             // 기존 항목이 있을 경우 조건에 따라 업데이트
-                                            if (existingTeeTimeMapping.TeetimeId != teeTimeDictionary.TeetimeId || 
-                                                existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
-                                                existingTeeTimeMapping.RefundPolicyId != refundPolicyId ||
-                                                existingTeeTimeMapping.SupplierTeetimeCode != code)
+                                            bool needsUpdate = existingTeeTimeMapping.TeetimeId != teetimeId ||
+                                                               existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
+                                                               existingTeeTimeMapping.RefundPolicyId != refundPolicyId ||
+                                                               !string.Equals(existingTeeTimeMapping.SupplierTeetimeCode, code);
+
+                                            if (needsUpdate)
                                             {
-                                                existingTeeTimeMapping.TeetimeId = teeTimeDictionary.TeetimeId;
+                                                existingTeeTimeMapping.TeetimeId = teetimeId;
                                                 existingTeeTimeMapping.PricePolicyId = pricePolicyId;
                                                 existingTeeTimeMapping.RefundPolicyId = refundPolicyId;
                                                 existingTeeTimeMapping.SupplierTeetimeCode = code;
@@ -690,20 +702,22 @@ namespace AGL.Api.Bridge_API.Services
                                         else
                                         {
                                             // 새로운 항목 추가
-                                            existingTeeTimeMappingsSet.TryAdd(key, true);
-                                            teeTimeMappings.Add(new OAPI_TeeTimeMapping
+                                            if (existingTeeTimeMappingsSet.TryAdd(mappingKey, true))
                                             {
-                                                TeetimeId = teeTimeDictionary.TeetimeId,
-                                                DateSlotId = dateSlotId,
-                                                TimeSlotId = timeSlotId,
-                                                PricePolicyId = pricePolicyId,
-                                                RefundPolicyId = refundPolicyId,
-                                                SupplierTeetimeCode = code,
-                                                IsAvailable = true,
-                                                IsDisable = true,
-                                                IsDeleted = false,
-                                                CreatedDate = DateTime.UtcNow
-                                            });
+                                                teeTimeMappings.Add(new OAPI_TeeTimeMapping
+                                                {
+                                                    TeetimeId = teetimeId,
+                                                    DateSlotId = dateSlotId,
+                                                    TimeSlotId = timeSlotId,
+                                                    PricePolicyId = pricePolicyId,
+                                                    RefundPolicyId = refundPolicyId,
+                                                    SupplierTeetimeCode = code,
+                                                    IsAvailable = true,
+                                                    IsDisable = true,
+                                                    IsDeleted = false,
+                                                    CreatedDate = DateTime.UtcNow
+                                                });
+                                            }
                                         }
                                     }
                                 }
@@ -719,7 +733,8 @@ namespace AGL.Api.Bridge_API.Services
 
                         await transaction.CommitAsync();
                         Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "티타임 처리 완료");
-
+//Debug.WriteLine($"[Step 4] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+//stopwatch.Stop();
                         return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
                     }
                     catch (Exception ex)
