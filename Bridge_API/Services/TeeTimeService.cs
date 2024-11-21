@@ -431,7 +431,7 @@ namespace AGL.Api.Bridge_API.Services
                         int supplierId = supplier.SupplierId;
 
                         // 골프장 코드로 골프장 정보 조회
-                        var existingGolfclub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
+                        var existingGolfclub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier != null && g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
                         if (existingGolfclub == null)
                         {
                             Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "골프장 검색 코드 없음");

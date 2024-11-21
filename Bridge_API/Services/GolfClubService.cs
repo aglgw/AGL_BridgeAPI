@@ -135,7 +135,7 @@ namespace AGL.Api.Bridge_API.Services
                     try
                     {
                         // 공급사 코드로 공급사 ID 조회
-                        OAPI_Supplier supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
+                        var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
                         int supplierId = supplier.SupplierId;
 
                         // 모든 관련 데이터를 미리 조회 골프장,이미지,환불정책,코스,홀
@@ -144,7 +144,7 @@ namespace AGL.Api.Bridge_API.Services
                             .Include(g => g.RefundPolicies)
                             .Include(g => g.Courses)
                             .Include(g => g.Holes)
-                            .FirstOrDefaultAsync(g => g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
+                            .FirstOrDefaultAsync(g => g.Supplier != null && g.SupplierId == supplierId && g.GolfClubCode == golfClubCode);
 
                         List<OAPI_GolfClubImage> existingImages = existingGolfclub?.GolfClubImages.ToList() ?? new List<OAPI_GolfClubImage>();
                         List<OAPI_GolfClubRefundPolicy> existingRefundPolicies = existingGolfclub?.RefundPolicies.ToList() ?? new List<OAPI_GolfClubRefundPolicy>();
@@ -160,6 +160,7 @@ namespace AGL.Api.Bridge_API.Services
                             golfClubId = existingGolfclub.GolfClubId;
                             // 기존 골프장 정보 업데이트
                             existingGolfclub.GolfClubName = request.golfClubName;
+                            existingGolfclub.InboundCode = supplier.SupplierCode + "_" + request.golfClubCode;
                             existingGolfclub.CountryCode = request.countryCode;
                             existingGolfclub.Currency = request.currency;
                             existingGolfclub.Description = request.description;
@@ -182,6 +183,7 @@ namespace AGL.Api.Bridge_API.Services
                             {
                                 SupplierId = supplierId,
                                 GolfClubCode = request.golfClubCode,
+                                InboundCode = supplier.SupplierCode + "_" + request.golfClubCode,
                                 GolfClubName = request.golfClubName,
                                 CountryCode = request.countryCode,
                                 Currency = request.currency,
