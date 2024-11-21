@@ -62,9 +62,7 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "inboundCode not found", null);
             }
 
-            OAPI_Supplier? supplier;
-
-            supplier = _context.Suppliers.Include(s => s.Authentication).FirstOrDefault(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
+            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null) // 공급사 유효성 검사
             {
@@ -300,11 +298,7 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "daemonId or supplierCode not found", null);
             }
 
-            OAPI_Supplier? supplier;
-
-            string supplierCode = inboundCode.Split("_").Last();
-
-            supplier = _context.Suppliers.Where(s => s.SupplierCode == supplierCode).FirstOrDefault();
+            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null)
             {
@@ -389,9 +383,17 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "inboundCode not found", null);
             }
 
-            OAPI_Supplier? supplier;
+            string goflClubCode = inboundCode.Split("_").Last();
 
-            supplier = _context.Suppliers.FirstOrDefault(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
+            var reservationManagement = await  _context.ReservationManagements.Where(r => r.ReservationId == Req.reservationId && r.GolfClubCode == goflClubCode && r.ReservationStatus != 3).FirstOrDefaultAsync();
+
+            if (reservationManagement == null)
+            {
+                Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, $"Booking", $"이미 취소했거나 예약 내역이 없습니다.");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Reservation not found", null);
+            }
+
+            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null)
             {

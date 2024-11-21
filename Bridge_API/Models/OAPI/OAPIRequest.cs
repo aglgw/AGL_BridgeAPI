@@ -156,7 +156,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 데몬 아이디 - 연동용
         /// </summary>
         [DataMember]
-        public string? inboundCode { get; set; }
+        public string inboundCode { get; set; }
     }
 
 
