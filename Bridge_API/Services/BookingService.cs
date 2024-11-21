@@ -64,7 +64,7 @@ namespace AGL.Api.Bridge_API.Services
 
             OAPI_Supplier? supplier;
 
-            supplier = _context.Suppliers.FirstOrDefault(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
+            supplier = _context.Suppliers.Include(s => s.Authentication).FirstOrDefault(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null) // 공급사 유효성 검사
             {

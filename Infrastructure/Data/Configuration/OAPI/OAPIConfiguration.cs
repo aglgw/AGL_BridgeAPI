@@ -53,8 +53,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             //.OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(e => e.Authentication)
-                   .WithOne()
-                   .HasForeignKey<OAPI_Authentication>(a => a.AuthenticationId);
+                   .WithOne(a => a.supplier)
+                   .HasForeignKey<OAPI_Authentication>(a => a.SupplierId);
         }
     }
 
