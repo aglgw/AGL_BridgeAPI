@@ -243,6 +243,35 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public T? data { get; set; }
         }
 
-
+        [DataContract]
+        public class authAuthenticationResponse
+        {
+            /// <summary>
+            /// 코드
+            /// </summary>
+            [DataMember]
+            public string authCode { get; set; }
+            /// <summary>
+            /// 공급사 토큰
+            /// </summary>
+            [DataMember]
+            public string? TokenSupplier { get; set; }
+            /// <summary>
+            /// 클라이언트 토큰
+            /// </summary>
+            [DataMember]
+            public string? TokenClient { get; set; }
+            /// <summary>
+            /// AGL 코드
+            /// </summary>
+            [DataMember]
+            public string? AglCode { get; set; }
+            /// <summary>
+            /// AGL 토큰
+            /// </summary>
+            [DataMember]
+            public string? TokenAgl { get; set; }
+        }
+        
     }
 }

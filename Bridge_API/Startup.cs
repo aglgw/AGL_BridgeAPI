@@ -134,8 +134,8 @@ namespace AGL.Api.Bridge_API
 
             app.UseCors("default");
 
-            app.UseMiddleware<AuthenticationMiddleware>();
             app.UseRouting();
+            app.UseMiddleware<AuthenticationMiddleware>();
 
             //app.UseAuthenticationMiddleware();
             app.UseAuthorization();

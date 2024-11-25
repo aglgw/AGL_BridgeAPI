@@ -294,4 +294,24 @@ namespace AGL.Api.Bridge_API.Models.OAPI
     }
 
 
+    public class AuthenticationRequest
+    {
+        /// <summary>
+        /// 생성코드
+        /// </summary>
+        [DataMember]
+        public string authCode { get; set; }
+
+        /// <summary>
+        /// 생성구분 1: 공급사 2: 클라이언트
+        /// </summary>
+        [DataMember]
+        public string authType { get; set; }
+
+        /// <summary>
+        /// 엔드포인트
+        /// </summary>
+        [DataMember]
+        public string? endPoint { get; set; }
+    }
 }

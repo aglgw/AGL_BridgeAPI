@@ -35,7 +35,6 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
         {
             builder.ToTable("OAPI_Supplier");
             builder.HasKey(e => e.SupplierId);
-            //builder.Property(e => e.DaemonId).IsRequired().HasMaxLength(50);
 
             builder.HasMany(e => e.GolfClubs)
                    .WithOne(g => g.Supplier)

@@ -29,9 +29,10 @@ namespace AGL.Api.Bridge_API.Controllers
         /// 내부연동 티타임 기간조회
         /// </summary>
         /// <returns></returns>
-        [DisableValidation]
         [Route("inbound/TeeTimeTable")]
         [HttpGet]
+        [DisableValidation] // 유효성 검사 패스
+        [SkipAuthentication] // 인증 미들웨어 패스
         public async Task<IDataResult> GetInboundTeeTime(
             [FromQuery] InboundTeeTimeRequest request)
         {
@@ -46,7 +47,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("inbound/golfclub/list")]
         [HttpGet]
-        //[DisableValidation]
+        [SkipAuthentication] // 인증 미들웨어 패스
         public async Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(
             [FromQuery(Name = "inboundCode")] string? inboundCode)
         {

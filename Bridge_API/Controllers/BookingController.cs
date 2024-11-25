@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+using AGL.Api.ApplicationCore.Filters;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -42,6 +43,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation")]
         [HttpPost]
+        [SkipAuthentication] // 인증 미들웨어 패스
         public async Task<IDataResult> POSTBookingRequest(
             [FromBody] ReqBookingRequest request)
         {
@@ -56,6 +58,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/list")]
         [HttpGet]
+        [SkipAuthentication] // 인증 미들웨어 패스
         public async Task<IDataResult> GetBookingInquiry(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody]ReqBookingInquiry Req)
         {
@@ -73,6 +76,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/confirm/{reservationId}")]
         [HttpGet]
+        [SkipAuthentication] // 인증 미들웨어 패스
         public async Task<IDataResult> GetConfirmBookingInquiry(
             [FromRoute] string reservationId,
             [FromQuery] string daemonId)
@@ -89,6 +93,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/cancel")]
         [HttpPost]
+        [SkipAuthentication] // 인증 미들웨어 패스
         public async Task<IDataResult> PostBookingCancel(
             [FromBody] ReservationDaemonRequest Req)
         {

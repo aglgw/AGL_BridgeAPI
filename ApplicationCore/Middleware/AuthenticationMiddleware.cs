@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using AGL.Api.Domain.Entities.OAPI;
 using Microsoft.EntityFrameworkCore;
 using AGL.Api.ApplicationCore.Utilities;
+using AGL.Api.ApplicationCore.Filters;
 
 namespace AGL.Api.ApplicationCore.Middleware
 {
@@ -25,18 +26,11 @@ namespace AGL.Api.ApplicationCore.Middleware
         }
         public async Task InvokeAsync(HttpContext context)
         {
-            // /api/inbound 경로는 예외 처리
-            if (context.Request.Path.StartsWithSegments("/api/inbound"))
+            // Endpoint에서 특성을 확인
+            var endpoint = context.GetEndpoint();
+            if (endpoint?.Metadata?.GetMetadata<SkipAuthenticationAttribute>() != null)
             {
-                await _next(context); // 미들웨어 건너뛰기
-                return;
-            }
-
-            // /api/reservation/confirm 경로는 예외 처리 대상에서 제외
-            if (context.Request.Path.StartsWithSegments("/api/reservation") &&
-                !context.Request.Path.Equals("/api/reservation/confirm", StringComparison.OrdinalIgnoreCase))
-            {
-                await _next(context); // 미들웨어 건너뛰기
+                await _next(context); // 인증을 건너뜀
                 return;
             }
 

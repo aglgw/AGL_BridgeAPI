@@ -370,6 +370,7 @@ namespace AGL.Api.Bridge_API.Services
                     }
                     catch (Exception ex)
                     {
+                        await transaction.RollbackAsync();
                         Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 저장 실패 {ex.Message}",true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
                     }
