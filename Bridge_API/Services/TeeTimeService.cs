@@ -95,7 +95,8 @@ namespace AGL.Api.Bridge_API.Services
                 var teeTimeMappings = await _context.TeeTimeMappings
                     .Where(tm => tm.TeeTime.GolfClubId == golfClub.GolfClubId
                     && dateSlotIds.Contains(tm.DateSlotId)
-                    && tm.TeeTime.SupplierId == golfClub.SupplierId)
+                    && tm.TeeTime.SupplierId == golfClub.SupplierId
+                    && tm.IsAvailable == true)
                     .Select(tm => new
                     {
                         TeeTime = new
