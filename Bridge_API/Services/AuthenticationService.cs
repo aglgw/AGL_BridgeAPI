@@ -149,7 +149,7 @@ namespace AGL.Api.Bridge_API.Services
                 
                 if(authType == "1") // 공급사
                 {
-                    var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.SupplierCode == request.authCode);
+                    var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.SupplierCode == request.authCode);
 
                     var response = new authAuthenticationResponse
                     {
@@ -165,7 +165,7 @@ namespace AGL.Api.Bridge_API.Services
                 }
                 else if(authType == "2") // 클라이언트
                 {
-                    var syncClient = await _context.SyncClients.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.ClientName == request.authCode);
+                    var syncClient = await _context.SyncClients.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.ClientName == request.authCode);
 
                     var response = new authAuthenticationResponse
                     {

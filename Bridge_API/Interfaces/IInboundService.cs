@@ -11,8 +11,9 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// 내부연동 골프장 조회
         /// </summary>
         /// <param name="inboundCode"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
-        Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(string? inboundCode);
+        Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(string? inboundCode, string token);
 
         /// <summary>
         /// 내부연동 티타임 기간조회

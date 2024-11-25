@@ -36,7 +36,7 @@ namespace AGL.Api.Bridge_API.Controllers
 
             return result;
         }
-#endif
+
         /// <summary>
         /// 예약 요청
         /// </summary>
@@ -102,7 +102,7 @@ namespace AGL.Api.Bridge_API.Controllers
 
             return result;
         }
-
+#endif
         /// <summary>
         /// 예약 확정
         /// </summary>

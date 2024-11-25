@@ -62,7 +62,7 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "inboundCode not found", null);
             }
 
-            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
+            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null) // 공급사 유효성 검사
             {
@@ -298,7 +298,7 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "daemonId or supplierCode not found", null);
             }
 
-            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
+            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null)
             {
@@ -393,7 +393,7 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Reservation has already been canceled or could not be found", null);
             }
 
-            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.GolfClubs.Any(g => g.InboundCode == inboundCode));
+            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
             if (supplier == null)
             {

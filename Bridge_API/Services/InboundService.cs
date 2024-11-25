@@ -7,6 +7,7 @@ using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using AGL.Api.Domain.Entities.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+using RTools_NTS.Util;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -103,8 +104,13 @@ namespace AGL.Api.Bridge_API.Services
             }
         }
 
-        public async Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(string inboundCode)
+        public async Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(string inboundCode, string token)
         {
+            if (string.IsNullOrEmpty(token) || token != InboundToken)
+            {
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "token is invalid", null);
+            }
+
             try
             {
                 // 모든 관련 데이터를 미리 조회 골프장,이미지,환불정책,코스,홀
