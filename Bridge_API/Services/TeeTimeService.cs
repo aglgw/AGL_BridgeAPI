@@ -66,12 +66,12 @@ namespace AGL.Api.Bridge_API.Services
 
                 // 공급자 코드에 따른 가격 정책 가져오기
                 var pricePolicies = await _context.TeetimePricePolicies
-                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode))
+                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
                     .ToDictionaryAsync(pp => pp.PricePolicyId);
 
                 // 공급자 코드에 따른 환불 정책 가져오기
                 var refundPolicies = await _context.TeetimeRefundPolicies
-                    .Where(rp => rp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode))
+                    .Where(rp => rp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
                     .ToDictionaryAsync(rp => rp.RefundPolicyId);
 
                 // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
@@ -124,7 +124,7 @@ namespace AGL.Api.Bridge_API.Services
                         TeeTime = g.First().TeeTime,
                         PlayDates = g.Select(tm => DateTime.ParseExact(tm.PlayDate, "yyyyMMdd", null).ToString("yyyy-MM-dd")).Distinct().OrderBy(date => date).ToList(),
                         CourseCodes = g.Select(tm => tm.TeeTime.CourseCode).Distinct().ToList(),
-                        Times = g.Select(tm => new { tm.StartTime, tm.SupplierTeetimeCode }).OrderBy(t => t.StartTime).ToList(),
+                        Times = g.Select(tm => new { tm.StartTime, tm.SupplierTeetimeCode }).OrderBy(t => t.StartTime).Where(t => t.SupplierTeetimeCode != null || t.StartTime != null).ToList(),
                         PricePolicyId = g.Key.PricePolicyId,
                         RefundPolicyId = g.Key.RefundPolicyId
                     })
@@ -155,7 +155,7 @@ namespace AGL.Api.Bridge_API.Services
                         time = groupedTeeTime.Times.GroupBy(t => t.StartTime).Select(g => new TimeInfo
                         {
                             startTime = g.Key,
-                            teeTimeCode = g.Select(t => t.SupplierTeetimeCode).Distinct().ToList()
+                            teeTimeCode = g.Any(t => t.SupplierTeetimeCode != null) ? g.Where(t => t.SupplierTeetimeCode != null).Select(t => t.SupplierTeetimeCode).Distinct().ToList() : null
                         }).ToList(),
                         price = pricePolicy != null ?
                             Enumerable.Range(1, 5).Select(playerCount =>
