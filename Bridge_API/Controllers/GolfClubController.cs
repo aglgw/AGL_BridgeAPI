@@ -4,11 +4,8 @@ using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
-using AGL.Api.ApplicationCore.Models.Enum;
-using AGL.Api.Bridge_API.Utils;
-using AGL.Api.ApplicationCore.Filters;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
 
 namespace AGL.Api.Bridge_API.Controllers
@@ -32,7 +29,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("golfclub")]
         [HttpPost]
         public async Task<IDataResult> PostGolfClub(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, GolfClubInfo request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPI.GolfClubInfo request)
         {
             Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 등록 처리 시작");
             var result = await _golfService.PostGolfClub(request, SupplierCode);
@@ -47,7 +44,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("golfclub/update")]
         [HttpPut]
         public async Task<IDataResult> PutGolfClub(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, GolfClubInfo request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPI.GolfClubInfo request)
         {
             Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 변경 처리 시작");
             var result = await _golfService.PutGolfClub(request, SupplierCode);

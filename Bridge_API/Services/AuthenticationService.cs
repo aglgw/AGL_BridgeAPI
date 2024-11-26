@@ -1,14 +1,11 @@
 ﻿using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
-using AGL.Api.ApplicationCore.Utilities;
 using AGL.Api.Bridge_API.Interfaces;
-using AGL.Api.Bridge_API.Models.OAPI;
 using AGL.Api.Domain.Entities.OAPI;
 using AGL.Api.Infrastructure.Data;
-using Azure;
 using Microsoft.EntityFrameworkCore;
-using RTools_NTS.Util;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.Bridge_API.Services

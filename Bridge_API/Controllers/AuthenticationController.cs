@@ -1,10 +1,9 @@
 ﻿using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.Bridge_API.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using System.ComponentModel.DataAnnotations;
-using AGL.Api.Bridge_API.Models.OAPI;
 using AGL.Api.ApplicationCore.Filters;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Controllers
 {

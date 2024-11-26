@@ -1,29 +1,16 @@
 ﻿using AGL.Api.Bridge_API.Interfaces;
-using AGL.Api.Bridge_API.Models.OAPI;
-using AGL.Api.Bridge_API.Utils;
 using AGL.Api.ApplicationCore.Extensions;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.Domain.Entities.OAPI;
 using AGL.Api.Infrastructure.Data;
-using Azure;
-using Azure.Core;
 using EFCore.BulkExtensions;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
-using System.Text.Json;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -217,7 +204,7 @@ namespace AGL.Api.Bridge_API.Services
             }
         }
 
-        public async Task<IDataResult> PutTeeTimeAvailability(TeeTimetAvailabilityRequest request, string supplierCode)
+        public async Task<IDataResult> PutTeeTimeAvailability(TeeTimeAvailabilityRequest request, string supplierCode)
         {
             var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.golfClubCode);
 

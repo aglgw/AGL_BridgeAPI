@@ -1,8 +1,5 @@
-﻿using AGL.Api.Bridge_API.Models.OAPI;
-using AGL.Api.ApplicationCore.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+﻿using AGL.Api.ApplicationCore.Interfaces;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Interfaces
 {
@@ -30,6 +27,6 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// 티타임 상태수정
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> PutTeeTimeAvailability(TeeTimetAvailabilityRequest request, string supplierCode);
+        Task<IDataResult> PutTeeTimeAvailability(TeeTimeAvailabilityRequest request, string supplierCode);
     }
 }

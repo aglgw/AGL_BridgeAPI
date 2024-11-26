@@ -1,14 +1,10 @@
 ﻿using AGL.Api.Bridge_API.Interfaces;
-using AGL.Api.Bridge_API.Models.OAPI;
-using AGL.Api.ApplicationCore.Extensions;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
-using AGL.Api.ApplicationCore.Models.Enum;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using AGL.Api.ApplicationCore.Filters;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -76,7 +72,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("teetime/availability")]
         [HttpPut]
         public async Task<IDataResult> PutTeeTimeAvailability(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimetAvailabilityRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeAvailabilityRequest request)
         {
             var result = await _teetimeService.PutTeeTimeAvailability(request, SupplierCode);
 

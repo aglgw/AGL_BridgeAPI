@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.IO;
 using System.Runtime.Serialization;
 
 namespace AGL.Api.Bridge_API.Models.OAPI
@@ -461,6 +460,42 @@ namespace AGL.Api.Bridge_API.Models.OAPI
 
         }
 
+
+
+        /// <summary>
+        /// 내장객 정보
+        /// </summary>
+        [DataContract]
+        public class GuestInfo
+        {
+            /// <summary>
+            /// 내장객 이름
+            /// </summary>
+            [DataMember]
+            public string? guestName { get; set; }
+
+            /// <summary>
+            /// 내장객 연락처
+            /// </summary>
+            [DataMember]
+            public string? guestPhone { get; set; }
+
+            /// <summary>
+            /// 내장객 성별 (F: 여성, M: 남성)
+            /// </summary>
+            [DataMember]
+            public string? guestGender { get; set; }
+
+            /// <summary>
+            /// 내장객 국적
+            /// </summary>
+            [DataMember]
+            public string? guestCountry { get; set; }
+        }
+
+        /// <summary>
+        /// 예약확정 정보
+        /// </summary>
         [DataContract]
         public class ConfirmBookingInfo
         {

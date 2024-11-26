@@ -1,5 +1,5 @@
 ﻿using AGL.Api.ApplicationCore.Interfaces;
-using AGL.Api.Bridge_API.Models.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Interfaces
 {

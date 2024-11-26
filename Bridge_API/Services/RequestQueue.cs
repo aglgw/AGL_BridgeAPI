@@ -1,7 +1,5 @@
-﻿using AGL.Api.Bridge_API.Interfaces;
-using AGL.Api.Bridge_API.Models.OAPI;
-using System.Collections.Concurrent;
-using System.Threading.Channels;
+﻿using System.Collections.Concurrent;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Services
 {

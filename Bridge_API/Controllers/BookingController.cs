@@ -1,15 +1,11 @@
 ﻿using AGL.Api.Bridge_API.Interfaces;
-using AGL.Api.Bridge_API.Models.OAPI;
-using AGL.Api.Bridge_API.Services;
-using AGL.Api.ApplicationCore.Extensions;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
-using AGL.Api.ApplicationCore.Models.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using AGL.Api.ApplicationCore.Filters;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Controllers
 {

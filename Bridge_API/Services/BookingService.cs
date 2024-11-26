@@ -1,32 +1,17 @@
 ﻿using AGL.Api.Bridge_API.Interfaces;
-using AGL.Api.Bridge_API.Models.OAPI;
-using AGL.Api.Bridge_API.Utils;
-using AGL.Api.ApplicationCore.Extensions;
 using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.Domain.Entities.OAPI;
 using AGL.Api.Infrastructure.Data;
-using Azure;
-using Azure.Core;
-using EFCore.BulkExtensions;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using AGL.Api.ApplicationCore.Utilities;
 using System.Globalization;
 using AGL.Api.ApplicationCore.Helpers;
-using System.Net;
-using System.Net.Mail;
-using System.Diagnostics;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -244,41 +229,111 @@ namespace AGL.Api.Bridge_API.Services
         /// <returns></returns>
         public async Task<IDataResult> GetBookingInquiry(ReqBookingInquiry Req)
         {
-
-
-            using (var httpClient = new HttpClient())
+            var inboundCode = Req.inboundCode;
+            if (string.IsNullOrWhiteSpace(inboundCode))
             {
-                var url = $"";
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, "Booking", "inboundCode 키 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "daemonId or supplierCode not found", null);
+            }
 
-                var response = await httpClient.GetAsync(url);
+            var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.GolfClubs.Any(g => g.InboundCode == inboundCode));
 
-                var responseString = await response.Content.ReadAsStringAsync();
+            if (supplier == null)
+            {
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"예약 요청 공급사 누락");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
+            }
 
+            var splitCode = inboundCode.Split("_");
 
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            var golfClubCode = splitCode.Last();
+            var supplierCode = splitCode.First();
+
+            string dateFormat = "yyyy-MM-dd";
+
+            // StartPlayDate 유효성 검사
+            if (!DateTime.TryParseExact(Req.startDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
+            {
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, "Booking", "시작일 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "startDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+            }
+
+            // EndPlayDate 유효성 검사
+            if (!DateTime.TryParseExact(Req.endDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
+            {
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, "Booking", "종료일 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "endDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+            }
+
+            // 인증 정보 설정
+            var authentication = supplier.Authentication;
+            string clientCode = authentication.AglCode;
+            string token = GenerateSHA256Hash(authentication.TokenAgl);
+
+            // 엔드포인트 설정
+            string EndpointUrl = $"{supplier.EndPoint.TrimEnd('/')}/reservation/list";
+
+            // HTTP 요청 설정
+            var header = new Dictionary<string, string>
+            {
+                { "X-Client-Code", clientCode },
+                { "Authorization", $"Bearer {token}" },
+            };
+
+            var query = new Dictionary<string, string>
+            {
+                { "golfClubCode", golfClubCode },
+                { "startDate", Req.startDate },
+                { "endDate", Req.endDate },
+                { "reservationId", Req.reservationId },
+                //{ "status", Req.status },
+            };
+
+            var response = new OAPIReservationConfirmListResponse();
+            string strReaponse = string.Empty;
+
+            try
+            {
+                await RestfulClient.GETAPIHeaderQuery<OAPIReservationConfirmListResponse>(EndpointUrl, header, query, (status, reasonPhrase, apiResponse) =>
                 {
-
-                    var resp = JsonConvert.DeserializeObject<OAPICommonListResponse<List<BookingInfo>>>(responseString);
-
-                    var rstMsg = string.Empty;
-
-                    if (string.Equals(resp?.rstCd.ToLower(), "success"))
+                    if (status == System.Net.HttpStatusCode.OK)
                     {
-
-                        //데이터 처리 부분 추가 필요
+                        string jsonString = System.Text.Json.JsonSerializer.Serialize(apiResponse);
+                        response = apiResponse;
 
                     }
                     else
                     {
-                        rstMsg = resp != null ? resp.rstMsg : "Not Found Result";
+                        strReaponse = reasonPhrase;
+                        Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 조회 실패 statusCode : {status} : {strReaponse} ", true);
+                    }
+                });
 
-                        return await _commonService.CreateResponse<object>(true, ResultCode.SERVER_ERROR, rstMsg, null);
+                if (response != null)
+                {
+                    if (response.data.Any())
+                    {
+                        Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 조회 성공");
+                        return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Confirmation Reservation was fail", response.data);
+                    }
+                    else
+                    {
+                        Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 내용 없음");
+                        return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Failed to retrieve confirmation reservation details.", response.data);
                     }
                 }
+                else
+                {
+                    Utils.UtilLogs.LogRegDay(inboundCode, inboundCode, "Booking", "확정 목록 정보 없음", true);
+                    return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Confirmation Reservation was fail", null);
+                }
+
             }
-
-
-            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation inquiry was successfully",null);
+            catch (Exception ex)
+            {
+                Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, "Booking", "예약요청 저장 실패", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            }
 
         }
 
@@ -331,7 +386,7 @@ namespace AGL.Api.Bridge_API.Services
 
             try
             {
-                await RestfulClient.GETAPIHeaderQuery<OAPIReservationConfirmListResponse>(EndpointUrl, header, null, (status, reasonPhrase, apiResponse) =>
+                await RestfulClient.GETAPIHeaderQuery<OAPIReservationConfirmListResponse>(EndpointUrl, header, query, (status, reasonPhrase, apiResponse) =>
                 {
                     if (status == System.Net.HttpStatusCode.OK)
                     {
@@ -348,9 +403,16 @@ namespace AGL.Api.Bridge_API.Services
 
                 if (response != null)
                 {
-
-
-                    Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 조회 성공");
+                    if (response.data.Any())
+                    {
+                        Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 조회 성공");
+                        return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Confirmation Reservation was fail", response.data); 
+                    }
+                    else
+                    {
+                        Utils.UtilLogs.LogRegHour(inboundCode, inboundCode, $"Booking", $"확정 목록 내용 없음");
+                        return await _commonService.CreateResponse<object>(true, ResultCode.NOT_FOUND, "Failed to retrieve confirmation reservation details.", response.data);
+                    }
                 }
                 else
                 {

@@ -1,5 +1,4 @@
-﻿using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 

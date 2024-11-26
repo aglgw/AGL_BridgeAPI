@@ -1,7 +1,4 @@
-﻿using AGL.Api.ApplicationCore.Infrastructure;
-using AGL.Api.ApplicationCore.Interfaces;
-using AGL.Api.ApplicationCore.Models.Queries;
-using AGL.Api.Infrastructure.Data;
+﻿using AGL.Api.ApplicationCore.Interfaces;
 
 namespace AGL.Api.Bridge_API.Interfaces
 {
