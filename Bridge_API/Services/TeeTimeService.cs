@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -39,7 +40,7 @@ namespace AGL.Api.Bridge_API.Services
             return await ValidateTeeTime(request, supplierCode, request.golfClubCode, "PUT");
         }
 
-        public async Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
+        public async Task<TeeTimeResponse> GetTeeTime(TeeTimeGetRequest request, string supplierCode)
         {
             if (string.IsNullOrEmpty(request.startDate) && string.IsNullOrEmpty(request.endDate))
             {
@@ -119,11 +120,11 @@ namespace AGL.Api.Bridge_API.Services
                     .ToList();
 
                 // 응답 데이터 준비
-                var responseData = new Dictionary<string, List<TeeTimeInfo>>
+                var responseData = new TeeTimeData
                 {
-                    ["teeTimeInfo"] = new List<TeeTimeInfo>()
+                    teeTimeInfo = new List<TeeTimeInfo>()
                 };
-//Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+                //Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                 // 그룹화된 티타임을 순회하며 TeeTimeInfo 객체 생성
                 foreach (var groupedTeeTime in groupedTeeTimes)
                 {
@@ -192,7 +193,7 @@ namespace AGL.Api.Bridge_API.Services
                             }).Where(rp => rp != null).Cast<RefundPolicy>().ToList() : new List<RefundPolicy>()
                     };
 //Debug.WriteLine($"[Step 4] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
-                    responseData["teeTimeInfo"].Add(teeTimeInfo);
+                    responseData.teeTimeInfo.Add(teeTimeInfo);
                 }
                 Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, $"TeeTime", $"티타임 정보 검색 성공");
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime List successfully", responseData);

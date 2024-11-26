@@ -41,6 +41,9 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public string rstMsg { get; set; }
         }
 
+        /// <summary>
+        /// 예약요청 응답
+        /// </summary>
         [DataContract]
         public class OAPIReservationResponse : OAPIResponseBase
         {
@@ -51,6 +54,9 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public string reservationId { get; set; }
         }
 
+        /// <summary>
+        /// 데이타 제너릭 응답
+        /// </summary>
         [DataContract]
         public class OAPIDataResponse<T> : OAPIResponseBase
         {
@@ -61,6 +67,9 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public T data { get; set; }
         }
 
+        /// <summary>
+        /// 취소 응답
+        /// </summary>
         [DataContract]
         public class cancelResponse
         {
@@ -84,6 +93,9 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public string? currency { get; set; }
         }
 
+        /// <summary>
+        /// 예약 확정 목록 응답
+        /// </summary>
         [DataContract]
         public class OAPIReservationConfirmListResponse : OAPIResponseBase
         {
@@ -94,6 +106,9 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public List<OAPIReservationConfirm> data { get; set; }
         }
 
+        /// <summary>
+        /// 예약 확정 응답
+        /// </summary>
         [DataContract]
         public class OAPIReservationConfirm
         {
@@ -137,36 +152,9 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public string reservationDate { get; set; }
         }
 
-        [DataContract]
-        public class OAPITeeTimeGetResponse : OAPIResponseBase
-        {
-            /// <summary>
-            /// 데이타
-            /// </summary>
-            [DataMember]
-            public Dictionary<string, List<TeeTimeInfo>>? data { get; set; }
-        }
-
-        [DataContract]
-        public class OAPICommonListResponse<T> : OAPIResponseBase
-        {
-            /// <summary>
-            /// 데이타
-            /// </summary>
-            [DataMember]
-            public List<T>? data { get; set; }
-        }
-
-        [DataContract]
-        public class OAPICommonResponse<T> : OAPIResponseBase
-        {
-            /// <summary>
-            /// 데이타
-            /// </summary>
-            [DataMember]
-            public T? data { get; set; }
-        }
-
+        /// <summary>
+        /// 인증 요청 응답
+        /// </summary>
         [DataContract]
         public class authAuthenticationResponse
         {
@@ -201,5 +189,30 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             public string? TokenAgl { get; set; }
         }
 
+        /// <summary>
+        /// 티타임 조회 응답
+        /// </summary>
+        [DataContract]
+        public class TeeTimeResponse : OAPIResponseBase
+        {
+            /// <summary>
+            /// 데이타
+            /// </summary>
+            [DataMember]
+            public TeeTimeData data { get; set; }
+        }
+
+        /// <summary>
+        /// 티타임 리스트 정보
+        /// </summary>
+        [DataContract]
+        public class TeeTimeData
+        {
+            /// <summary>
+            /// 티타임 정보
+            /// </summary>
+            [DataMember]
+            public List<TeeTimeInfo> teeTimeInfo { get; set; }
+        }
     }
 }

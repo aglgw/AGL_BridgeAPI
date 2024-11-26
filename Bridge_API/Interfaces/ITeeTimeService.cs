@@ -1,5 +1,7 @@
 ﻿using AGL.Api.ApplicationCore.Interfaces;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
 namespace AGL.Api.Bridge_API.Interfaces
 {
@@ -22,7 +24,7 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// 티타임 조회
         /// </summary>
         /// <returns></returns>
-        Task<IDataResult> GetTeeTime(TeeTimeGetRequest request, string supplierCode);
+        Task<TeeTimeResponse> GetTeeTime(TeeTimeGetRequest request, string supplierCode);
         /// <summary>
         /// 티타임 상태수정
         /// </summary>

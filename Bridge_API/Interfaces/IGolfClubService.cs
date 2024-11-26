@@ -26,6 +26,6 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<OAPICommonListResponse<GolfClubInfo>> GetGolfClub(string supplierCode, string? GolfclubCode);
+        Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(string supplierCode, string? GolfclubCode);
     }
 }

@@ -104,7 +104,7 @@ namespace AGL.Api.Bridge_API.Services
             }
         }
 
-        public async Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(string inboundCode, string token)
+        public async Task<OAPIDataResponse<List<GolfClubInfoWithInboundCode>>> GetInboundGolfClub(string inboundCode, string token)
         {
             if (string.IsNullOrEmpty(token) || token != InboundToken)
             {
@@ -185,7 +185,7 @@ namespace AGL.Api.Bridge_API.Services
                 }).ToList();
 
                 Utils.UtilLogs.LogRegHour("inbound", "inbound", "GolfClub", $"골프장 검색 성공");
-                return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);
+                return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);
             }
             catch (Exception ex)
             {

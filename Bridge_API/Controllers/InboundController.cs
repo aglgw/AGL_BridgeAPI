@@ -48,7 +48,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("inbound/golfclub/list")]
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
-        public async Task<OAPICommonListResponse<GolfClubInfoWithInboundCode>> GetInboundGolfClub(
+        public async Task<OAPIDataResponse<List<GolfClubInfoWithInboundCode>>> GetInboundGolfClub(
             [FromHeader(Name = "token")][Required] string token,
             [FromQuery(Name = "inboundCode")] string? inboundCode)
         {

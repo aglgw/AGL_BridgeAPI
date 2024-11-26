@@ -34,10 +34,8 @@ namespace AGL.Api.Bridge_API.Services
         {
             var description = ExtensionMethods.GetDescription(resultCode);
 
-            // 요청 데이터 타입에 따라 반환 타입 결정
-            if (data == null)
+            if (data == null) // 데이터가 없는 경우 기본 응답
             {
-                // 데이터가 없는 경우 기본 응답
                 return new OAPIResponseBase
                 {
                     isSuccess = isSuccess,
@@ -46,84 +44,29 @@ namespace AGL.Api.Bridge_API.Services
                     statusCode = (int)resultCode
                 };
             }
-            else if (data is List<string> stringList)
+            else if (typeof(T) == typeof(TeeTimeData)) // 티타임 조회용
             {
-                return new OAPICommonListResponse<string>
+                return new TeeTimeResponse
                 {
                     isSuccess = isSuccess,
                     rstCd = description,
                     rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
                     statusCode = (int)resultCode,
-                    data = stringList
-                };
-            }
-            else if (data is Dictionary<string, List<TeeTimeInfo>> teeTimeDict)
-            {
-                return new OAPITeeTimeGetResponse
-                {
-                    isSuccess = isSuccess,
-                    rstCd = description,
-                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    statusCode = (int)resultCode,
-                    data = teeTimeDict
-                };
-            }
-            else if (data is string singleString)
-            {
-                return new OAPICommonResponse<string>
-                {
-                    isSuccess = isSuccess,
-                    rstCd = description,
-                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    statusCode = (int)resultCode,
-                    data = singleString
-                };
-            }
-            else if (data is Dictionary<string, string> keyValueStringData)
-            {
-                return new OAPICommonResponse<Dictionary<string, string>>
-                {
-                    isSuccess = isSuccess,
-                    rstCd = description,
-                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    statusCode = (int)resultCode,
-                    data = keyValueStringData
-                };
-            }
-            else if (data is List<GolfClubInfoWithInboundCode> golfClubInfoWithInboundCodeList)
-            {
-                return new OAPICommonListResponse<GolfClubInfoWithInboundCode>
-                {
-                    isSuccess = isSuccess,
-                    rstCd = description,
-                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    statusCode = (int)resultCode,
-                    data = golfClubInfoWithInboundCodeList
-                };
-            }
-            else if (data is List<GolfClubInfo> golfClubInfoList)
-            {
-                return new OAPICommonListResponse<GolfClubInfo>
-                {
-                    isSuccess = isSuccess,
-                    rstCd = description,
-                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    statusCode = (int)resultCode,
-                    data = golfClubInfoList
+                    data = data as TeeTimeData
                 };
             }
             else
             {
-                // 기타 타입에 대한 공통 응답
-                return new OAPICommonResponse<T>
+                return new OAPIDataResponse<T>
                 {
                     isSuccess = isSuccess,
                     rstCd = description,
                     rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
                     statusCode = (int)resultCode,
                     data = data
+
                 };
-            }
+            };
 
         }
     }

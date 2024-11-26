@@ -36,7 +36,7 @@ namespace AGL.Api.Bridge_API.Services
             return await ProcessGolfClub(request, supplierCode, request.golfClubCode);
         }
 
-        public async Task<OAPICommonListResponse<GolfClubInfo>> GetGolfClub(string supplierCode, string golfClubCode)
+        public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(string supplierCode, string golfClubCode)
         {
             try
             {
@@ -116,12 +116,12 @@ namespace AGL.Api.Bridge_API.Services
                 }).ToList();
 
                 Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 검색 성공");
-                return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);
+                return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);
             }
             catch (Exception ex)
             {
                 Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 검색 실패 {ex.Message}", true);
-                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                return await _commonService.CreateResponse<List<GolfClubInfo>>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
 
