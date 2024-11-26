@@ -63,7 +63,7 @@ namespace AGL.Api.Bridge_API.Services
 
                     Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue end", $"골프장TeeTime queue end");
                 }
-                await Task.Delay(1000, stoppingToken); // Adjust delay as needed
+                await Task.Delay(2000, stoppingToken); // 큐 딜레이 설정
             }
         }
     }

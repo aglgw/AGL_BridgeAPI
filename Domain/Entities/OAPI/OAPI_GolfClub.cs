@@ -69,6 +69,9 @@ namespace AGL.Api.Domain.Entities.OAPI
         //public bool? TeetimeCancelIsActive { get; set; } // 티타임 취소시 활성화여부
 
         [Required]
+        public bool IsDeleted { get; set; } // 삭제 여부
+
+        [Required]
         public DateTime CreatedDate { get; set; } // 생성일
 
         public DateTime? UpdatedDate { get; set; } // 수정일

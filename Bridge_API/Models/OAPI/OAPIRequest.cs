@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
@@ -180,6 +181,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
     /// <summary>
     ///예약 목록 조회
     /// </summary>
+    [DataContract]
     public class ReqBookingInquiry: TeeTimeBaseRequest
     {
         /// <summary>
@@ -213,6 +215,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
     /// <summary>
     ///예약 요청
     /// </summary>
+    [DataContract]
     public class ReqBookingRequest : TeeTimeBaseRequest
     {
         /// <summary>
@@ -286,6 +289,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
     /// <summary>
     ///예약 요청
     /// </summary>
+    [DataContract]
     public class GuestInfo
     {
         /// <summary>
@@ -310,7 +314,10 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         public string? guestCountry { get; set; }
     }
 
-
+    /// <summary>
+    /// 인증 요청, 조회
+    /// </summary>
+    [DataContract]
     public class AuthenticationRequest
     {
         /// <summary>
@@ -330,5 +337,25 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// </summary>
         [DataMember]
         public string? endPoint { get; set; }
+    }
+
+    /// <summary>
+    /// 인증 체크
+    /// </summary>
+    [DataContract]
+    public class CheckAuthenticationRequest
+    {
+        /// <summary>
+        /// 클라이언트 토큰
+        /// </summary>
+        [DataMember]
+        [FromHeader(Name = "token"), Required]
+        public string token { get; set; }
+        /// <summary>
+        /// 클라이언트 코드
+        /// </summary>
+        [DataMember]
+        [FromHeader(Name = "ClientCode"), Required]
+        public string ClientCode { get; set; }
     }
 }

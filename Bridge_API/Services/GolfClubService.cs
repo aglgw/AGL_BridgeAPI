@@ -219,6 +219,9 @@ namespace AGL.Api.Bridge_API.Services
                         // 이미지 정보 저장 (유효성 체크)
                         if (request.image != null)
                         {
+                            // 요청된 이미지 ID 목록
+                            var requestedImageIds = request.image.Select(image => image.id).ToList();
+
                             foreach (var image in request.image)
                             {
                                 var existingImage = existingImages.FirstOrDefault(i => i.Idx == image.id);
@@ -243,11 +246,36 @@ namespace AGL.Api.Bridge_API.Services
                                     newImages.Add(newImage);
                                 }
                             }
+
+                            // 요청 데이터에 없는 기존 이미지를 소프트 삭제
+                            var imagesToSoftDelete = existingImages.Where(i => !requestedImageIds.Contains(i.Idx)).ToList();
+                            if (imagesToSoftDelete.Any())
+                            {
+                                foreach (var imageToSoftDelete in imagesToSoftDelete)
+                                {
+                                    imageToSoftDelete.IsDeleted = true; // 소프트 삭제 처리
+                                    imageToSoftDelete.UpdatedDate = DateTime.UtcNow; // 삭제된 시점 기록
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (existingImages.Any()) // image 가 null 일 때 모든 기존 이미지를 소프트 삭제
+                            {
+                                foreach (var existingImage in existingImages)
+                                {
+                                    existingImage.IsDeleted = true; // 소프트 삭제 처리
+                                    existingImage.UpdatedDate = DateTime.UtcNow; // 삭제된 시점 기록
+                                }
+                            }
                         }
 
                         // 환불 정책 정보 저장 (유효성 체크)
                         if (request.refundPolicy != null)
                         {
+                            // 요청된 환불 정책의 RefundDate 목록 생성
+                            var requestedRefundDates = request.refundPolicy.Select(rp => rp.refundDate).ToList();
+
                             foreach (var refundPolicy in request.refundPolicy)
                             {
                                 var existingPolicy = existingRefundPolicies.FirstOrDefault(rp => rp.RefundDate == refundPolicy.refundDate);
@@ -273,11 +301,36 @@ namespace AGL.Api.Bridge_API.Services
                                     newRefundPolicies.Add(newRefundPolicy);
                                 }
                             }
+
+                            // 요청 데이터에 없는 기존 환불 정책 소프트 삭제
+                            var policiesToSoftDelete = existingRefundPolicies.Where(rp => !requestedRefundDates.Contains(rp.RefundDate)).ToList();
+                            if (policiesToSoftDelete.Any())
+                            {
+                                foreach (var policyToSoftDelete in policiesToSoftDelete)
+                                {
+                                    policyToSoftDelete.IsDeleted = true; // 소프트 삭제
+                                    policyToSoftDelete.UpdatedDate = DateTime.UtcNow;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (existingRefundPolicies.Any()) // refundPolicy 가 null 일때 모든 정책 소프트 삭제
+                            {
+                                foreach (var existingRefundPolicy in existingRefundPolicies)
+                                {
+                                    existingRefundPolicy.IsDeleted = true; // 소프트 삭제
+                                    existingRefundPolicy.UpdatedDate = DateTime.UtcNow;
+                                }
+                            }
                         }
 
                         // 코스 정보 저장 (유효성 체크)
                         if (request.course != null)
                         {
+                            // 요청된 환불 정책의 CoursesCode 목록 생성
+                            var requestedCourses = request.course.Select(rp => rp.courseCode).ToList();
+
                             foreach (var course in request.course)
                             {
                                 var existingCourse = existingCourses.FirstOrDefault(c => c.CourseCode.ToString() == course.courseCode.ToString());
@@ -302,11 +355,36 @@ namespace AGL.Api.Bridge_API.Services
                                     newCourses.Add(newCourse);
                                 }
                             }
+
+                            // 요청 데이터에 없는 기존 코스 소프트 삭제
+                            var coursesToSoftDelete = existingCourses.Where(rc => !requestedCourses.Contains(rc.CourseCode)).ToList();
+                            if (coursesToSoftDelete.Any())
+                            {
+                                foreach (var courseToSoftDelete in coursesToSoftDelete)
+                                {
+                                    courseToSoftDelete.IsDeleted = true; // 소프트 삭제
+                                    courseToSoftDelete.UpdatedDate = DateTime.UtcNow;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (existingCourses.Any()) // course 가 null 일때 삭제 처리
+                            {
+                                foreach (var existingCourse in existingCourses)
+                                {
+                                    existingCourse.IsDeleted = true; // 소프트 삭제
+                                    existingCourse.UpdatedDate = DateTime.UtcNow;
+                                }
+                            }
                         }
 
                         // 홀 정보 저장 (유효성 체크)
                         if (request.holeInfo != null)
                         {
+                            // 요청된 환불 정책의 CoursesCode 목록 생성
+                            var requestedholeInfos = request.holeInfo.Select(rp => rp.holeNumber).ToList();
+
                             foreach (var hole in request.holeInfo)
                             {
                                 if (hole.holeNumber <= 0)
@@ -335,6 +413,28 @@ namespace AGL.Api.Bridge_API.Services
                                         UpdatedDate = null
                                     };
                                     newHoles.Add(newHole);
+                                }
+                            }
+
+                            // 요청 데이터에 없는 기존 홀 소프트 삭제
+                            var holesToSoftDelete = existingHoles.Where(rc => !requestedholeInfos.Contains(rc.HoleNumber)).ToList();
+                            if (holesToSoftDelete.Any())
+                            {
+                                foreach (var holeToSoftDelete in holesToSoftDelete)
+                                {
+                                    holeToSoftDelete.IsDeleted = true; // 소프트 삭제
+                                    holeToSoftDelete.UpdatedDate = DateTime.UtcNow;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (existingHoles.Any()) // holeInfo 가 null 일때 모든 홀 소프트 삭제
+                            {
+                                foreach (var existingHole in existingHoles)
+                                {
+                                    existingHole.IsDeleted = true; // 소프트 삭제
+                                    existingHole.UpdatedDate = DateTime.UtcNow;
                                 }
                             }
                         }

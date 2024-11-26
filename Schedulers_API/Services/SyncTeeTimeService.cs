@@ -44,7 +44,7 @@ namespace AGL.Api.API_Schedulers.Services
                 {
                     try
                     {
-                        UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientName : {client.ClientName} 동기화 시작", "");
+                        UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientCode : {client.ClientCode} 동기화 시작", "");
 
                         var syncTeeTimeMappings = await _context.SyncTeeTimeMappings
                             .Where(stm => stm.SyncTeeTimeMappingId > client.LastSyncTeeTimeMappingId)
@@ -78,13 +78,13 @@ namespace AGL.Api.API_Schedulers.Services
                         // teeTimeMappings가 있을 때만 아래 코드를 실행합니다
                         if (syncTeeTimeMappings.Any())
                         {
-                            UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientName: {client.ClientName}에 대해 {syncTeeTimeMappings.Count}개의 티타임 매핑을 준비", "");
+                            UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientCode: {client.ClientCode}에 대해 {syncTeeTimeMappings.Count}개의 티타임 매핑을 준비", "");
                             // 클라이언트에 전송할 객체 리스트를 준비합니다
                             var syncTeeTimeRequests = syncTeeTimeMappings.Select(stm => 
                             {
                                 // 클라이언트 마다 객체 모양 다르게 설정
                                 ISyncTeeTimeRequest request;
-                                if (client.ClientName == "ClientA")
+                                if (client.ClientCode == "ClientA")
                                 {
                                     request = new SyncTeeTimeRequest
                                     {
@@ -115,7 +115,7 @@ namespace AGL.Api.API_Schedulers.Services
                             // 동기화할 티타임 요청이 있는 경우, 클라이언트의 엔드포인트로 전송합니다
                             if (syncTeeTimeRequests.Count > 0)
                             {
-                                UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientName: {client.ClientName}로 데이터 전송 시작", "");
+                                UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientCode: {client.ClientCode}로 데이터 전송 시작", "");
 #if DEBUG
                                 var success = true;
 #else
@@ -125,13 +125,13 @@ namespace AGL.Api.API_Schedulers.Services
                                 {
                                     // 동기화가 성공하면 클라이언트의 LastSyncTeeTimeMappingId를 업데이트합니다
                                     client.LastSyncTeeTimeMappingId = syncTeeTimeMappings.Max(stm => stm.SyncTeeTimeMappingId);
-                                    UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientName: {client.ClientName}의 LastSyncTeeTimeMappingId를 {client.LastSyncTeeTimeMappingId}로 업데이트", "");
+                                    UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientCode: {client.ClientCode}의 LastSyncTeeTimeMappingId를 {client.LastSyncTeeTimeMappingId}로 업데이트", "");
                                     _context.SyncClients.Update(client);
                                     await _context.SaveChangesAsync();
                                 }
                                 else
                                 {
-                                    UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientName: {client.ClientName}로 데이터 전송 실패", "", true);
+                                    UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientCode: {client.ClientCode}로 데이터 전송 실패", "", true);
                                 }
                             }
                         }
@@ -139,7 +139,7 @@ namespace AGL.Api.API_Schedulers.Services
                     catch (Exception ex)
                     {
                         // 개별 클라이언트 동기화 실패에 대한 오류를 기록합니다
-                        UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientName: {client.ClientName} 처리 실패: {ex.Message}", "", true);
+                        UtilLogs.LogRegHour("SyncTeeTime", "SyncTeeTime", $"ClientCode: {client.ClientCode} 처리 실패: {ex.Message}", "", true);
                     }
                 });
                 // 모든 클라이언트 동기화 작업을 동시에 실행합니다
@@ -159,17 +159,17 @@ namespace AGL.Api.API_Schedulers.Services
         {
             try
             {
-                UtilLogs.LogRegHour("SendDataToClient", "SendDataToClient", $"ClientName: {client.ClientName}로 데이터 전송 시작", "");
+                UtilLogs.LogRegHour("SendDataToClient", "SendDataToClient", $"ClientCode: {client.ClientCode}로 데이터 전송 시작", "");
                 // syncTeeTimeRequests를 직렬화하여 HTTP 요청 콘텐츠를 준비합니다
                 var content = new StringContent(JsonSerializer.Serialize(syncTeeTimeRequests), Encoding.UTF8, "application/json");
                 var response = await httpClient.PostAsync(client.ClientEndpoint, content);
                 if (response.IsSuccessStatusCode)
                 {
-                    UtilLogs.LogRegHour("SendDataToClient", "SendDataToClient", $"ClientName: {client.ClientName}로 데이터 전송 성공", "");
+                    UtilLogs.LogRegHour("SendDataToClient", "SendDataToClient", $"ClientCode: {client.ClientCode}로 데이터 전송 성공", "");
                 }
                 else
                 {
-                    UtilLogs.LogRegHour("SendDataToClient", "SendDataToClient", $"ClientName: {client.ClientName}로 데이터 전송 실패", "", true);
+                    UtilLogs.LogRegHour("SendDataToClient", "SendDataToClient", $"ClientCode: {client.ClientCode}로 데이터 전송 실패", "", true);
                 }
                 return response.IsSuccessStatusCode;
             }

@@ -1,6 +1,7 @@
 ﻿using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
+using AGL.Api.ApplicationCore.Utilities;
 using AGL.Api.Bridge_API.Interfaces;
 using AGL.Api.Bridge_API.Models.OAPI;
 using AGL.Api.Domain.Entities.OAPI;
@@ -54,7 +55,7 @@ namespace AGL.Api.Bridge_API.Services
                         }
                         else if (authType == "2") // 클라이언트
                         {
-                            auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientName == request.authCode);
+                            auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientCode == request.authCode);
                         }
 
                         if (auth != null)
@@ -90,13 +91,13 @@ namespace AGL.Api.Bridge_API.Services
                             }
                             else if (authType == "2") // 클라이언트
                             {
-                                auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientName == request.authCode);
+                                auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientCode == request.authCode);
 
                                 var maxSyncTeeTimeMappingId = await _context.SyncTeeTimeMappings.MaxAsync(s => s.TeetimeMappingId);
 
                                 var newSyncClient = new OAPI_SyncClient
                                 {
-                                    ClientName = request.authCode,
+                                    ClientCode = request.authCode,
                                     ClientEndpoint = request.endPoint,
                                     LastSyncTeeTimeMappingId = maxSyncTeeTimeMappingId
                                 };
@@ -136,7 +137,7 @@ namespace AGL.Api.Bridge_API.Services
         }
 
 
-        public async Task<IDataResult> GetAuthentication(AuthenticationRequest request,string token)
+        public async Task<IDataResult> GetAuthentication(AuthenticationRequest request, string token)
         {
             if (string.IsNullOrEmpty(token) || token != AuthToken)
             {
@@ -146,8 +147,8 @@ namespace AGL.Api.Bridge_API.Services
             try
             {
                 var authType = request.authType;
-                
-                if(authType == "1") // 공급사
+
+                if (authType == "1") // 공급사
                 {
                     var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.SupplierCode == request.authCode);
 
@@ -163,13 +164,13 @@ namespace AGL.Api.Bridge_API.Services
                     return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "Authentication List successfully", response);
 
                 }
-                else if(authType == "2") // 클라이언트
+                else if (authType == "2") // 클라이언트
                 {
-                    var syncClient = await _context.SyncClients.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.ClientName == request.authCode);
+                    var syncClient = await _context.SyncClients.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.ClientCode == request.authCode);
 
                     var response = new authAuthenticationResponse
                     {
-                        authCode = syncClient.ClientName,
+                        authCode = syncClient.ClientCode,
                         TokenSupplier = syncClient.Authentication.TokenSupplier,
                         TokenClient = syncClient.Authentication.TokenClient,
                         AglCode = syncClient.Authentication.AglCode,
@@ -199,5 +200,40 @@ namespace AGL.Api.Bridge_API.Services
             //    .Select(_ => random.Next(0, 10).ToString()));
             //return result;
         }
+
+        //public async Task<IDataResult> CheckAuthentication(CheckAuthenticationRequest request)
+        //{
+        //    try
+        //    {
+        //        var syncClient = await _context.SyncClients.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.ClientCode == request.ClientCode);
+
+        //        if (syncClient == null)
+        //        {
+        //            return await _commonService.CreateResponse<object>(false, ResultCode.UNAUTHORIZED, "client not found", null);
+        //        }
+
+        //        var tokenClient = syncClient.Authentication.TokenClient;
+
+        //        if (tokenClient == null)
+        //        {
+        //            return await _commonService.CreateResponse<object>(false, ResultCode.UNAUTHORIZED, "clientToken not found", null);
+        //        }
+
+        //        var hashToken = ComputeSha256.ComputeSha256Hash(tokenClient);
+                
+        //        if(hashToken != request.token)
+        //        {
+        //            return await _commonService.CreateResponse<object>(false, ResultCode.UNAUTHORIZED, "signature Unauthorized", null);
+        //        }
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Utils.UtilLogs.LogRegHour(request.ClientCode, request.ClientCode, $"Authentication", $"인증 실패 {ex.Message}", true);
+        //        return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+        //    }
+        
+        //}
+
     }
 }

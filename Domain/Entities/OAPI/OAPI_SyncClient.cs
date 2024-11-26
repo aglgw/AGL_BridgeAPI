@@ -15,7 +15,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public int SyncClientId { get; set; }
 
         [Required]
-        public string ClientName { get; set; }
+        public string ClientCode { get; set; }
 
         public string? ClientEndpoint { get; set; }
 

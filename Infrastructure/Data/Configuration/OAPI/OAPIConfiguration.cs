@@ -83,6 +83,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .HasForeignKey(h => h.GolfClubId);
 
             builder.Property(e => e.isGuestInfoRequired).HasColumnType("bit");
+
+            // IsDeleted = 0 전역 필터 추가
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 
@@ -92,6 +95,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
         {
             builder.ToTable("OAPI_GolfClubImage");
             builder.HasKey(e => e.GolfClubImageId);
+
+            // IsDeleted = 0 전역 필터 추가
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 
@@ -108,6 +114,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
             builder.Property(e => e.RefundFee).HasColumnType("decimal(18,4)");
             builder.Property(e => e.RefundUnit).HasColumnType("TINYINT");
+
+            // IsDeleted = 0 전역 필터 추가
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 
@@ -126,6 +135,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithOne(c => c.GolfClubCourse)
                    .HasForeignKey(c => c.GolfClubCourseId);
 
+            // IsDeleted = 0 전역 필터 추가
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 
@@ -141,6 +152,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithMany(g => g.Holes) // 각 GolfClub은 여러 개의 GolfClubHole을 가질 수 있음
                    .HasForeignKey(h => h.GolfClubId) // 외래 키 설정
                    .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
+
+            // IsDeleted = 0 전역 필터 추가
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 
