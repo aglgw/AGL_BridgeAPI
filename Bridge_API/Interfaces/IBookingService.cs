@@ -37,7 +37,7 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// </summary>
         /// <param name="Req"></param>
         /// <returns></returns>
-        Task<IDataResult> PostBookingCancel(ReservationDaemonRequest Req);
+        Task<IDataResult> PostBookingCancel(ReservationInboundRequest Req);
 
         /// <summary>
         /// 예약확정

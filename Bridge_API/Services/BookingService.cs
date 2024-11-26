@@ -225,7 +225,7 @@ namespace AGL.Api.Bridge_API.Services
                         await _context.SaveChangesAsync();
                         await transaction.CommitAsync();
 
-                        return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation Request was successfully", tmpData);
+                        return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation Cancel Request was successfully", tmpData);
                     }
                     catch (Exception ex)
                     {
@@ -374,7 +374,7 @@ namespace AGL.Api.Bridge_API.Services
         /// </summary>
         /// <param name="reservationId"></param>
         /// <returns></returns>
-        public async Task<IDataResult> PostBookingCancel(ReservationDaemonRequest Req)
+        public async Task<IDataResult> PostBookingCancel(ReservationInboundRequest Req)
         {
             var inboundCode = Req.inboundCode;
             if (string.IsNullOrWhiteSpace(inboundCode))
@@ -533,14 +533,12 @@ namespace AGL.Api.Bridge_API.Services
                             return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
                         }
 
-                        // 트랜잭션 커밋
                         await transaction.CommitAsync();
                         Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약확정 완료");
                         return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
                     }
                     catch (Exception ex)
                     {
-                        // 오류 발생 시 트랜잭션 롤백
                         await transaction.RollbackAsync();
                         Utils.UtilLogs.LogRegDay(supplierCode, "Confirm", "Confirm", $"예약확정 실패 {ex.Message}", true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);

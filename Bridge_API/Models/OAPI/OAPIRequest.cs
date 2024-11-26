@@ -4,11 +4,17 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
 namespace AGL.Api.Bridge_API.Models.OAPI
 {
+    /// <summary>
+    /// 티타임 기본 베이스
+    /// </summary>
     [DataContract]
     public class TeeTimeBaseRequest
     {
+        /// <summary>
+        /// 골프장 코드
+        /// </summary>
         [DataMember]
-        public string? golfClubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
+        public string? golfClubCode { get; set; }
     }
 
     /// <summary>
@@ -21,11 +27,13 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 골프장 코드
         /// </summary>
         [DataMember]
-        public string? golfClubCode { get; set; } // 바디에 있을 수도 있고 없을 수도 있으므로 선택적 사용
+        [Required]
+        public string? golfClubCode { get; set; } 
         /// <summary>
         /// 날짜적용방법 - 특정 공휴일이 있을시 2번 사용 ( 1 기간 , 2 적용일 )
         /// </summary>
         [DataMember]
+        [Required]
         public int dateApplyType { get; set; }
         /// <summary>
         /// 기간 시작일 
@@ -56,6 +64,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 티타임 정보 리스트
         /// </summary>
         [DataMember]
+        [Required]
         public List<TeeTimeInfo> teeTimeInfo { get; set; }
     }
 
@@ -84,16 +93,19 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 시작일
         /// </summary>
         [DataMember]
+        [Required]
         public string startDate { get; set; }
         /// <summary>
         /// 종료일
         /// </summary>
         [DataMember]
+        [Required]
         public string endDate { get; set; }
         /// <summary>
         /// 골프장 코드
         /// </summary>
         [DataMember]
+        [Required]
         public string golfClubCode { get; set; }
     }
 
@@ -107,6 +119,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 골프장 코드
         /// </summary>
         [DataMember]
+        [Required]
         public string golfClubCode { get; set; }
         /// <summary>
         /// 시작일
@@ -117,16 +130,19 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 코스 코드
         /// </summary>
         [DataMember]
+        [Required]
         public List<string> courseCode { get; set; }
         /// <summary>
         /// 시간 정보
         /// </summary>
         [DataMember]
+        [Required]
         public List<TimeInfo> time { get; set; }
         /// <summary>
         /// 판매여부 ( true  판매, false  판매안함 )
         /// </summary>
         [DataMember]
+        [Required]
         public bool available { get; set; }
     }
 
@@ -142,18 +158,19 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 부킹 IDE
         /// </summary>
         [DataMember]
+        [Required]
         public string reservationId { get; set; }
     }
 
 
     /// <summary>
-    /// 예약확정
+    /// 예약확정 - 내부연동용
     /// </summary>
     [DataContract]
-    public class ReservationDaemonRequest : ReservationRequest
+    public class ReservationInboundRequest : ReservationRequest
     {
         /// <summary>
-        /// 데몬 아이디 - 연동용
+        /// 인바운드 아이디 - 연동용
         /// </summary>
         [DataMember]
         public string inboundCode { get; set; }

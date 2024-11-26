@@ -95,7 +95,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
         public async Task<IDataResult> PostBookingCancel(
-            [FromBody] ReservationDaemonRequest Req)
+            [FromBody] ReservationInboundRequest Req)
         {
 
             var result = await _bookingService.PostBookingCancel(Req);

@@ -226,6 +226,15 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
             }
 
+            string dateFormat = "yyyy-MM-dd";
+
+            // PlayDate 유효성 검사
+            if (!DateTime.TryParseExact(request.playDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", "시작일 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "PlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+            }
+
             var strategy = _context.Database.CreateExecutionStrategy();
 
             return await strategy.ExecuteAsync(async () =>
