@@ -120,31 +120,41 @@ namespace AGL.Api.ApplicationCore.Filters
                 }
 
                 // 해당 프로퍼티가 클래스 타입인 경우 재귀적으로 내부 필드를 검사
-                if (requestData.TryGetValue(propertyName, out var propertyValue) && propertyValue is JsonElement nestedData)
+                if (requestData.TryGetValue(propertyName, out var propertyValue))
                 {
-                    if (property.GetValue(dto) is IEnumerable<object> collection)
+                    if (propertyValue is JsonElement nestedData)
                     {
-                        // 리스트나 컬렉션 타입일 경우 각 요소를 검사
-                        int index = 0;
-                        foreach (var item in collection)
+                        try
                         {
-                            if (item != null)
+                            if (property.GetValue(dto) is IEnumerable<object> collection)
                             {
-                                var nestedCollectionData = nestedData.EnumerateArray().ElementAtOrDefault(index);
-                                if (nestedCollectionData.ValueKind == JsonValueKind.Object)
+                                // 리스트나 컬렉션 타입일 경우 각 요소를 검사
+                                int index = 0;
+                                foreach (var item in collection)
                                 {
-                                    var nestedRequestData = JsonSerializer.Deserialize<Dictionary<string, object>>(nestedCollectionData.GetRawText());
-                                    ValidateRequiredProperties(item, nestedRequestData, errors, $"{parentPath}.{propertyName}[{index}]");
+                                    if (item != null)
+                                    {
+                                        var nestedCollectionData = nestedData.EnumerateArray().ElementAtOrDefault(index);
+                                        if (nestedCollectionData.ValueKind == JsonValueKind.Object)
+                                        {
+                                            var nestedRequestData = JsonSerializer.Deserialize<Dictionary<string, object>>(nestedCollectionData.GetRawText());
+                                            ValidateRequiredProperties(item, nestedRequestData, errors, $"{parentPath}.{propertyName}[{index}]");
+                                        }
+                                    }
+                                    index++;
                                 }
                             }
-                            index++;
+                            else if (property.GetValue(dto) != null && nestedData.ValueKind == JsonValueKind.Object)
+                            {
+                                // 클래스 타입일 경우 내부 필드 검사
+                                var nestedRequestData = JsonSerializer.Deserialize<Dictionary<string, object>>(nestedData.GetRawText());
+                                ValidateRequiredProperties(property.GetValue(dto), nestedRequestData, errors, $"{parentPath}.{propertyName}");
+                            }
                         }
-                    }
-                    else if (property.GetValue(dto) != null && nestedData.ValueKind == JsonValueKind.Object)
-                    {
-                        // 클래스 타입일 경우 내부 필드 검사
-                        var nestedRequestData = JsonSerializer.Deserialize<Dictionary<string, object>>(nestedData.GetRawText());
-                        ValidateRequiredProperties(property.GetValue(dto), nestedRequestData, errors, $"{parentPath}.{propertyName}");
+                        catch (JsonException ex)
+                        {
+                            errors.Add($"{parentPath}.{propertyName} has invalid JSON format: {ex.Message}");
+                        }
                     }
                 }
             }

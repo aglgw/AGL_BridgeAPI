@@ -304,6 +304,17 @@ namespace AGL.Api.Bridge_API.Services
                 }
             }
 
+            // playerCount 중복 체크
+            foreach (var teeTimeInfo in request.teeTimeInfo)
+            {
+                var playerCounts = teeTimeInfo.price.Select(p => p.playerCount).ToList();
+                if (playerCounts.Count != playerCounts.Distinct().Count())
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "playerCount 중복됨", true);
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate playerCount found in price list", null);
+                }
+            }
+
             if (request.dateApplyType == 1) // 날짜적용방법이 1번 일때 시작일과 종료일이 있어야 함
             {
                 string dateFormat = "yyyy-MM-dd";
