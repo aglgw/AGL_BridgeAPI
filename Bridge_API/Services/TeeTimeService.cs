@@ -56,16 +56,12 @@ namespace AGL.Api.Bridge_API.Services
                 // 공급자 코드에 따른 가격 정책 가져오기
                 var pricePolicies = await _context.TeetimePricePolicies
                     .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
-                    .ToListAsync(); // 먼저 데이터를 메모리에 로드
-                // 가격 정책 Dictionary 형태로 변환
-                var pricePoliciesDict = pricePolicies.ToDictionary(pp => pp.PricePolicyId);
+                    .ToDictionaryAsync(pp => pp.PricePolicyId); // 먼저 데이터를 메모리에 로드
 
                 // 공급자 코드에 따른 환불 정책 가져오기
                 var refundPolicies = await _context.TeetimeRefundPolicies
                     .Where(rp => rp.TeeTimeMappings.Any(tm => tm.TeeTime.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
-                    .ToListAsync();
-                // 가격 정책 Dictionary 형태로 변환
-                var refundPoliciesDict = refundPolicies.ToDictionary(pp => pp.RefundPolicyId);
+                    .ToDictionaryAsync(rp => rp.RefundPolicyId);
 
                 // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
                 var dateSlotIds = await _context.DateSlots
@@ -129,13 +125,13 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     teeTimeInfo = new List<TeeTimeInfo>()
                 };
-                //Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+//Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                 // 그룹화된 티타임을 순회하며 TeeTimeInfo 객체 생성
                 foreach (var groupedTeeTime in groupedTeeTimes)
                 {
                     var teeTime = groupedTeeTime.TeeTime;
-                    var pricePolicy = pricePoliciesDict.TryGetValue(groupedTeeTime.PricePolicyId, out var policy) ? policy : null;
-                    var refundPolicy = refundPoliciesDict.TryGetValue(groupedTeeTime.RefundPolicyId, out var refund) ? refund : null;
+                    var pricePolicy = pricePolicies.TryGetValue(groupedTeeTime.PricePolicyId, out var policy) ? policy : null;
+                    var refundPolicy = refundPolicies.TryGetValue(groupedTeeTime.RefundPolicyId, out var refund) ? refund : null;
 
                     // 상세 정보를 포함한 TeeTimeInfo 객체 생성
                     var teeTimeInfo = new TeeTimeInfo
@@ -452,8 +448,9 @@ namespace AGL.Api.Bridge_API.Services
                             })
                             .ToListAsync();
                         var teeTimes = await _context.TeeTimes.Where(tt => tt.SupplierId == supplierId).ToListAsync();
-//Debug.WriteLine($"[Step 1] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
-                        int batchSize = 10000; // 한 번에 처리할 ID 개수
+
+                        //Debug.WriteLine($"[Step 1] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+                        int batchSize = Math.Min(dateSlotIds.Count, 5000); // 기본적으로 5000 또는 전체 데이터 크기 중 작은 값 사용
                         List<OAPI_TeeTimeMapping> existingTeeTimeMappings = new List<OAPI_TeeTimeMapping>();
 
                         // dateSlotIds를 배치 크기로 나눔
@@ -477,10 +474,16 @@ namespace AGL.Api.Bridge_API.Services
                         var golfClubCourseMap = golfClubCourses.ToDictionary(gc => gc.CourseCode, gc => gc.GolfClubCourseId); // CourseCode와 GolfClubCourseId의 매핑 딕셔너리 생성
                         var dateSlotMap = dateSlots.ToDictionary(ds => ds.PlayDate, ds => ds.DateSlotId); // PlayDate와 DateSlotId의 매핑 딕셔너리 생성
                         var timeSlotMap = timeSlots.ToDictionary(ts => ts.StartTime, ts => ts.TimeSlotId); // StartTime과 TimeSlotId의 매핑 딕셔너리 생성
-                        var existingTeeTimeMappingsMap = existingTeeTimeMappings.ToDictionary(ttm => (ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId));
 
-                        // 기존 매핑된 티타임의 중복 체크를 위한 ConcurrentDictionary 생성
-                        var existingTeeTimeMappingsSet = new ConcurrentDictionary<(int TeetimeId, int DateSlotId, int TimeSlotId), bool>(existingTeeTimeMappings.Select(ttm => new KeyValuePair<(int, int, int), bool>((ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId), true)));
+                        //// 기존 매핑된 티타임의 중복 체크를 위한 ConcurrentDictionary 생성
+                        //var existingTeeTimeMappingsSet = new ConcurrentDictionary<(int TeetimeId, int DateSlotId, int TimeSlotId), bool>(existingTeeTimeMappings.Select(ttm => new KeyValuePair<(int, int, int), bool>((ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId), true)));
+                        // 기존 매핑된 티타임의 중복 체크를 위한 HashSet 생성
+                        var existingTeeTimeMappingsSet = new HashSet<(int TeetimeId, int DateSlotId, int TimeSlotId)>(
+                            existingTeeTimeMappings.Select(ttm => (ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId))
+                        );
+
+                        // 기존 매핑을 Dictionary로 생성하여 빠른 조회 가능하게 설정
+                        var existingTeeTimeMappingsDict = existingTeeTimeMappings.ToDictionary(ttm => (ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId));
 
                         // 코스 코드 수 만큼 티타임 추가
                         foreach (var teeTimeInfo in request.teeTimeInfo)
@@ -639,9 +642,16 @@ namespace AGL.Api.Bridge_API.Services
 
                             // 병렬로 티타임 매핑 생성
                             var teeTimeMappings = new ConcurrentBag<OAPI_TeeTimeMapping>();
-//Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
-                            var partitioner = Partitioner.Create(applicableDates.ToList(), true);
-                            Parallel.ForEach(partitioner, date =>
+                            //Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+
+                            // 최적화된 파티션 크기 설정
+                            int partitionSize = Math.Max(1, applicableDates.Count() / Environment.ProcessorCount);
+
+                            // Partitioner.Create를 사용하여 고정 크기 파티션 생성
+                            var partitioner = Partitioner.Create(applicableDates.ToList(), EnumerablePartitionerOptions.NoBuffering);
+
+                            // 병렬 작업을 통해 티타임 매핑 생성
+                            Parallel.ForEach(partitioner, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, date =>
                             {
                                 if (!dateSlotMap.TryGetValue(date, out var dateSlotId))
                                     return;
@@ -674,7 +684,8 @@ namespace AGL.Api.Bridge_API.Services
                                         var teetimeId = teeTimeDictionary.TeetimeId;
                                         var mappingKey = (teetimeId, dateSlotId, timeSlotId);
 
-                                        if (existingTeeTimeMappingsMap.TryGetValue(mappingKey, out var existingTeeTimeMapping))
+                                        // 기존 매핑이 있는지 확인 후 업데이트 또는 추가
+                                        if (existingTeeTimeMappingsDict.TryGetValue(mappingKey, out var existingTeeTimeMapping))
                                         {
                                             // 기존 항목이 있을 경우 조건에 따라 업데이트
                                             bool needsUpdate = existingTeeTimeMapping.TeetimeId != teetimeId ||
@@ -695,22 +706,22 @@ namespace AGL.Api.Bridge_API.Services
                                         else
                                         {
                                             // 새로운 항목 추가
-                                            if (existingTeeTimeMappingsSet.TryAdd(mappingKey, true))
+                                            existingTeeTimeMappingsSet.Add(mappingKey);
+
+                                            teeTimeMappings.Add(new OAPI_TeeTimeMapping
                                             {
-                                                teeTimeMappings.Add(new OAPI_TeeTimeMapping
-                                                {
-                                                    TeetimeId = teetimeId,
-                                                    DateSlotId = dateSlotId,
-                                                    TimeSlotId = timeSlotId,
-                                                    PricePolicyId = pricePolicyId,
-                                                    RefundPolicyId = refundPolicyId,
-                                                    SupplierTeetimeCode = code,
-                                                    IsAvailable = true,
-                                                    IsDisable = true,
-                                                    IsDeleted = false,
-                                                    CreatedDate = DateTime.UtcNow
-                                                });
-                                            }
+                                                TeetimeId = teetimeId,
+                                                DateSlotId = dateSlotId,
+                                                TimeSlotId = timeSlotId,
+                                                PricePolicyId = pricePolicyId,
+                                                RefundPolicyId = refundPolicyId,
+                                                SupplierTeetimeCode = code,
+                                                IsAvailable = true,
+                                                IsDisable = true,
+                                                IsDeleted = false,
+                                                CreatedDate = DateTime.UtcNow
+                                            });
+                                            
                                         }
                                     }
                                 }
