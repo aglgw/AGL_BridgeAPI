@@ -74,20 +74,17 @@ namespace AGL.Api.Domain.Entities.OAPI
         {
             get
             {
-                // 데이터를 리스트로 변환
-                return Enumerable.Range(1, 6) // PlayerCount 1~6 반복
-                    .Select(i => new PriceDetail
+                // 속성 값을 직접 매핑
+                return new List<PriceDetail>
                     {
-                        PlayerCount = i,
-                        GreenFee = GetValue($"GreenFee_{i}"),
-                        CartFee = GetValue($"CartFee_{i}"),
-                        CaddyFee = GetValue($"CaddyFee_{i}"),
-                        Tax = GetValue($"Tax_{i}"),
-                        AdditionalTax = GetValue($"AdditionalTax_{i}"),
-                        UnitPrice = GetValue($"UnitPrice_{i}")
-                    })
-                    .Where(pd => pd.GreenFee.HasValue || pd.CartFee.HasValue || pd.CaddyFee.HasValue || pd.Tax.HasValue || pd.AdditionalTax.HasValue || pd.UnitPrice.HasValue)
-                    .ToList();
+                        new PriceDetail { PlayerCount = 1, GreenFee = GreenFee_1, CartFee = CartFee_1, CaddyFee = CaddyFee_1, Tax = Tax_1, AdditionalTax = AdditionalTax_1, UnitPrice = UnitPrice_1 },
+                        new PriceDetail { PlayerCount = 2, GreenFee = GreenFee_2, CartFee = CartFee_2, CaddyFee = CaddyFee_2, Tax = Tax_2, AdditionalTax = AdditionalTax_2, UnitPrice = UnitPrice_2 },
+                        new PriceDetail { PlayerCount = 3, GreenFee = GreenFee_3, CartFee = CartFee_3, CaddyFee = CaddyFee_3, Tax = Tax_3, AdditionalTax = AdditionalTax_3, UnitPrice = UnitPrice_3 },
+                        new PriceDetail { PlayerCount = 4, GreenFee = GreenFee_4, CartFee = CartFee_4, CaddyFee = CaddyFee_4, Tax = Tax_4, AdditionalTax = AdditionalTax_4, UnitPrice = UnitPrice_4 },
+                        new PriceDetail { PlayerCount = 5, GreenFee = GreenFee_5, CartFee = CartFee_5, CaddyFee = CaddyFee_5, Tax = Tax_5, AdditionalTax = AdditionalTax_5, UnitPrice = UnitPrice_5 },
+                        new PriceDetail { PlayerCount = 6, GreenFee = GreenFee_6, CartFee = CartFee_6, CaddyFee = CaddyFee_6, Tax = Tax_6, AdditionalTax = AdditionalTax_6, UnitPrice = UnitPrice_6 }
+                    }.Where(pd => pd.GreenFee.HasValue || pd.CartFee.HasValue || pd.CaddyFee.HasValue || pd.Tax.HasValue || pd.AdditionalTax.HasValue || pd.UnitPrice.HasValue)
+                 .ToList();
             }
             set
             {
