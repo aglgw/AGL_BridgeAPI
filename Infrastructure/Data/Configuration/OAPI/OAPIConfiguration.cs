@@ -173,7 +173,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
             builder.HasOne(e => e.GolfClub)
                    .WithMany(g => g.TeeTimes)
-                   .HasForeignKey(e => e.GolfClubId);
+                   .HasForeignKey(e => e.GolfClubId)
+                   .IsRequired(false);
 
             builder.HasOne(e => e.GolfClubCourse)
                    .WithMany(c => c.TeeTimes)
@@ -235,27 +236,38 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.ToTable("OAPI_TeetimeRefundPolicy");
             builder.HasKey(e => e.RefundPolicyId);
 
+            var decimalProperties = new[]
+            {
+                "RefundFee"
+            };
+
+            foreach (var property in decimalProperties)
+            {
+                for (int i = 1; i <= 5; i++)
+                {
+                    builder.Property(typeof(decimal?), $"{property}_{i}")
+                        .HasColumnType("decimal(18,4)");
+                }
+            }
+
+            var tinyintProperties = new[]
+{
+                "RefundUnit"
+            };
+
+            foreach (var property in tinyintProperties)
+            {
+                for (int i = 1; i <= 5; i++)
+                {
+                    builder.Property($"{property}_{i}").HasColumnType("TINYINT");
+                }
+            }
+
             // OAPI_TeetimeRefundPolicy와 OAPI_TeetimeRefundMapping 간의 관계 설정
             builder.HasMany(rp => rp.TeeTimeMappings) // OAPI_TeetimeRefundPolicy는 여러 개의 OAPI_TeeTimeMapping과 관계를 가짐
                    .WithOne(tr => tr.TeetimeRefundPolicy) // 각 OAPI_TeeTimeMapping은 하나의 TeetimeRefundPolicy와 관계를 가짐
                    .HasForeignKey(tr => tr.RefundPolicyId) // 외래 키 설정
                    .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
-
-            builder.Property(e => e.RefundUnit_1).HasColumnType("TINYINT");
-            builder.Property(e => e.RefundUnit_2).HasColumnType("TINYINT");
-            builder.Property(e => e.RefundUnit_3).HasColumnType("TINYINT");
-            builder.Property(e => e.RefundUnit_4).HasColumnType("TINYINT");
-            builder.Property(e => e.RefundUnit_5).HasColumnType("TINYINT");
-
-            builder.Property(e => e.RefundFee_1).HasColumnType("decimal(18,4)");
-            builder.Property(e => e.RefundFee_2).HasColumnType("decimal(18,4)");
-            builder.Property(e => e.RefundFee_3).HasColumnType("decimal(18,4)");
-            builder.Property(e => e.RefundFee_4).HasColumnType("decimal(18,4)");
-            builder.Property(e => e.RefundFee_5).HasColumnType("decimal(18,4)");
-            //builder.Property(e => e.RefundUnit_1)
-            //        .HasConversion(
-            //            v => (int?)v,         // byte? -> int?로 저장
-            //            v => (byte?)v);       // int? -> byte?로 읽어오기
         }
     }
 
@@ -265,12 +277,6 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
         {
             builder.ToTable("OAPI_TeetimePricePolicy");
             builder.HasKey(e => e.PricePolicyId);
-
-            // OAPI_TeetimeRefundPolicy와 OAPI_TeetimeRefundMapping 간의 관계 설정
-            builder.HasMany(rp => rp.TeeTimeMappings) // OAPI_TeetimePricePolicy는 여러 개의 OAPI_TeeTimeMapping과 관계를 가짐
-                   .WithOne(tr => tr.TeetimePricePolicy) // 각 OAPI_TeeTimeMapping은 하나의 TeetimePricePolicy와 관계를 가짐
-                   .HasForeignKey(tr => tr.PricePolicyId) // 외래 키 설정
-                   .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
 
             var decimalProperties = new[]
             {
@@ -285,6 +291,13 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                         .HasColumnType("decimal(18,4)");
                 }
             }
+
+            // OAPI_TeetimeRefundPolicy와 OAPI_TeetimeRefundMapping 간의 관계 설정
+            builder.HasMany(rp => rp.TeeTimeMappings) // OAPI_TeetimePricePolicy는 여러 개의 OAPI_TeeTimeMapping과 관계를 가짐
+                   .WithOne(tr => tr.TeetimePricePolicy) // 각 OAPI_TeeTimeMapping은 하나의 TeetimePricePolicy와 관계를 가짐
+                   .HasForeignKey(tr => tr.PricePolicyId) // 외래 키 설정
+                   .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
+
         }
     }
 
@@ -294,6 +307,13 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
         {
             builder.ToTable("OAPI_ReservationManagement");
             builder.HasKey(e => e.ReservationManagementId);
+
+            var decimalProperties = new[] { "TotalPrice", "cancelPenaltyAmount" };
+
+            foreach (var property in decimalProperties)
+            {
+                builder.Property(property).HasPrecision(18, 4);
+            }
 
             builder.HasOne(e => e.Supplier)
                    .WithMany(s => s.ReservationManagements)
@@ -308,6 +328,7 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.Property(e => e.ReservationMembers).HasColumnType("TINYINT");
         }
     }
+
     public class OAPIReservationManagementGuestConfiguration : IEntityTypeConfiguration<OAPI_ReservationmanagementGuest>
     {
         public void Configure(EntityTypeBuilder<OAPI_ReservationmanagementGuest> builder)

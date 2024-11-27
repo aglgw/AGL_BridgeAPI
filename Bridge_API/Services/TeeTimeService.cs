@@ -12,6 +12,7 @@ using System.Globalization;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+using System.Diagnostics;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -54,13 +55,17 @@ namespace AGL.Api.Bridge_API.Services
 
                 // 공급자 코드에 따른 가격 정책 가져오기
                 var pricePolicies = await _context.TeetimePricePolicies
-                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
-                    .ToDictionaryAsync(pp => pp.PricePolicyId);
+                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
+                    .ToListAsync(); // 먼저 데이터를 메모리에 로드
+                // 가격 정책 Dictionary 형태로 변환
+                var pricePoliciesDict = pricePolicies.ToDictionary(pp => pp.PricePolicyId);
 
                 // 공급자 코드에 따른 환불 정책 가져오기
                 var refundPolicies = await _context.TeetimeRefundPolicies
-                    .Where(rp => rp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
-                    .ToDictionaryAsync(rp => rp.RefundPolicyId);
+                    .Where(rp => rp.TeeTimeMappings.Any(tm => tm.TeeTime.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
+                    .ToListAsync();
+                // 가격 정책 Dictionary 형태로 변환
+                var refundPoliciesDict = refundPolicies.ToDictionary(pp => pp.RefundPolicyId);
 
                 // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
                 var dateSlotIds = await _context.DateSlots
@@ -129,8 +134,9 @@ namespace AGL.Api.Bridge_API.Services
                 foreach (var groupedTeeTime in groupedTeeTimes)
                 {
                     var teeTime = groupedTeeTime.TeeTime;
-                    var pricePolicy = pricePolicies.ContainsKey(groupedTeeTime.PricePolicyId) ? pricePolicies[groupedTeeTime.PricePolicyId] : null;
-                    var refundPolicy = refundPolicies.ContainsKey(groupedTeeTime.RefundPolicyId) ? refundPolicies[groupedTeeTime.RefundPolicyId] : null;
+                    var pricePolicy = pricePoliciesDict.TryGetValue(groupedTeeTime.PricePolicyId, out var policy) ? policy : null;
+                    var refundPolicy = refundPoliciesDict.TryGetValue(groupedTeeTime.RefundPolicyId, out var refund) ? refund : null;
+
                     // 상세 정보를 포함한 TeeTimeInfo 객체 생성
                     var teeTimeInfo = new TeeTimeInfo
                     {
@@ -147,50 +153,23 @@ namespace AGL.Api.Bridge_API.Services
                             teeTimeCode = g.Any(t => t.SupplierTeetimeCode != null) ? g.Where(t => t.SupplierTeetimeCode != null).Select(t => t.SupplierTeetimeCode).Distinct().ToList() : null
                         }).ToList(),
                         price = pricePolicy != null ?
-                            Enumerable.Range(1, 5).Select(playerCount =>
+                            pricePolicy.PriceDetails.Select(pd => new PriceInfo
                             {
-                                var greenFee = (decimal?)pricePolicy.GetType().GetProperty($"GreenFee_{playerCount}")?.GetValue(pricePolicy);
-                                var cartFee = (decimal?)pricePolicy.GetType().GetProperty($"CartFee_{playerCount}")?.GetValue(pricePolicy);
-                                var caddyFee = (decimal?)pricePolicy.GetType().GetProperty($"CaddyFee_{playerCount}")?.GetValue(pricePolicy);
-                                var tax = (decimal?)pricePolicy.GetType().GetProperty($"Tax_{playerCount}")?.GetValue(pricePolicy);
-                                var additionalTax = (decimal?)pricePolicy.GetType().GetProperty($"AdditionalTax_{playerCount}")?.GetValue(pricePolicy);
-                                var unitPrice = (decimal?)pricePolicy.GetType().GetProperty($"UnitPrice_{playerCount}")?.GetValue(pricePolicy);
-
-                                if (new[] { greenFee, cartFee, caddyFee, tax, additionalTax, unitPrice }.All(v => v == null))
-                                {
-                                    return null;
-                                }
-
-                                return new PriceInfo
-                                {
-                                    playerCount = playerCount,
-                                    greenFee = greenFee ?? 0,
-                                    cartFee = cartFee ?? 0,
-                                    caddyFee = caddyFee ?? 0,
-                                    tax = tax ?? 0,
-                                    additionalTax = additionalTax ?? 0,
-                                    unitPrice = unitPrice ?? 0
-                                };
-                            }).Where(p => p != null).Cast<PriceInfo>().ToList() : new List<PriceInfo>(),
+                                playerCount = pd.PlayerCount,
+                                greenFee = pd.GreenFee ?? 0,
+                                cartFee = pd.CartFee ?? 0,
+                                caddyFee = pd.CaddyFee ?? 0,
+                                tax = pd.Tax ?? 0,
+                                additionalTax = pd.AdditionalTax ?? 0,
+                                unitPrice = pd.UnitPrice ?? 0
+                            }).ToList() : new List<PriceInfo>(),
                         refundPolicy = refundPolicy != null ?
-                            Enumerable.Range(1, 5).Select(refundCount =>
+                            refundPolicy.RefundDetails.Select((rd, index) => new RefundPolicy
                             {
-                                var refundDate = refundPolicy.GetType().GetProperty($"RefundDate_{refundCount}")?.GetValue(refundPolicy) as int?;
-                                var refundFee = refundPolicy.GetType().GetProperty($"RefundFee_{refundCount}")?.GetValue(refundPolicy) as decimal?;
-                                var refundUnit = refundPolicy.GetType().GetProperty($"RefundUnit_{refundCount}")?.GetValue(refundPolicy) as byte?;
-
-                                if (new[] { refundDate, refundFee, refundUnit }.All(v => v == null))
-                                {
-                                    return null;
-                                }
-
-                                return new RefundPolicy
-                                {
-                                    refundDate = refundDate ?? 0,
-                                    refundFee = refundFee ?? 0,
-                                    refundUnit = refundUnit ?? 0
-                                };
-                            }).Where(rp => rp != null).Cast<RefundPolicy>().ToList() : new List<RefundPolicy>()
+                                refundDate = rd.RefundDate ?? 0,
+                                refundFee = rd.RefundFee ?? 0,
+                                refundUnit = rd.RefundUnit ?? 0
+                            }).ToList() : new List<RefundPolicy>()
                     };
 //Debug.WriteLine($"[Step 4] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                     responseData.teeTimeInfo.Add(teeTimeInfo);
@@ -534,14 +513,19 @@ namespace AGL.Api.Bridge_API.Services
 
                             // 요금 정책 중복 확인 후 추가
                             var existingTeeTimePricePolicy = existingTeeTimePricePolicies.FirstOrDefault(p =>
-                                Enumerable.Range(1, 6).All(count =>
-                                    p.GetType().GetProperty($"GreenFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.greenFee &&
-                                    p.GetType().GetProperty($"CartFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.cartFee &&
-                                    p.GetType().GetProperty($"CaddyFee_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.caddyFee &&
-                                    p.GetType().GetProperty($"Tax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.tax &&
-                                    p.GetType().GetProperty($"AdditionalTax_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.additionalTax &&
-                                    p.GetType().GetProperty($"UnitPrice_{count}")?.GetValue(p) as decimal? == teeTimeInfo.price.FirstOrDefault(price => price.playerCount == count)?.unitPrice
-                                ));
+                                p.PriceDetails.Count == teeTimeInfo.price.Count &&
+                                teeTimeInfo.price.All(price =>
+                                {
+                                    var priceDetail = p.PriceDetails.FirstOrDefault(pd => pd.PlayerCount == price.playerCount);
+                                    return priceDetail != null &&
+                                           priceDetail.GreenFee == price.greenFee &&
+                                           priceDetail.CartFee == price.cartFee &&
+                                           priceDetail.CaddyFee == price.caddyFee &&
+                                           priceDetail.Tax == price.tax &&
+                                           priceDetail.AdditionalTax == price.additionalTax &&
+                                           priceDetail.UnitPrice == price.unitPrice;
+                                })
+                            );
 
                             int pricePolicyId;
                             if (existingTeeTimePricePolicy != null)
@@ -551,18 +535,33 @@ namespace AGL.Api.Bridge_API.Services
                             }
                             else
                             {
-                                var newTeeTimePricePolicy = new OAPI_TeetimePricePolicy();
+                                // PriceDetails 리스트 생성
+                                var priceDetails = new List<PriceDetail>();
+
                                 foreach (var price in teeTimeInfo.price)
                                 {
-                                    var count = price.playerCount;
-                                    newTeeTimePricePolicy.GetType().GetProperty($"GreenFee_{count}")?.SetValue(newTeeTimePricePolicy, price.greenFee);
-                                    newTeeTimePricePolicy.GetType().GetProperty($"CartFee_{count}")?.SetValue(newTeeTimePricePolicy, price.cartFee);
-                                    newTeeTimePricePolicy.GetType().GetProperty($"CaddyFee_{count}")?.SetValue(newTeeTimePricePolicy, price.caddyFee);
-                                    newTeeTimePricePolicy.GetType().GetProperty($"Tax_{count}")?.SetValue(newTeeTimePricePolicy, price.tax);
-                                    newTeeTimePricePolicy.GetType().GetProperty($"AdditionalTax_{count}")?.SetValue(newTeeTimePricePolicy, price.additionalTax);
-                                    newTeeTimePricePolicy.GetType().GetProperty($"UnitPrice_{count}")?.SetValue(newTeeTimePricePolicy, price.unitPrice);
+                                    var playCount = price.playerCount ?? 0;
+
+                                    var priceDetail = new PriceDetail
+                                    {
+                                        PlayerCount = playCount,
+                                        GreenFee = price.greenFee,
+                                        CartFee = price.cartFee,
+                                        CaddyFee = price.caddyFee,
+                                        Tax = price.tax,
+                                        AdditionalTax = price.additionalTax,
+                                        UnitPrice = price.unitPrice
+                                    };
+
+                                    priceDetails.Add(priceDetail);
                                 }
-                                newTeeTimePricePolicy.CreatedDate = DateTime.UtcNow;
+
+                                var newTeeTimePricePolicy = new OAPI_TeetimePricePolicy
+                                {
+                                    CreatedDate = DateTime.UtcNow
+                                };
+                                // PriceDetails를 설정해 컬럼에 값 매핑
+                                newTeeTimePricePolicy.PriceDetails = priceDetails;
 
                                 _context.TeetimePricePolicies.Add(newTeeTimePricePolicy);
                                 await _context.SaveChangesAsync();
@@ -576,11 +575,14 @@ namespace AGL.Api.Bridge_API.Services
                             // 환불 정책 중복 확인 후 추가
                             var sortedRefundPolicies = teeTimeInfo.refundPolicy.OrderByDescending(rp => rp.refundDate).ToList();
                             var existingRefundPolicy = existingTeeTimeRefundPolicies.FirstOrDefault(rp =>
-                                sortedRefundPolicies.Count <= 5 && Enumerable.Range(1, sortedRefundPolicies.Count).All(i =>
-                                    (rp.GetType().GetProperty($"RefundDate_{i}")?.GetValue(rp) as int?) == sortedRefundPolicies[i - 1].refundDate &&
-                                    (rp.GetType().GetProperty($"RefundFee_{i}")?.GetValue(rp) as decimal?) == sortedRefundPolicies[i - 1].refundFee &&
-                                    (rp.GetType().GetProperty($"RefundUnit_{i}")?.GetValue(rp) as byte?) == sortedRefundPolicies[i - 1].refundUnit
-                                )
+                                rp.RefundDetails.Count == sortedRefundPolicies.Count &&
+                                sortedRefundPolicies.All(refund =>
+                                {
+                                    var refundDetail = rp.RefundDetails.FirstOrDefault(rd => rd.RefundDate == refund.refundDate);
+                                    return refundDetail != null &&
+                                           refundDetail.RefundFee == refund.refundFee &&
+                                           refundDetail.RefundUnit == refund.refundUnit;
+                                })
                             );
 
                             int refundPolicyId;
@@ -591,17 +593,29 @@ namespace AGL.Api.Bridge_API.Services
                             }
                             else
                             {
-                                var newRefundPolicy = new OAPI_TeetimeRefundPolicy();
-                                var sortedRefundPolicy = teeTimeInfo.refundPolicy.OrderByDescending(r => r.refundDate).ToList();
-                                for (int i = 0; i < teeTimeInfo.refundPolicy.Count; i++)
+                                // PriceDetails 리스트 생성
+                                var refundDetails = new List<RefundDetail>();
+
+                                foreach (var refund in sortedRefundPolicies)
                                 {
-                                    var refund = teeTimeInfo.refundPolicy[i];
-                                    newRefundPolicy.GetType().GetProperty($"RefundDate_{i + 1}")?.SetValue(newRefundPolicy, refund.refundDate);
-                                    //newRefundPolicy.GetType().GetProperty($"RefundHour_{i + 1}")?.SetValue(newRefundPolicy, "0000");
-                                    newRefundPolicy.GetType().GetProperty($"RefundFee_{i + 1}")?.SetValue(newRefundPolicy, refund.refundFee);
-                                    newRefundPolicy.GetType().GetProperty($"RefundUnit_{i + 1}")?.SetValue(newRefundPolicy, (byte?)refund.refundUnit);
+
+                                    var refundDetail = new RefundDetail
+                                    {
+                                        RefundDate = refund.refundDate,
+                                        RefundHour = refund.refundHour,
+                                        RefundFee = refund.refundFee,
+                                        RefundUnit = refund.refundUnit
+                                    };
+
+                                    refundDetails.Add(refundDetail);
                                 }
-                                newRefundPolicy.CreatedDate = DateTime.UtcNow;
+
+                                var newRefundPolicy = new OAPI_TeetimeRefundPolicy
+                                {
+                                    CreatedDate = DateTime.UtcNow,
+                                };
+                                // PriceDetails를 설정해 컬럼에 값 매핑
+                                newRefundPolicy.RefundDetails = refundDetails;
 
                                 _context.TeetimeRefundPolicies.Add(newRefundPolicy);
                                 await _context.SaveChangesAsync();
