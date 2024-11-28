@@ -316,6 +316,13 @@ namespace AGL.Api.Bridge_API.Services
             {
                 string dateFormat = "yyyy-MM-dd";
 
+                // StartPlayDate와 EndPlayDate 필수 확인
+                if (string.IsNullOrEmpty(request.startPlayDate) || string.IsNullOrEmpty(request.endPlayDate))
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "시작일 또는 종료일 없음");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Both StartPlayDate and EndPlayDate are required", null);
+                }
+
                 // StartPlayDate 유효성 검사
                 if (!DateTime.TryParseExact(request.startPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
                 {
@@ -335,6 +342,13 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "시작일이 종료일보다 빠른 날짜임");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate cannot be later than EndPlayDate", null);
+                }
+
+                // week 유효성 검사 (0 ~ 6 사이에 최소 1개의 값이 있어야 함)
+                if (request.week == null || !request.week.Any() || request.week.Any(w => w < 0 || w > 6))
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "week 배열 유효하지 않음");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Week array must contain at least one value between 0 and 6", null);
                 }
             }
             else if (request.dateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
