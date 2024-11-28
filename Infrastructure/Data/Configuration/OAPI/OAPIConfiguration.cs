@@ -206,7 +206,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
             builder.HasOne(e => e.TeetimeRefundPolicy)
                     .WithMany(t => t.TeeTimeMappings)
-                    .HasForeignKey(e => e.RefundPolicyId);
+                    .HasForeignKey(e => e.RefundPolicyId)
+                    .IsRequired(false);
         }
     }
 
