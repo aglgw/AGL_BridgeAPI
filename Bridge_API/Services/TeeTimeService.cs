@@ -353,10 +353,10 @@ namespace AGL.Api.Bridge_API.Services
             }
             else if (request.dateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
             {
-                if (request.effectiveDate == null || request.effectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
+                if (request.effectiveDate == null || !request.effectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "적용일 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EffectiveDate not found", null);
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "effectiveDate not found", null);
                 }
             }
 

@@ -122,6 +122,16 @@ namespace AGL.Api.ApplicationCore.Filters
                 // 해당 프로퍼티가 클래스 타입인 경우 재귀적으로 내부 필드를 검사
                 if (requestData.TryGetValue(propertyName, out var propertyValue))
                 {
+                    if (property.PropertyType == typeof(string) && propertyValue is JsonElement stringElement)
+                    {
+                        // 문자열 값이면 Trim 처리
+                        if (stringElement.ValueKind == JsonValueKind.String)
+                        {
+                            var trimmedValue = stringElement.GetString()?.Trim();
+                            property.SetValue(dto, trimmedValue);
+                        }
+                    }
+
                     if (propertyValue is JsonElement nestedData)
                     {
                         try
