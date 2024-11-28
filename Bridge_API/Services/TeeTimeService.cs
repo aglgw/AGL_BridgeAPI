@@ -56,7 +56,7 @@ namespace AGL.Api.Bridge_API.Services
                 // 공급자 코드에 따른 가격 정책 가져오기
                 var pricePolicies = await _context.TeetimePricePolicies
                     .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.Supplier.SupplierCode == supplierCode && tm.TeeTime.GolfClub.GolfClubCode == request.golfClubCode))
-                    .ToDictionaryAsync(pp => pp.PricePolicyId); // 먼저 데이터를 메모리에 로드
+                    .ToDictionaryAsync(pp => pp.PricePolicyId);
 
                 // 공급자 코드에 따른 환불 정책 가져오기
                 var refundPolicies = await _context.TeetimeRefundPolicies
@@ -65,7 +65,7 @@ namespace AGL.Api.Bridge_API.Services
 
                 // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
                 var dateSlotIds = await _context.DateSlots
-                    .Where(ds => string.Compare(ds.PlayDate, startDateParsed) >= 0 && string.Compare(ds.PlayDate, endDateParsed) <= 0)
+                    .Where(ds => ds.StartDate >= DateTime.ParseExact(startDateParsed, "yyyyMMdd", null) && ds.StartDate <= DateTime.ParseExact(endDateParsed, "yyyyMMdd", null))
                     .Select(ds => ds.DateSlotId)
                     .ToListAsync();
 
@@ -100,7 +100,7 @@ namespace AGL.Api.Bridge_API.Services
                         },
                         tm.TimeSlot.StartTime,
                         tm.SupplierTeetimeCode,
-                        tm.DateSlot.PlayDate,
+                        tm.DateSlot.StartDate,
                         tm.PricePolicyId,
                         RefundPolicyId = tm.RefundPolicyId ?? 0
                     })
@@ -113,7 +113,7 @@ namespace AGL.Api.Bridge_API.Services
                     .Select(g => new
                     {
                         TeeTime = g.First().TeeTime,
-                        PlayDates = g.Select(tm => DateTime.ParseExact(tm.PlayDate, "yyyyMMdd", null).ToString("yyyy-MM-dd")).Distinct().OrderBy(date => date).ToList(),
+                        PlayDates = g.Select(tm => tm.StartDate.ToString("yyyy-MM-dd")).Distinct().OrderBy(date => date).ToList(), //
                         CourseCodes = g.Select(tm => tm.TeeTime.CourseCode).Distinct().ToList(),
                         Times = g.Select(tm => new { tm.StartTime, tm.SupplierTeetimeCode }).OrderBy(t => t.StartTime).Where(t => t.SupplierTeetimeCode != null || t.StartTime != null).ToList(),
                         PricePolicyId = g.Key.PricePolicyId,

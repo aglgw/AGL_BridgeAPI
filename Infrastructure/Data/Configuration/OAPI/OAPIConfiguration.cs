@@ -218,6 +218,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
         {
             builder.ToTable("OAPI_DateSlot");
             builder.HasKey(e => e.DateSlotId);
+
+            builder.Property(e => e.StartDate)
+                   .HasColumnType("date"); // SQL Server의 DATE 형식
         }
     }
 

@@ -28,8 +28,6 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> GetInboundTeeTime(InboundTeeTimeRequest request)
         {
-            var startDate = request.startDate;
-            var endDate = request.endDate;
             var inboundCode = request.inboundCode;
             var token = request.token;
 
@@ -51,52 +49,43 @@ namespace AGL.Api.Bridge_API.Services
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Invalid GolfClub", null);
                 }
 
-                // 공급자 코드에 따른 가격 정책 가져오기
-                var pricePolicies = await _context.TeetimePricePolicies
-                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.GolfClubId == golfClub.GolfClubId))
-                    .Select(pp => new { pp.PricePolicyId, pp.UnitPrice_3, pp.UnitPrice_4 })
-                    .ToDictionaryAsync(pp => pp.PricePolicyId);
+                // request.startDate와 request.endDate를 DateTime으로 변환
+                if (!DateTime.TryParseExact(request.startDate, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var startDate) ||
+                    !DateTime.TryParseExact(request.endDate, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var endDate))
+                {
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Invalid date format. Expected yyyyMMdd.", null);
+                }
 
-                // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
-                var dateSlotIds = await _context.DateSlots
-                    .Where(ds => string.Compare(ds.PlayDate, startDate) >= 0 && string.Compare(ds.PlayDate, endDate) <= 0)
-                    .Select(ds => ds.DateSlotId)
-                    .ToListAsync();
-
-                // 주어진 골프장 코드와 날짜 범위에 해당하는 티타임 매핑 가져오기
-                var teeTimeMappings = await _context.TeeTimeMappings
-                    .Where(tm => tm.TeeTime.GolfClubId == golfClub.GolfClubId && dateSlotIds.Contains(tm.DateSlotId))
-                    .OrderBy(tm => tm.DateSlot.PlayDate)
+                var teeTimeMappingsWithPolicies = await _context.TeeTimeMappings
+                    .Where(tm => tm.TeeTime.GolfClub.InboundCode == inboundCode &&
+                                 tm.DateSlot.StartDate >= startDate &&
+                                 tm.DateSlot.StartDate <= endDate)
+                    .OrderBy(tm => tm.DateSlot.StartDate)
                     .ThenBy(tm => tm.TimeSlot.StartTime)
-                    .Select(tm => new
-                    {
-                        tm.PricePolicyId,
-                        PlayDate = tm.DateSlot.PlayDate,
-                        CourseCode = tm.TeeTime.GolfClubCourse.CourseCode,
-                        PlayTime = tm.TimeSlot.StartTime,
-                        MinMember = tm.TeeTime.MinMembers,
-                    })
-                    .ToListAsync();
-
+                        .Select(tm => new
+                        {
+                            tm.DateSlot.PlayDate,
+                            tm.TimeSlot.StartTime,
+                            tm.TeeTime.MinMembers,
+                            tm.TeeTime.GolfClubCourse.CourseCode,
+                            PricePolicy = tm.TeetimePricePolicy == null ? null : new
+                            {
+                                tm.TeetimePricePolicy.UnitPrice_3,
+                                tm.TeetimePricePolicy.UnitPrice_4
+                            }
+                        })
+                        .ToListAsync();
 
                 // 응답 데이터 준비
-                var responseData = new List<InboundTeeTimeResponse>();
-
-                foreach ( var tm in teeTimeMappings )
+                var responseData = teeTimeMappingsWithPolicies.Select(tm => new InboundTeeTimeResponse
                 {
-                    var pricePolicy = pricePolicies.ContainsKey(tm.PricePolicyId) ? pricePolicies[tm.PricePolicyId] : null;
-
-                    var InboundData = new InboundTeeTimeResponse
-                    {
-                        PlayDate = tm.PlayDate,
-                        CourseCode = tm.CourseCode,
-                        PlayTime = tm.PlayTime,
-                        MinMember = tm.MinMember,
-                        sumAmt_3 = pricePolicy?.UnitPrice_3,
-                        sumAmt_4 = pricePolicy?.UnitPrice_4,
-                    };
-                    responseData.Add(InboundData);
-                }
+                    PlayDate = tm.PlayDate,
+                    CourseCode = tm.CourseCode,
+                    PlayTime = tm.StartTime,
+                    MinMember = tm.MinMembers,
+                    sumAmt_3 = tm.PricePolicy?.UnitPrice_3,
+                    sumAmt_4 = tm.PricePolicy?.UnitPrice_4
+                }).ToList();
 
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime List successfully", responseData);
             }
