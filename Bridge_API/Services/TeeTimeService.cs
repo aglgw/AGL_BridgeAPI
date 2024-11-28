@@ -102,7 +102,7 @@ namespace AGL.Api.Bridge_API.Services
                         tm.SupplierTeetimeCode,
                         tm.DateSlot.PlayDate,
                         tm.PricePolicyId,
-                        tm.RefundPolicyId
+                        RefundPolicyId = tm.RefundPolicyId ?? 0
                     })
                     .ToListAsync();
 
@@ -433,8 +433,8 @@ namespace AGL.Api.Bridge_API.Services
                         }
 
                         // 1. 기존 데이터 조회 (요금 정책, 환불 정책, 날짜 슬롯, 시간 슬롯, 코스정보, 티타임 정보 등)
-                        var existingTeeTimePricePolicies = await _context.TeetimePricePolicies.ToListAsync();
-                        var existingTeeTimeRefundPolicies = await _context.TeetimeRefundPolicies.ToListAsync();
+                        var existingTeeTimePricePolicies = await _context.TeetimePricePolicies.Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.SupplierId == supplier.SupplierId)).ToListAsync();
+                        var existingTeeTimeRefundPolicies = await _context.TeetimeRefundPolicies.Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.SupplierId == supplier.SupplierId)).ToListAsync();
                         var dateSlots = await _context.DateSlots.Where(ds => applicableDates.Contains(ds.PlayDate)).ToListAsync();
                         var dateSlotIds = dateSlots.Select(ds => ds.DateSlotId).ToHashSet();
                         var timeSlots = await _context.TimeSlots.ToListAsync();
@@ -521,7 +521,7 @@ namespace AGL.Api.Bridge_API.Services
                             // 검색용 딕셔너리 현재 위치에서 만들어야 검색한 티타임 + 추가된 티타임 으로 만들수 있음
                             Dictionary<(int GolfClubCourseId, int MinMembers, int MaxMembers), OAPI_TeeTime> teeTimesDictionary = teeTimes.ToDictionary(t => (t.GolfClubCourseId, t.MinMembers, t.MaxMembers));
 
-                            // 요금 정책 중복 확인 후 추가
+                            // 요금 정책 중복 확인
                             var existingTeeTimePricePolicy = existingTeeTimePricePolicies.FirstOrDefault(p =>
                                 p.PriceDetails.Count == teeTimeInfo.price.Count &&
                                 teeTimeInfo.price.All(price =>
@@ -545,39 +545,28 @@ namespace AGL.Api.Bridge_API.Services
                             }
                             else
                             {
-                                // PriceDetails 리스트 생성
-                                var priceDetails = new List<PriceDetail>();
-
-                                foreach (var price in teeTimeInfo.price)
+                                // 새 정책 추가
+                                var priceDetails = teeTimeInfo.price.Select(price => new PriceDetail
                                 {
-                                    var playCount = price.playerCount ?? 0;
-
-                                    var priceDetail = new PriceDetail
-                                    {
-                                        PlayerCount = playCount,
-                                        GreenFee = price.greenFee,
-                                        CartFee = price.cartFee,
-                                        CaddyFee = price.caddyFee,
-                                        Tax = price.tax,
-                                        AdditionalTax = price.additionalTax,
-                                        UnitPrice = price.unitPrice
-                                    };
-
-                                    priceDetails.Add(priceDetail);
-                                }
+                                    PlayerCount = price.playerCount ?? 0,
+                                    GreenFee = price.greenFee,
+                                    CartFee = price.cartFee,
+                                    CaddyFee = price.caddyFee,
+                                    Tax = price.tax,
+                                    AdditionalTax = price.additionalTax,
+                                    UnitPrice = price.unitPrice
+                                }).ToList();
 
                                 var newTeeTimePricePolicy = new OAPI_TeetimePricePolicy
                                 {
-                                    CreatedDate = DateTime.UtcNow
+                                    CreatedDate = DateTime.UtcNow,
+                                    PriceDetails = priceDetails
                                 };
-                                // PriceDetails를 설정해 컬럼에 값 매핑
-                                newTeeTimePricePolicy.PriceDetails = priceDetails;
 
                                 _context.TeetimePricePolicies.Add(newTeeTimePricePolicy);
                                 await _context.SaveChangesAsync();
                                 pricePolicyId = newTeeTimePricePolicy.PricePolicyId;
 
-                                // 새로운 정책 추가 후 리스트에 포함
                                 existingTeeTimePricePolicies.Add(newTeeTimePricePolicy);
                                 Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "요금 정책 없어서 추가");
                             }
@@ -595,7 +584,7 @@ namespace AGL.Api.Bridge_API.Services
                                 })
                             );
 
-                            int refundPolicyId;
+                            int? refundPolicyId = null;
                             if (existingRefundPolicy != null)
                             {
                                 refundPolicyId = existingRefundPolicy.RefundPolicyId;
@@ -603,37 +592,30 @@ namespace AGL.Api.Bridge_API.Services
                             }
                             else
                             {
-                                // PriceDetails 리스트 생성
-                                var refundDetails = new List<RefundDetail>();
-
-                                foreach (var refund in sortedRefundPolicies)
+                                if (teeTimeInfo.refundPolicy != null && teeTimeInfo.refundPolicy.Any())
                                 {
-
-                                    var refundDetail = new RefundDetail
+                                    var refundDetails = teeTimeInfo.refundPolicy.Select(refund => new RefundDetail
                                     {
                                         RefundDate = refund.refundDate,
                                         RefundHour = refund.refundHour,
                                         RefundFee = refund.refundFee,
                                         RefundUnit = refund.refundUnit
+                                    }).ToList();
+
+                                    var newRefundPolicy = new OAPI_TeetimeRefundPolicy
+                                    {
+                                        CreatedDate = DateTime.UtcNow,
+                                        RefundDetails = refundDetails,
                                     };
 
-                                    refundDetails.Add(refundDetail);
+                                    _context.TeetimeRefundPolicies.Add(newRefundPolicy);
+                                    await _context.SaveChangesAsync();
+                                    refundPolicyId = newRefundPolicy.RefundPolicyId;
+
+                                    // 새로운 정책 추가 후 리스트에 포함
+                                    existingTeeTimeRefundPolicies.Add(newRefundPolicy);
+                                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 없어서 추가");
                                 }
-
-                                var newRefundPolicy = new OAPI_TeetimeRefundPolicy
-                                {
-                                    CreatedDate = DateTime.UtcNow,
-                                };
-                                // PriceDetails를 설정해 컬럼에 값 매핑
-                                newRefundPolicy.RefundDetails = refundDetails;
-
-                                _context.TeetimeRefundPolicies.Add(newRefundPolicy);
-                                await _context.SaveChangesAsync();
-                                refundPolicyId = newRefundPolicy.RefundPolicyId;
-
-                                // 새로운 정책 추가 후 리스트에 포함
-                                existingTeeTimeRefundPolicies.Add(newRefundPolicy);
-                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "환불 정책 없어서 추가");
                             }
 
                             // 병렬로 티타임 매핑 생성
