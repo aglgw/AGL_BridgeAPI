@@ -77,7 +77,8 @@ namespace AGL.Api.Bridge_API.Services
 
                 if (golfClub == null)
                 {
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Invalid GolfClubCode", null);
+                    Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "GolfClub", "골프장 검색 코드 없음");
+                    return await _commonService.CreateResponse<TeeTimeData>(false, ResultCode.INVALID_INPUT, "Invalid GolfClubCode", null);
                 }
 //Debug.WriteLine($"[Step 1] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                 // 주어진 골프장 코드와 날짜 범위에 해당하는 티타임 매핑 가져오기 (필요한 필드만 선택적으로 가져오기)
@@ -176,7 +177,7 @@ namespace AGL.Api.Bridge_API.Services
             catch (Exception ex)
             {
                 Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, $"TeeTime", $"티타임 정보 검색 실패 {ex.Message}", true);
-                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                return await _commonService.CreateResponse<TeeTimeData>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
 
@@ -475,15 +476,10 @@ namespace AGL.Api.Bridge_API.Services
                         var dateSlotMap = dateSlots.ToDictionary(ds => ds.PlayDate, ds => ds.DateSlotId); // PlayDate와 DateSlotId의 매핑 딕셔너리 생성
                         var timeSlotMap = timeSlots.ToDictionary(ts => ts.StartTime, ts => ts.TimeSlotId); // StartTime과 TimeSlotId의 매핑 딕셔너리 생성
 
-                        //// 기존 매핑된 티타임의 중복 체크를 위한 ConcurrentDictionary 생성
-                        //var existingTeeTimeMappingsSet = new ConcurrentDictionary<(int TeetimeId, int DateSlotId, int TimeSlotId), bool>(existingTeeTimeMappings.Select(ttm => new KeyValuePair<(int, int, int), bool>((ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId), true)));
-                        // 기존 매핑된 티타임의 중복 체크를 위한 HashSet 생성
-                        var existingTeeTimeMappingsSet = new HashSet<(int TeetimeId, int DateSlotId, int TimeSlotId)>(
-                            existingTeeTimeMappings.Select(ttm => (ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId))
+                        // 기존 매핑을 ConcurrentDictionary로 생성하여 중복 체크 및 업데이트 가능하게 설정
+                        var existingTeeTimeMappingsDict = new ConcurrentDictionary<(int TeetimeId, int DateSlotId, int TimeSlotId), OAPI_TeeTimeMapping>(
+                            existingTeeTimeMappings.Select(ttm => new KeyValuePair<(int, int, int), OAPI_TeeTimeMapping>((ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId), ttm))
                         );
-
-                        // 기존 매핑을 Dictionary로 생성하여 빠른 조회 가능하게 설정
-                        var existingTeeTimeMappingsDict = existingTeeTimeMappings.ToDictionary(ttm => (ttm.TeetimeId, ttm.DateSlotId, ttm.TimeSlotId));
 
                         // 코스 코드 수 만큼 티타임 추가
                         foreach (var teeTimeInfo in request.teeTimeInfo)
@@ -685,44 +681,48 @@ namespace AGL.Api.Bridge_API.Services
                                         var mappingKey = (teetimeId, dateSlotId, timeSlotId);
 
                                         // 기존 매핑이 있는지 확인 후 업데이트 또는 추가
-                                        if (existingTeeTimeMappingsDict.TryGetValue(mappingKey, out var existingTeeTimeMapping))
-                                        {
-                                            // 기존 항목이 있을 경우 조건에 따라 업데이트
-                                            bool needsUpdate = existingTeeTimeMapping.TeetimeId != teetimeId ||
-                                                               existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
-                                                               existingTeeTimeMapping.RefundPolicyId != refundPolicyId ||
-                                                               !string.Equals(existingTeeTimeMapping.SupplierTeetimeCode, code);
-
-                                            if (needsUpdate)
-                                            {
-                                                existingTeeTimeMapping.TeetimeId = teetimeId;
-                                                existingTeeTimeMapping.PricePolicyId = pricePolicyId;
-                                                existingTeeTimeMapping.RefundPolicyId = refundPolicyId;
-                                                existingTeeTimeMapping.SupplierTeetimeCode = code;
-                                                existingTeeTimeMapping.UpdatedDate = DateTime.UtcNow;
-                                                teeTimeMappings.Add(existingTeeTimeMapping);
-                                            }
-                                        }
-                                        else
-                                        {
+                                        existingTeeTimeMappingsDict.AddOrUpdate(mappingKey,
                                             // 새로운 항목 추가
-                                            existingTeeTimeMappingsSet.Add(mappingKey);
-
-                                            teeTimeMappings.Add(new OAPI_TeeTimeMapping
+                                            key =>
                                             {
-                                                TeetimeId = teetimeId,
-                                                DateSlotId = dateSlotId,
-                                                TimeSlotId = timeSlotId,
-                                                PricePolicyId = pricePolicyId,
-                                                RefundPolicyId = refundPolicyId,
-                                                SupplierTeetimeCode = code,
-                                                IsAvailable = true,
-                                                IsDisable = true,
-                                                IsDeleted = false,
-                                                CreatedDate = DateTime.UtcNow
+                                                var newMapping = new OAPI_TeeTimeMapping
+                                                {
+                                                    TeetimeId = teetimeId,
+                                                    DateSlotId = dateSlotId,
+                                                    TimeSlotId = timeSlotId,
+                                                    PricePolicyId = pricePolicyId,
+                                                    RefundPolicyId = refundPolicyId,
+                                                    SupplierTeetimeCode = code,
+                                                    IsAvailable = true,
+                                                    IsDisable = true,
+                                                    IsDeleted = false,
+                                                    CreatedDate = DateTime.UtcNow
+                                                };
+
+                                                teeTimeMappings.Add(newMapping);  // 새로 추가된 항목을 리스트에 포함
+                                                return newMapping;
+                                            },
+                                            // 기존 항목 업데이트
+                                            (key, existingTeeTimeMapping) =>
+                                            {
+                                                bool needsUpdate = existingTeeTimeMapping.TeetimeId != teetimeId ||
+                                                                   existingTeeTimeMapping.PricePolicyId != pricePolicyId ||
+                                                                   existingTeeTimeMapping.RefundPolicyId != refundPolicyId ||
+                                                                   !string.Equals(existingTeeTimeMapping.SupplierTeetimeCode, code);
+
+                                                if (needsUpdate)
+                                                {
+                                                    existingTeeTimeMapping.TeetimeId = teetimeId;
+                                                    existingTeeTimeMapping.PricePolicyId = pricePolicyId;
+                                                    existingTeeTimeMapping.RefundPolicyId = refundPolicyId;
+                                                    existingTeeTimeMapping.SupplierTeetimeCode = code;
+                                                    existingTeeTimeMapping.UpdatedDate = DateTime.UtcNow;
+
+                                                    teeTimeMappings.Add(existingTeeTimeMapping); // 업데이트된 항목을 리스트에 포함
+                                                }
+
+                                                return existingTeeTimeMapping;
                                             });
-                                            
-                                        }
                                     }
                                 }
                             });

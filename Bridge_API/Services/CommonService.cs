@@ -34,17 +34,18 @@ namespace AGL.Api.Bridge_API.Services
         {
             var description = ExtensionMethods.GetDescription(resultCode);
 
-            if (data == null) // 데이터가 없는 경우 기본 응답
-            {
-                return new OAPIResponseBase
-                {
-                    isSuccess = isSuccess,
-                    rstCd = description,
-                    rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
-                    statusCode = (int)resultCode
-                };
-            }
-            else if (typeof(T) == typeof(TeeTimeData)) // 티타임 조회용
+            //if (data == null && typeof(T) == null) // 데이터가 없는 경우 기본 응답
+            //{
+            //    return new OAPIResponseBase
+            //    {
+            //        isSuccess = isSuccess,
+            //        rstCd = description,
+            //        rstMsg = $"{description} (StatusCode: {(int)resultCode}) {message}",
+            //        statusCode = (int)resultCode
+            //    };
+            //}
+            //else 
+            if (typeof(T) == typeof(TeeTimeData)) // 티타임 조회용
             {
                 return new TeeTimeResponse
                 {
