@@ -26,9 +26,8 @@ namespace AGL.Api.Domain.Entities.OAPI
         [ForeignKey("OAPI_TeetimePricePolicy")]
         public int PricePolicyId { get; set; }
 
-        [Required]
         [ForeignKey("OAPI_TeetimeRefundPolicy")]
-        public int RefundPolicyId { get; set; }
+        public int? RefundPolicyId { get; set; }
 
         [StringLength(100)]
         public string? SupplierTeetimeCode { get; set; }
