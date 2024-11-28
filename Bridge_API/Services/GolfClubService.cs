@@ -64,7 +64,7 @@ namespace AGL.Api.Bridge_API.Services
                 if (existingGolfclubs == null || !existingGolfclubs.Any())
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 검색 코드 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
+                    return await _commonService.CreateResponse<List<GolfClubInfo>>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
                 }
 
                 var golfClubDtos = existingGolfclubs.Select(golfClub => new GolfClubInfo

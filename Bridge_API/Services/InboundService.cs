@@ -8,6 +8,7 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using AGL.Api.Domain.Entities.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using RTools_NTS.Util;
+using System.Diagnostics;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -39,17 +40,6 @@ namespace AGL.Api.Bridge_API.Services
 
             try
             {
-                // 공급자 코드에 따른 가격 정책 가져오기
-                var pricePolicies = await _context.TeetimePricePolicies
-                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.InboundCode == inboundCode))
-                    .ToDictionaryAsync(pp => pp.PricePolicyId);
-
-                // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
-                var dateSlotIds = await _context.DateSlots
-                    .Where(ds => string.Compare(ds.PlayDate, startDate) >= 0 && string.Compare(ds.PlayDate, endDate) <= 0)
-                    .Select(ds => ds.DateSlotId)
-                    .ToListAsync();
-
                 // 골프장 코드와 공급자 코드에 해당하는 골프장 가져오기
                 var golfClub = await _context.GolfClubs
                     .Where(gc => gc.InboundCode == inboundCode)
@@ -60,6 +50,18 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Invalid GolfClub", null);
                 }
+
+                // 공급자 코드에 따른 가격 정책 가져오기
+                var pricePolicies = await _context.TeetimePricePolicies
+                    .Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.GolfClub.GolfClubId == golfClub.GolfClubId))
+                    .Select(pp => new { pp.PricePolicyId, pp.UnitPrice_3, pp.UnitPrice_4 })
+                    .ToDictionaryAsync(pp => pp.PricePolicyId);
+
+                // 날짜 범위에 해당하는 DateSlot의 ID 목록 가져오기
+                var dateSlotIds = await _context.DateSlots
+                    .Where(ds => string.Compare(ds.PlayDate, startDate) >= 0 && string.Compare(ds.PlayDate, endDate) <= 0)
+                    .Select(ds => ds.DateSlotId)
+                    .ToListAsync();
 
                 // 주어진 골프장 코드와 날짜 범위에 해당하는 티타임 매핑 가져오기
                 var teeTimeMappings = await _context.TeeTimeMappings
@@ -134,7 +136,7 @@ namespace AGL.Api.Bridge_API.Services
                 if (existingGolfclubs == null || !existingGolfclubs.Any())
                 {
                     Utils.UtilLogs.LogRegHour("inbound", "inbound", "GolfClub", "골프장 검색 코드 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
+                    return await _commonService.CreateResponse<List<GolfClubInfoWithInboundCode>>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
                 }
 
                 var golfClubDtos = existingGolfclubs.Select(golfClub => new GolfClubInfoWithInboundCode
@@ -190,7 +192,7 @@ namespace AGL.Api.Bridge_API.Services
             catch (Exception ex)
             {
                 Utils.UtilLogs.LogRegHour("inbound", "inbound", "GolfClub", $"골프장 검색 실패 {ex.Message}", true);
-                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+                return await _commonService.CreateResponse<List<GolfClubInfoWithInboundCode>>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
 
