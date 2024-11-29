@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using AGL.Api.ApplicationCore.Filters;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
+using AGL.Api.ApplicationCore.Infrastructure;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
-    public class AuthenticationController
+    public class AuthenticationController : ApiControllerBase
     {
         private readonly ILogger<AuthenticationController> _logger;
         private readonly IAuthenticationService _authenticationService;
@@ -28,7 +29,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> PostAuthentication(
             [FromHeader][Required] string token,
-            AuthenticationRequest request)
+            [FromBody][Required] AuthenticationRequest request)
         {
             var result = await _authenticationService.PostAuthentication(request, token);
 
