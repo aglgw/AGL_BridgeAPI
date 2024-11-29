@@ -356,10 +356,10 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         public class AuthenticationRequest
         {
             /// <summary>
-            /// 생성 코드
+            /// 생성 코드 입력값 없을시 SUP + 고유 랜덤8자리 문자열
             /// </summary>
             [DataMember]
-            public string authCode { get; set; }
+            public string? authCode { get; set; }
 
             /// <summary>
             /// 생성 구분 (1: 공급사, 2: 클라이언트)

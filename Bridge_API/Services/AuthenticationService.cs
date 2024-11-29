@@ -45,77 +45,89 @@ namespace AGL.Api.Bridge_API.Services
                         3 토큰 생성
                          */
                         var authType = request.authType;
-                        object auth = null;
+
                         if (authType == "1") // 공급사
                         {
-                            auth = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == request.authCode);
+                            var supplierCode = "";
+                            if (request.authCode == null)
+                            {
+                                supplierCode = "SUP" + GenerateRandomNumber(8);
+                            }
+                            else
+                            {
+                                supplierCode = request.authCode;
+                                var auth = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == request.authCode);
+                                if (auth != null)
+                                {
+                                    return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "authCode is duplicated ", null);
+                                }
+                            }
+
+                            var newSupplier = new OAPI_Supplier
+                            {
+                                SupplierCode = supplierCode,
+                                EndPoint = request.endPoint,
+                                CreatedDate = DateTime.UtcNow,
+                            };
+                            _context.Suppliers.Add(newSupplier);
+                            await _context.SaveChangesAsync();
+                            int SupplierId = newSupplier.SupplierId;
+
+                            var newAuthentication = new OAPI_Authentication
+                            {
+                                SupplierId = SupplierId,
+                                TokenSupplier = GenerateRandomNumber(),
+                                //TokenClient = "",
+                                AglCode = "AGL0001",
+                                TokenAgl = GenerateRandomNumber(),
+                                Deleted = false,
+                                CreatedDate = DateTime.UtcNow,
+                            };
+                            _context.Authentications.Add(newAuthentication);
+                            await _context.SaveChangesAsync();
                         }
                         else if (authType == "2") // 클라이언트
                         {
-                            auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientCode == request.authCode);
-                        }
-
-                        if (auth != null)
-                        {
-                            return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "authCode is duplicated ", null);
-                        }
-                        else
-                        {
-                            if (authType == "1") // 공급사
+                            var ClientCode = "";
+                            if (request.authCode == null)
                             {
-                                var newSupplier = new OAPI_Supplier
-                                {
-                                    SupplierCode = request.authCode,
-                                    EndPoint = request.endPoint,
-                                    CreatedDate = DateTime.UtcNow,
-                                };
-                                _context.Suppliers.Add(newSupplier);
-                                await _context.SaveChangesAsync();
-                                int SupplierId = newSupplier.SupplierId;
-
-                                var newAuthentication = new OAPI_Authentication
-                                {
-                                    SupplierId = SupplierId,
-                                    TokenSupplier = GenerateRandomNumber(),
-                                    //TokenClient = "",
-                                    AglCode = "AGL0001",
-                                    TokenAgl = GenerateRandomNumber(),
-                                    Deleted = false,
-                                    CreatedDate = DateTime.UtcNow,
-                                };
-                                _context.Authentications.Add(newAuthentication);
-                                await _context.SaveChangesAsync();
+                                ClientCode = "CET" + GenerateRandomNumber(8);
                             }
-                            else if (authType == "2") // 클라이언트
+                            else
                             {
-                                auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientCode == request.authCode);
-
-                                var maxSyncTeeTimeMappingId = await _context.SyncTeeTimeMappings.MaxAsync(s => s.TeetimeMappingId);
-
-                                var newSyncClient = new OAPI_SyncClient
+                                ClientCode = request.authCode;
+                                var auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientCode == request.authCode);
+                                if (auth != null)
                                 {
-                                    ClientCode = request.authCode,
-                                    ClientEndpoint = request.endPoint,
-                                    LastSyncTeeTimeMappingId = maxSyncTeeTimeMappingId
-                                };
-
-                                _context.SyncClients.Add(newSyncClient);
-                                await _context.SaveChangesAsync();
-                                int SyncClientId = newSyncClient.SyncClientId;
-
-                                var newAuthentication = new OAPI_Authentication
-                                {
-                                    SyncClientId = SyncClientId,
-                                    //TokenSupplier = GenerateRandomNumber(),
-                                    TokenClient = GenerateRandomNumber(),
-                                    //AglCode = "AGL0001",
-                                    //TokenAgl = GenerateRandomNumber(),
-                                    Deleted = false,
-                                    CreatedDate = DateTime.UtcNow,
-                                };
-                                _context.Authentications.Add(newAuthentication);
-                                await _context.SaveChangesAsync();
+                                    return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "authCode is duplicated ", null);
+                                }
                             }
+
+                            var maxSyncTeeTimeMappingId = await _context.SyncTeeTimeMappings.MaxAsync(s => s.TeetimeMappingId);
+
+                            var newSyncClient = new OAPI_SyncClient
+                            {
+                                ClientCode = ClientCode,
+                                ClientEndpoint = request.endPoint,
+                                LastSyncTeeTimeMappingId = maxSyncTeeTimeMappingId
+                            };
+
+                            _context.SyncClients.Add(newSyncClient);
+                            await _context.SaveChangesAsync();
+                            int SyncClientId = newSyncClient.SyncClientId;
+
+                            var newAuthentication = new OAPI_Authentication
+                            {
+                                SyncClientId = SyncClientId,
+                                //TokenSupplier = GenerateRandomNumber(),
+                                TokenClient = GenerateRandomNumber(),
+                                //AglCode = "AGL0001",
+                                //TokenAgl = GenerateRandomNumber(),
+                                Deleted = false,
+                                CreatedDate = DateTime.UtcNow,
+                            };
+                            _context.Authentications.Add(newAuthentication);
+                            await _context.SaveChangesAsync();
                         }
 
                         await transaction.CommitAsync();
@@ -147,7 +159,14 @@ namespace AGL.Api.Bridge_API.Services
 
                 if (authType == "1") // 공급사
                 {
-                    var supplier = await _context.Suppliers.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.SupplierCode == request.authCode);
+                    var existingSupplierQuery = _context.Suppliers.Include(s => s.Authentication).Where(s => s.Authentication.Deleted == false);
+
+                    if(request.authCode != null)
+                    {
+                        existingSupplierQuery.Where(s => s.SupplierCode == request.authCode);
+                    }
+
+                    var supplier = await existingSupplierQuery.FirstOrDefaultAsync();
 
                     var response = new authAuthenticationResponse
                     {

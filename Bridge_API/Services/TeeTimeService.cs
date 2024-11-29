@@ -128,14 +128,13 @@ namespace AGL.Api.Bridge_API.Services
                 };
 //Debug.WriteLine($"[Step 3] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                 // 그룹화된 티타임을 순회하며 TeeTimeInfo 객체 생성
-                foreach (var groupedTeeTime in groupedTeeTimes)
+                responseData.teeTimeInfo = groupedTeeTimes.Select(groupedTeeTime =>
                 {
                     var teeTime = groupedTeeTime.TeeTime;
                     var pricePolicy = pricePolicies.TryGetValue(groupedTeeTime.PricePolicyId, out var policy) ? policy : null;
                     var refundPolicy = refundPolicies.TryGetValue(groupedTeeTime.RefundPolicyId, out var refund) ? refund : null;
 
-                    // 상세 정보를 포함한 TeeTimeInfo 객체 생성
-                    var teeTimeInfo = new TeeTimeInfo
+                    return new TeeTimeInfo
                     {
                         playDate = groupedTeeTime.PlayDates.ToList(),
                         courseCode = groupedTeeTime.CourseCodes,
@@ -147,7 +146,7 @@ namespace AGL.Api.Bridge_API.Services
                         time = groupedTeeTime.Times.GroupBy(t => t.StartTime).Select(g => new TimeInfo
                         {
                             startTime = g.Key,
-                            teeTimeCode = g.Any(t => t.SupplierTeetimeCode != null) ? g.Where(t => t.SupplierTeetimeCode != null).Select(t => t.SupplierTeetimeCode).Distinct().ToList() : null
+                            teeTimeCode = g.Any(t => t.SupplierTeetimeCode != null) ? g.Where(t => t.SupplierTeetimeCode != null)?.Select(t => t.SupplierTeetimeCode).Distinct().ToList() : null
                         }).ToList(),
                         price = pricePolicy != null ?
                             pricePolicy.PriceDetails.Select(pd => new PriceInfo
@@ -168,9 +167,9 @@ namespace AGL.Api.Bridge_API.Services
                                 refundUnit = rd.RefundUnit ?? 0
                             }).ToList() : new List<RefundPolicy>()
                     };
-//Debug.WriteLine($"[Step 4] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
-                    responseData.teeTimeInfo.Add(teeTimeInfo);
-                }
+
+                }).ToList();
+
                 Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, $"TeeTime", $"티타임 정보 검색 성공");
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "TeeTime List successfully", responseData);
             }

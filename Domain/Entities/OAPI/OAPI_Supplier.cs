@@ -13,7 +13,7 @@ namespace AGL.Api.Domain.Entities.OAPI
         public string SupplierCode { get; set; } // 공급자 코드
 
         [StringLength(50)]
-        public string EndPoint { get; set; } // 엔드포인트
+        public string? EndPoint { get; set; } // 엔드포인트
 
         [Required]
         public DateTime CreatedDate { get; set; } // 생성일
