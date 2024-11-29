@@ -33,6 +33,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpGet]
         [DisableValidation] // 유효성 검사 패스
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> GetInboundTeeTime(
             [FromQuery] InboundTeeTimeRequest request)
         {
@@ -48,6 +49,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("inbound/golfclub/list")]
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<OAPIDataResponse<List<GolfClubInfoWithInboundCode>>> GetInboundGolfClub(
             [FromHeader(Name = "token")][Required] string token,
             [FromQuery(Name = "inboundCode")] string? inboundCode)

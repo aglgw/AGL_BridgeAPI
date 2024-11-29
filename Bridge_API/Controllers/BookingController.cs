@@ -19,7 +19,7 @@ namespace AGL.Api.Bridge_API.Controllers
             _logger = logger;
             _bookingService = bookingService;
         }
-#if DEBUG
+
         [AllowAnonymous]
         [Route("test")]
         [HttpGet]
@@ -40,6 +40,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation")]
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> POSTBookingRequest(
             [FromBody] ReqBookingRequest request)
         {
@@ -55,6 +56,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation/list")]
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> GetBookingInquiry(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, [FromBody]ReqBookingInquiry Req)
         {
@@ -73,6 +75,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation/confirm/{reservationId}")]
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> GetConfirmBookingInquiry(
             [FromRoute] string reservationId,
             [FromQuery] string daemonId)
@@ -90,6 +93,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation/cancel")]
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> PostBookingCancel(
             [FromBody] ReservationInboundRequest Req)
         {
@@ -98,7 +102,7 @@ namespace AGL.Api.Bridge_API.Controllers
 
             return result;
         }
-#endif
+
         /// <summary>
         /// 예약 확정
         /// </summary>
