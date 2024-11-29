@@ -45,7 +45,7 @@ namespace AGL.Api.Bridge_API.Services
                         if (authType == "1") // 공급사
                         {
                             var supplierCode = "";
-                            if (request.authCode == null) // 코드가 없을시 SUP + 랜덤문자열8 자리로 생성
+                            if (string.IsNullOrWhiteSpace(request.authCode)) // 코드가 없을시 SUP + 랜덤문자열8 자리로 생성
                             {
                                 supplierCode = "SUP" + GenerateRandomNumber(8);
                             }
@@ -88,7 +88,7 @@ namespace AGL.Api.Bridge_API.Services
                         else if (authType == "2") // 클라이언트
                         {
                             var ClientCode = "";
-                            if (request.authCode == null)  // 코드가 없을시 CET + 랜덤문자열8 자리로 생성
+                            if (string.IsNullOrWhiteSpace(request.authCode))  // 코드가 없을시 CET + 랜덤문자열8 자리로 생성
                             {
                                 ClientCode = "CET" + GenerateRandomNumber(8);
                             }
