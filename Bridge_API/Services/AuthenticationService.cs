@@ -5,6 +5,7 @@ using AGL.Api.Bridge_API.Interfaces;
 using AGL.Api.Domain.Entities.OAPI;
 using AGL.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 
@@ -39,30 +40,27 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     try
                     {
-                        /*
-                        1 인증 코드 유효성 검사
-                        2 타입값에 따른 코드 분류
-                        3 토큰 생성
-                         */
                         var authType = request.authType;
 
                         if (authType == "1") // 공급사
                         {
                             var supplierCode = "";
-                            if (request.authCode == null)
+                            if (request.authCode == null) // 코드가 없을시 SUP + 랜덤문자열8 자리로 생성
                             {
                                 supplierCode = "SUP" + GenerateRandomNumber(8);
                             }
                             else
                             {
                                 supplierCode = request.authCode;
+                                // 공급사 코드 중복체크
                                 var auth = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == request.authCode);
                                 if (auth != null)
                                 {
                                     return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "authCode is duplicated ", null);
                                 }
                             }
-
+                            
+                            // 공급사 생성
                             var newSupplier = new OAPI_Supplier
                             {
                                 SupplierCode = supplierCode,
@@ -73,6 +71,7 @@ namespace AGL.Api.Bridge_API.Services
                             await _context.SaveChangesAsync();
                             int SupplierId = newSupplier.SupplierId;
 
+                            // 인증 생성
                             var newAuthentication = new OAPI_Authentication
                             {
                                 SupplierId = SupplierId,
@@ -89,13 +88,14 @@ namespace AGL.Api.Bridge_API.Services
                         else if (authType == "2") // 클라이언트
                         {
                             var ClientCode = "";
-                            if (request.authCode == null)
+                            if (request.authCode == null)  // 코드가 없을시 CET + 랜덤문자열8 자리로 생성
                             {
                                 ClientCode = "CET" + GenerateRandomNumber(8);
                             }
                             else
                             {
                                 ClientCode = request.authCode;
+                                // 클라이언트 코드 중복체크
                                 var auth = await _context.SyncClients.FirstOrDefaultAsync(s => s.ClientCode == request.authCode);
                                 if (auth != null)
                                 {
@@ -103,8 +103,10 @@ namespace AGL.Api.Bridge_API.Services
                                 }
                             }
 
+                            // 클라이언트 생성 시 동기티타임의 가장 큰값으로 저장
                             var maxSyncTeeTimeMappingId = await _context.SyncTeeTimeMappings.MaxAsync(s => s.TeetimeMappingId);
 
+                            // 클라이언트 생성
                             var newSyncClient = new OAPI_SyncClient
                             {
                                 ClientCode = ClientCode,
@@ -116,6 +118,7 @@ namespace AGL.Api.Bridge_API.Services
                             await _context.SaveChangesAsync();
                             int SyncClientId = newSyncClient.SyncClientId;
 
+                            // 인증 생성
                             var newAuthentication = new OAPI_Authentication
                             {
                                 SyncClientId = SyncClientId,
@@ -156,42 +159,52 @@ namespace AGL.Api.Bridge_API.Services
             try
             {
                 var authType = request.authType;
+                
 
                 if (authType == "1") // 공급사
                 {
                     var existingSupplierQuery = _context.Suppliers.Include(s => s.Authentication).Where(s => s.Authentication.Deleted == false);
 
-                    if(request.authCode != null)
+                    if (request.authCode != null)
                     {
-                        existingSupplierQuery.Where(s => s.SupplierCode == request.authCode);
+                        existingSupplierQuery = existingSupplierQuery.Where(s => s.SupplierCode == request.authCode);
                     }
 
-                    var supplier = await existingSupplierQuery.FirstOrDefaultAsync();
+                    var suppliers = new List<OAPI_Supplier>();
+                    suppliers = await existingSupplierQuery.ToListAsync();
 
-                    var response = new authAuthenticationResponse
+                    var response = suppliers.Select(supplier => new authAuthenticationResponse
                     {
                         authCode = supplier.SupplierCode,
                         TokenSupplier = supplier.Authentication.TokenSupplier,
                         TokenClient = supplier.Authentication.TokenClient,
                         AglCode = supplier.Authentication.AglCode,
                         TokenAgl = supplier.Authentication.TokenAgl,
-                    };
+                    }).ToList();
 
                     return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "Authentication List successfully", response);
 
                 }
                 else if (authType == "2") // 클라이언트
                 {
-                    var syncClient = await _context.SyncClients.Include(s => s.Authentication).FirstOrDefaultAsync(s => s.Authentication.Deleted == false && s.ClientCode == request.authCode);
+                    var existingClientQuery = _context.SyncClients.Include(s => s.Authentication).Where(s => s.Authentication.Deleted == false);
 
-                    var response = new authAuthenticationResponse
+                    if (request.authCode != null)
+                    {
+                        existingClientQuery = existingClientQuery.Where(s => s.ClientCode == request.authCode);
+                    }
+
+                    var syncClients = new List<OAPI_SyncClient>();
+                    syncClients = await existingClientQuery.ToListAsync();
+
+                    var response = syncClients.Select(syncClient => new authAuthenticationResponse
                     {
                         authCode = syncClient.ClientCode,
                         TokenSupplier = syncClient.Authentication.TokenSupplier,
                         TokenClient = syncClient.Authentication.TokenClient,
                         AglCode = syncClient.Authentication.AglCode,
                         TokenAgl = syncClient.Authentication.TokenAgl,
-                    };
+                    }).ToList();
 
                     return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "Authentication List successfully", response);
                 }
