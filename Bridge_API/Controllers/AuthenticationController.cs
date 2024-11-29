@@ -18,7 +18,6 @@ namespace AGL.Api.Bridge_API.Controllers
             _authenticationService = authenticationService;
         }
 
-#if DEBUG
         /// <summary>
         /// 인증 등록
         /// </summary>
@@ -26,6 +25,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("auth")]
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> PostAuthentication(
             [FromHeader][Required] string token,
             AuthenticationRequest request)
@@ -42,6 +42,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("auth/list")]
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
         public async Task<IDataResult> GetAuthentication(
             [FromHeader][Required] string token,
             [FromQuery][Required] AuthenticationRequest request)
@@ -50,7 +51,6 @@ namespace AGL.Api.Bridge_API.Controllers
 
             return result;
         }
-#endif
 
     }
 }

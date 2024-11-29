@@ -20,6 +20,8 @@ using System.IO;
 using System.Reflection;
 using AGL.Api.ApplicationCore.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.Hosting;
 
 
 namespace AGL.Api.Bridge_API
@@ -107,6 +109,32 @@ namespace AGL.Api.Bridge_API
                         },
                         new string[] {}
                     }
+                });
+
+                c.DocInclusionPredicate((docName, apiDesc) =>
+                {
+                    var actionDescriptor = apiDesc.ActionDescriptor as ControllerActionDescriptor;
+                    var serviceProvider = services.BuildServiceProvider();
+                    var environment = serviceProvider.GetRequiredService<IWebHostEnvironment>().EnvironmentName; // 현재 환경 이름 가져오기
+
+                    if (actionDescriptor != null)
+                    {
+                        // 메서드에 EnvironmentSpecificAttribute가 있는지 확인
+                        var environmentSpecificAttribute = actionDescriptor.MethodInfo
+                            .GetCustomAttributes(typeof(EnvironmentSpecificAttribute), false)
+                            .FirstOrDefault() as EnvironmentSpecificAttribute;
+
+                        if (environmentSpecificAttribute != null)
+                        {
+                            // 현재 환경과 속성에서 지정한 환경이 일치하면 Swagger에 표시
+                            return environmentSpecificAttribute.Environment == environment;
+                        }
+
+                        // 속성이 없는 메서드는 모든 환경에서 보이도록 설정
+                        return true;
+                    }
+
+                    return false; // 기본적으로 숨김
                 });
             });
         }
