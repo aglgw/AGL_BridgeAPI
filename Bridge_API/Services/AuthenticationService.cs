@@ -14,16 +14,21 @@ namespace AGL.Api.Bridge_API.Services
     public class AuthenticationService : BaseService, IAuthenticationService
     {
         public const string AuthToken = "0ksP6iZltO"; // 인증용 header token
+        private readonly string _filePath = @"C:\AGL\DATA\agl_code.txt"; // AGLCODE 생성을 위한 파일 (파일에서 숫자 증가 방식)
         private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
         private readonly ICommonService _commonService;
-        //private readonly RequestQueue _queue;
+        private readonly PersistentAglCodeGenerator _aglCodeGenerator; // AglCode 생성기
+
 
         public AuthenticationService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService)
         {
             _context = context;
             _configuration = configuration;
             _commonService = commonService;
+
+            // PersistentAglCodeGenerator 초기화
+            _aglCodeGenerator = new PersistentAglCodeGenerator(_filePath);
         }
 
         public async Task<IDataResult> PostAuthentication(AuthenticationRequest request, string token)
@@ -64,6 +69,7 @@ namespace AGL.Api.Bridge_API.Services
                             var newSupplier = new OAPI_Supplier
                             {
                                 SupplierCode = supplierCode,
+                                SupplierName = request.authName,
                                 EndPoint = request.endPoint,
                                 CreatedDate = DateTime.UtcNow,
                             };
@@ -77,7 +83,7 @@ namespace AGL.Api.Bridge_API.Services
                                 SupplierId = SupplierId,
                                 TokenSupplier = GenerateRandomNumber(),
                                 //TokenClient = "",
-                                AglCode = "AGL0001",
+                                AglCode = _aglCodeGenerator.GetNextAglCode(),
                                 TokenAgl = GenerateRandomNumber(),
                                 Deleted = false,
                                 CreatedDate = DateTime.UtcNow,
@@ -110,6 +116,7 @@ namespace AGL.Api.Bridge_API.Services
                             var newSyncClient = new OAPI_SyncClient
                             {
                                 ClientCode = ClientCode,
+                                ClientName = request.authName,
                                 ClientEndpoint = request.endPoint,
                                 LastSyncTeeTimeMappingId = maxSyncTeeTimeMappingId
                             };
@@ -230,6 +237,40 @@ namespace AGL.Api.Bridge_API.Services
             //return result;
         }
 
+        // AGLCODE 생성을 위한 로직
+        public class PersistentAglCodeGenerator
+        {
+            private readonly string _filePath;
+
+            public PersistentAglCodeGenerator(string filePath)
+            {
+                _filePath = filePath;
+
+                // 폴더가 존재하지 않으면 생성
+                string directoryPath = Path.GetDirectoryName(_filePath);
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+            }
+
+            public string GetNextAglCode()
+            {
+                int currentCode = 1;
+
+                if (File.Exists(_filePath))
+                {
+                    int.TryParse(File.ReadAllText(_filePath), out currentCode);
+                }
+
+                currentCode++;
+                File.WriteAllText(_filePath, currentCode.ToString());
+
+                return $"AGL{currentCode:D4}";
+            }
+        }
+
+
         //public async Task<IDataResult> CheckAuthentication(CheckAuthenticationRequest request)
         //{
         //    try
@@ -249,7 +290,7 @@ namespace AGL.Api.Bridge_API.Services
         //        }
 
         //        var hashToken = ComputeSha256.ComputeSha256Hash(tokenClient);
-                
+
         //        if(hashToken != request.token)
         //        {
         //            return await _commonService.CreateResponse<object>(false, ResultCode.UNAUTHORIZED, "signature Unauthorized", null);
@@ -261,7 +302,7 @@ namespace AGL.Api.Bridge_API.Services
         //        Utils.UtilLogs.LogRegHour(request.ClientCode, request.ClientCode, $"Authentication", $"인증 실패 {ex.Message}", true);
         //        return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
         //    }
-        
+
         //}
 
     }
