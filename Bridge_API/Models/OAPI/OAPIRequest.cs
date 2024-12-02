@@ -273,7 +273,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// <summary>
             /// 인바운드 코드
             /// </summary>
-            [DataMember]
+            [DataMember, Required]
             public string inboundCode { get; set; }
 
             /// <summary>
@@ -285,7 +285,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// <summary>
             /// 코스 코드
             /// </summary>
-            [DataMember]
+            [DataMember, Required]
             public string courseCode { get; set; }
 
             /// <summary>
@@ -368,7 +368,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// <summary>
             /// 생성 구분 (1: 공급사, 2: 클라이언트)
             /// </summary>
-            [DataMember]
+            [DataMember, Required]
             public string authType { get; set; }
 
             /// <summary>

@@ -12,8 +12,8 @@ namespace AGL.Api.Domain.Entities.OAPI
         [Required, StringLength(50)]
         public string SupplierCode { get; set; } // 공급자 코드
 
-        [Required, StringLength(50)]
-        public string SupplierName { get; set; } // 공급자 명
+        [StringLength(50)]
+        public string? SupplierName { get; set; } // 공급자 명
 
         [StringLength(50)]
         public string? EndPoint { get; set; } // 엔드포인트
