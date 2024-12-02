@@ -360,7 +360,11 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// </summary>
             [DataMember]
             public string? authCode { get; set; }
-
+            /// <summary>
+            /// 생성 이름
+            /// </summary>
+            [DataMember]
+            public string? authName { get; set; }
             /// <summary>
             /// 생성 구분 (1: 공급사, 2: 클라이언트)
             /// </summary>
