@@ -79,6 +79,7 @@ namespace AGL.Api.ApplicationCore.Utilities
     {
         private static readonly object lockObject = new object();
         private static readonly string logBasePath = @$"C:\AGL\Logs\";
+        private static readonly string environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "";
         /// <summary>
         /// 시간별로그
         /// </summary>
@@ -94,7 +95,7 @@ namespace AGL.Api.ApplicationCore.Utilities
             {
                 DateTime kstTime = DateTime.UtcNow.AddHours(9);
 
-                string fullPath = Path.Combine(logBasePath + projectName, folderName);
+                string fullPath = Path.Combine(logBasePath, environmentName, projectName, folderName);
                 string logfileName = Path.Combine(fullPath, $"{fileName}_{kstTime:yyyyMMddHH}.log");
 
                 Directory.CreateDirectory(fullPath);
@@ -140,7 +141,7 @@ namespace AGL.Api.ApplicationCore.Utilities
             {
                 DateTime kstTime = DateTime.UtcNow.AddHours(9);
 
-                string fullPath = Path.Combine(logBasePath + projectName, folderName);
+                string fullPath = Path.Combine(logBasePath, environmentName, projectName, folderName);
                 string logfileName = Path.Combine(fullPath, $"{fileName}_{kstTime:yyyyMMdd}.log");
 
                 Directory.CreateDirectory(fullPath);
@@ -177,7 +178,7 @@ namespace AGL.Api.ApplicationCore.Utilities
         /// <param name="logName"></param>
         public static void LogDelete(string projectName, string logName, int limitDays)
         {
-            string directoryPath = Path.Combine(logBasePath + projectName, logName);
+            string directoryPath = Path.Combine(logBasePath , environmentName, projectName, logName);
             try
             {
                 var logFiles = Directory.GetFiles(directoryPath, "*.log", SearchOption.AllDirectories);

@@ -17,8 +17,8 @@ namespace AGL.Api.Domain.Entities.OAPI
         [Required]
         public string ClientCode { get; set; }
 
-        [Required, StringLength(50)]
-        public string ClientName { get; set; } // 사용자 명
+        [StringLength(50)]
+        public string? ClientName { get; set; } // 사용자 명
 
         public string? ClientEndpoint { get; set; }
 
