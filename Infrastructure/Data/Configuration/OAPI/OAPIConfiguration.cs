@@ -86,6 +86,11 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
             // IsDeleted = 0 전역 필터 추가
             builder.HasQueryFilter(e => !e.IsDeleted);
+
+            // 유니크 조건 추가
+            builder.HasIndex(e => new { e.SupplierId, e.GolfClubCode })
+                   .IsUnique()
+                   .HasDatabaseName("UQ_SupplierId_GolfClubCode");
         }
     }
 
@@ -208,6 +213,11 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                     .WithMany(t => t.TeeTimeMappings)
                     .HasForeignKey(e => e.RefundPolicyId)
                     .IsRequired(false);
+
+            // 유니크 조건 추가
+            builder.HasIndex(e => new { e.TeetimeId, e.DateSlotId, e.TimeSlotId })
+                   .IsUnique()
+                   .HasDatabaseName("UQ_TeeTimeMapping");
         }
     }
 
