@@ -560,43 +560,37 @@ namespace AGL.Api.Bridge_API.Services
                 Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", $"예약번호 또는 공급사 코드 없음 {reservationId} : {supplierCode}");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid", null);
             }
+            // 공급자 정보 조회 - supplierCode에 해당하는 공급자를 데이터베이스에서 검색
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
+            if (supplier == null)
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "공급사 검색 안됨");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
+            }
+            int supplierId = supplier.SupplierId;
+
+            // 예약관리 DB에서 예약 조회 - 예약 번호, 상태, 공급자 ID를 기준으로 예약 검색
+            var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 1 && r.SupplierId == supplierId);
+            if (reservation == null)
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에서 검색 안됨");
+                return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
+            }
 
             var strategy = _context.Database.CreateExecutionStrategy();
-
             return await strategy.ExecuteAsync(async () =>
             {
                 using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
                     try
                     {
-                        // 공급자 정보 조회 - supplierCode에 해당하는 공급자를 데이터베이스에서 검색
-                        var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
-                        if (supplier == null)
-                        {
-                            Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "공급사 검색 안됨");
-                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
-                        }
-                        int supplierId = supplier.SupplierId;
+                        reservation.ReservationStatus = (byte)StatusCode.CONFIRMATION; // 1 예약요청 2 예약확정 3 예약취소
+                        reservation.UpdatedDate = DateTime.UtcNow;
 
-                        // 예약관리 DB에서 예약 조회 - 예약 번호, 상태, 공급자 ID를 기준으로 예약 검색
-                        var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 1 && r.SupplierId == supplierId);
-
-                        if (reservation != null)
-                        {
-                            reservation.ReservationStatus = (byte)StatusCode.CONFIRMATION; // 1 예약요청 2 예약확정 3 예약취소
-                            reservation.UpdatedDate = DateTime.UtcNow;
-
-                            await _context.SaveChangesAsync();
-                            Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에 변경 완료");
-                        }
-                        else
-                        {
-                            Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에서 검색 안됨");
-                            return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
-                        }
-
+                        await _context.SaveChangesAsync();
                         await transaction.CommitAsync();
-                        Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약확정 완료");
+                        Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에 예약확정 변경 완료");
+
                         return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
                     }
                     catch (Exception ex)
