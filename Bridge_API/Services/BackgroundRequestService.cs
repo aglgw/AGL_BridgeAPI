@@ -55,11 +55,14 @@ namespace AGL.Api.Bridge_API.Services
                     var fileName = Path.Combine(directory, $"Request_{request.supplierCode}_{request.golfClubCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}.json");
                     await File.WriteAllTextAsync(fileName, json, stoppingToken);
 
-                    Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"골프장 수정 queue start", $"json saved to file: {fileName}");
+                    Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue json", $"json saved to file: {fileName}");
 
                     using var scope = _scopeFactory.CreateScope();
                     var teeTimeService = scope.ServiceProvider.GetRequiredService<TeeTimeService>();
                     await teeTimeService.ProcessTeeTime(request, request.supplierCode, request.golfClubCode);
+
+                    // 요청 처리 완료 후 HashSet에서 제거
+                    teeTimeService.RemoveProcessingRequest(ComputeSha256.ComputeSha256RequestHash(request));
 
                     Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue end", $"골프장TeeTime queue end");
                 }

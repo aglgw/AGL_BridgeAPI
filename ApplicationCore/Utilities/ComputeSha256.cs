@@ -24,5 +24,15 @@ namespace AGL.Api.ApplicationCore.Utilities
                 return builder.ToString();
             }
         }
+        public static string ComputeSha256RequestHash<T>(T request)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                var hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
+        }
     }
 }
