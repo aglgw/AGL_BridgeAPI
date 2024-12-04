@@ -46,7 +46,7 @@ namespace AGL.Api.Bridge_API.Services
             {
                 if (_queue.TryDequeue(out var request))
                 {
-                    Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue start", $"골프장TeeTime queue start");
+                    Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue start", $"TeeTime queue start");
 
                     var directory = "C:\\AGL\\JSON";
                     Directory.CreateDirectory(directory);
@@ -61,10 +61,7 @@ namespace AGL.Api.Bridge_API.Services
                     var teeTimeService = scope.ServiceProvider.GetRequiredService<TeeTimeService>();
                     await teeTimeService.ProcessTeeTime(request, request.supplierCode, request.golfClubCode);
 
-                    // 요청 처리 완료 후 HashSet에서 제거
-                    teeTimeService.RemoveProcessingRequest(ComputeSha256.ComputeSha256RequestHash(request));
-
-                    Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue end", $"골프장TeeTime queue end");
+                    Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue end", $"TeeTime queue end");
                 }
                 await Task.Delay(2000, stoppingToken); // 큐 딜레이 설정
             }

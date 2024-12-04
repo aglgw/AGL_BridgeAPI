@@ -12,6 +12,8 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using System.Globalization;
 using AGL.Api.ApplicationCore.Helpers;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
+using AGL.Api.ApplicationCore.Utilities;
+using StackExchange.Redis;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -20,14 +22,17 @@ namespace AGL.Api.Bridge_API.Services
         private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
         private readonly ICommonService _commonService;
+        private readonly RedisService _redisService;
 
         public BookingService(OAPI_DbContext context,
             ICommonService commonService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            RedisService redisService)
         {
             _context = context;
             _configuration = configuration;
             _commonService = commonService;
+            _redisService = redisService;
         }
 
         /// <summary>
@@ -553,6 +558,28 @@ namespace AGL.Api.Bridge_API.Services
         public async Task<IDataResult> PostBookingConfirm(ReservationRequest request, string supplierCode)
         {
             var reservationId = request.reservationId;
+
+            var RedisStrKey = $"PBC_{supplierCode}_{reservationId}";
+
+            try
+            {
+                var db = _redisService.GetDatabase(); // Redis 커넥션
+
+                if (await db.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", $"예약확정 중복");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
+                }
+                else
+                {
+                    await db.StringSetAsync(RedisStrKey, "", TimeSpan.FromMinutes(2)); // 비동기로 Redis 키 설정
+                }
+            }
+            catch (RedisException ex)
+            {
+                Utils.UtilLogs.LogRegDay(supplierCode, "Confirm", "Confirm", $"예약확정 Redis 실패 {ex.Message}", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            }
 
             // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
