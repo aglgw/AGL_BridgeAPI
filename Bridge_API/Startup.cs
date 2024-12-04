@@ -62,6 +62,8 @@ namespace AGL.Api.Bridge_API
             services.AddApiClient();
             services.AddDefaultCors();
 
+            services.AddSingleton<RedisService>();
+
             // ModelState 유효성 검사 필터를 비활성화
             services.Configure<ApiBehaviorOptions>(options =>
             {
