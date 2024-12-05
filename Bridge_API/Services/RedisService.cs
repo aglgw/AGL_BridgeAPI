@@ -1,8 +1,9 @@
-﻿using StackExchange.Redis;
+﻿using AGL.Api.ApplicationCore.Interfaces;
+using StackExchange.Redis;
 
 namespace AGL.Api.Bridge_API.Services
 {
-    public class RedisService
+    public class RedisService : IRedisService
     {
         private static Lazy<ConnectionMultiplexer> _redisConnection;
         private readonly IConfiguration _configuration;
@@ -34,6 +35,27 @@ namespace AGL.Api.Bridge_API.Services
             });
         }
 
-        public IDatabase GetDatabase() => _redisConnection.Value.GetDatabase();
+        public IDatabase GetDatabase()
+        {
+            return _redisConnection.Value.GetDatabase();
+        }
+
+        public async Task<bool> KeyExistsAsync(string key)
+        {
+            var db = GetDatabase();
+            return await db.KeyExistsAsync(key);
+        }
+
+        public async Task<string> GetValueAsync(string key)
+        {
+            var db = GetDatabase();
+            return await db.StringGetAsync(key);
+        }
+
+        public async Task SetValueAsync(string key, string value, TimeSpan? expiry = null)
+        {
+            var db = GetDatabase();
+            await db.StringSetAsync(key, value, expiry);
+        }
     }
 }
