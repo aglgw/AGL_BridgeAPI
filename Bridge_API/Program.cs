@@ -15,6 +15,7 @@ namespace AGL.Api.Bridge_API
         public static void Main(string[] args)
         {
 
+            //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Main"); // 환경 강제 설정
             var configuration = GetConfiguration();
             //Log.Logger = CreateSerilogLogger(configuration);
             try
