@@ -10,6 +10,7 @@ using AGL.Api.Infrastructure.Data;
 
 namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 {
+    #region OAPI_Authentication
     public class OAPIAuthenticationConfiguration : IEntityTypeConfiguration<OAPI_Authentication>
     {
         public void Configure(EntityTypeBuilder<OAPI_Authentication> builder)
@@ -28,7 +29,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .IsRequired(false); // 관계를 선택적으로 설정 (nullable)
         }
     }
+    #endregion
 
+    #region OAPI_Supplier
     public class OAPISupplierConfiguration : IEntityTypeConfiguration<OAPI_Supplier>
     {
         public void Configure(EntityTypeBuilder<OAPI_Supplier> builder)
@@ -58,7 +61,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .IsRequired(false); // 선택적 관계
         }
     }
+    #endregion
 
+    #region OAPI_GolfClub
     public class OAPIGolfClubConfiguration : IEntityTypeConfiguration<OAPI_GolfClub>
     {
         public void Configure(EntityTypeBuilder<OAPI_GolfClub> builder)
@@ -93,7 +98,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .HasDatabaseName("UQ_SupplierId_GolfClubCode");
         }
     }
+    #endregion
 
+    #region OAPI_GolfClubImage
     public class OAPIGolfClubImageConfiguration : IEntityTypeConfiguration<OAPI_GolfClubImage>
     {
         public void Configure(EntityTypeBuilder<OAPI_GolfClubImage> builder)
@@ -105,7 +112,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
+    #endregion
 
+    #region OAPI_GolfClubRefundPolicy
     public class OAPIGolfClubRefundPolicyConfiguration : IEntityTypeConfiguration<OAPI_GolfClubRefundPolicy>
     {
         public void Configure(EntityTypeBuilder<OAPI_GolfClubRefundPolicy> builder)
@@ -124,7 +133,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
+    #endregion
 
+    #region OAPI_GolfClubCourse
     public class OAPIGolfClubCourseConfiguration : IEntityTypeConfiguration<OAPI_GolfClubCourse>
     {
         public void Configure(EntityTypeBuilder<OAPI_GolfClubCourse> builder)
@@ -144,7 +155,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
+    #endregion
 
+    #region OAPI_GolfClubHole
     public class OAPIGolfClubHoleConfiguration : IEntityTypeConfiguration<OAPI_GolfClubHole>
     {
         public void Configure(EntityTypeBuilder<OAPI_GolfClubHole> builder)
@@ -162,9 +175,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
+    #endregion
 
-
-
+    #region OAPI_TeeTime
     public class OAPITeeTimeConfiguration : IEntityTypeConfiguration<OAPI_TeeTime>
     {
         public void Configure(EntityTypeBuilder<OAPI_TeeTime> builder)
@@ -186,7 +199,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .HasForeignKey(e => e.GolfClubCourseId);
         }
     }
+    #endregion
 
+    #region OAPI_TeeTimeMapping
     public class OAPITeeTimeMappingConfiguration : IEntityTypeConfiguration<OAPI_TeeTimeMapping>
     {
         public void Configure(EntityTypeBuilder<OAPI_TeeTimeMapping> builder)
@@ -220,8 +235,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .HasDatabaseName("UQ_TeeTimeMapping");
         }
     }
+    #endregion
 
-
+    #region OAPI_DateSlot
     public class OAPIDateSlotConfiguration : IEntityTypeConfiguration<OAPI_DateSlot>
     {
         public void Configure(EntityTypeBuilder<OAPI_DateSlot> builder)
@@ -233,6 +249,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .HasColumnType("date"); // SQL Server의 DATE 형식
         }
     }
+    #endregion
+
+    #region OAPI_TimeSlot
 
     public class OAPITimeSlotConfiguration : IEntityTypeConfiguration<OAPI_TimeSlot>
     {
@@ -242,7 +261,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.HasKey(e => e.TimeSlotId);
         }
     }
+    #endregion
 
+    #region OAPI_TeetimeRefundPolicy
     public class OAPITeetimeRefundPolicyConfiguration : IEntityTypeConfiguration<OAPI_TeetimeRefundPolicy>
     {
         public void Configure(EntityTypeBuilder<OAPI_TeetimeRefundPolicy> builder)
@@ -284,7 +305,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .OnDelete(DeleteBehavior.Restrict); // 삭제 동작을 제한함
         }
     }
+    #endregion
 
+    #region OAPI_TeetimePricePolicy
     public class OAPITeetimePricePolicyConfiguration : IEntityTypeConfiguration<OAPI_TeetimePricePolicy>
     {
         public void Configure(EntityTypeBuilder<OAPI_TeetimePricePolicy> builder)
@@ -314,7 +337,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
 
         }
     }
+    #endregion
 
+    #region OAPI_ReservationManagement
     public class OAPIReservationManagementConfiguration : IEntityTypeConfiguration<OAPI_ReservationManagement>
     {
         public void Configure(EntityTypeBuilder<OAPI_ReservationManagement> builder)
@@ -342,7 +367,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.Property(e => e.ReservationMembers).HasColumnType("TINYINT");
         }
     }
+    #endregion
 
+    #region OAPI_ReservationmanagementGuest
     public class OAPIReservationManagementGuestConfiguration : IEntityTypeConfiguration<OAPI_ReservationmanagementGuest>
     {
         public void Configure(EntityTypeBuilder<OAPI_ReservationmanagementGuest> builder)
@@ -357,7 +384,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.Property(e => e.Idx).HasColumnType("TINYINT");
         }
     }
+    #endregion
 
+    #region OAPI_SyncClient
     public class OAPISyncClientConfiguration : IEntityTypeConfiguration<OAPI_SyncClient>
     {
         public void Configure(EntityTypeBuilder<OAPI_SyncClient> builder)
@@ -372,7 +401,9 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .IsRequired(false); // 선택적 관계
         }
     }
+    #endregion
 
+    #region OAPI_SyncTeeTimeMapping
     public class OAPISyncTeeTimeMappingConfiguration : IEntityTypeConfiguration<OAPI_SyncTeeTimeMapping>
     {
         public void Configure(EntityTypeBuilder<OAPI_SyncTeeTimeMapping> builder)
@@ -385,4 +416,5 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .HasForeignKey<OAPI_SyncTeeTimeMapping>(stm => stm.SyncTeeTimeMappingId);
         }
     }
+    #endregion
 }
