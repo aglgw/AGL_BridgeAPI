@@ -24,9 +24,9 @@ namespace AGL.Api.Bridge_API.Services
         private IConfiguration _configuration { get; }
         private readonly ICommonService _commonService;
         private readonly RequestQueue _queue;
-        private readonly RedisService _redisService;
+        private readonly IRedisService _redisService;
 
-        public TeeTimeService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService, RequestQueue queue, RedisService redisService)
+        public TeeTimeService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService, RequestQueue queue, IRedisService redisService)
         {
             _context = context;
             _configuration = configuration;
@@ -267,20 +267,18 @@ namespace AGL.Api.Bridge_API.Services
 
         private async Task<IDataResult> ValidateTeeTime(TeeTimeRequest request, string supplierCode, string golfClubCode, string mode)
         {
-            var RedisStrKey = ComputeSha256.ComputeSha256RequestHash(request);
+            var RedisStrKey = $"PTT:"+ComputeSha256.ComputeSha256RequestHash(request);
 
             try
             {
-                var db = _redisService.GetDatabase(); // Redis 커넥션
-
-                if (await db.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
+                if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", $"티타임 중복");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
                 }
                 else
                 {
-                    await db.StringSetAsync(RedisStrKey, "", TimeSpan.FromMinutes(2)); // 비동기로 Redis 키 설정
+                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(2)); // 비동기로 Redis 키 설정
                 }
             }
             catch (RedisException ex)
