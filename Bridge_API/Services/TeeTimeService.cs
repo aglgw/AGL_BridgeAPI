@@ -210,8 +210,8 @@ namespace AGL.Api.Bridge_API.Services
                     {
                         // 요청에서 제공된 티타임 코드 목록을 가져옴
                         var startTimes = request.time != null ? request.time.Select(t => t.startTime).ToList() : new List<string>();
-                        var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.teeTimeCode).ToList() : [];
-                        var playDate = request.playDate.Replace("-", "");
+                        var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.teeTimeCode).ToList() : new List<string>();
+                        var playDate = DateTime.ParseExact(request.playDate,"yyyy-MM-dd",null);
 
                         // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
                         var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
@@ -221,7 +221,7 @@ namespace AGL.Api.Bridge_API.Services
                             .Include(tm => tm.TimeSlot) // TimeSlot 엔터티 포함 (연관관계)
                             .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.golfClubCode && // 요청된 골프장 코드와 일치 확인
                                          request.courseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode) && // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
-                                         tm.DateSlot.PlayDate == playDate && // 요청된 플레이 날짜와 일치하는 DateSlot 확인
+                                         tm.DateSlot.StartDate == playDate && // 요청된 플레이 날짜와 일치하는 DateSlot 확인
                                          startTimes.Contains(tm.TimeSlot.StartTime.ToString()));  // 요청된 시작 시간과 일치하는지 확인
 
                         // 티타임 코드 목록이 있을 경우 해당 코드들에 대한 조건 추가
@@ -278,7 +278,7 @@ namespace AGL.Api.Bridge_API.Services
                 }
                 else
                 {
-                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(2)); // 비동기로 Redis 키 설정
+                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
                 }
             }
             catch (RedisException ex)
@@ -395,10 +395,9 @@ namespace AGL.Api.Bridge_API.Services
                 property.SetValue(teeTimeBackgroundRequest, property.GetValue(request));
             }
 
-            // Queue에 요청 추가
             _queue.Enqueue(teeTimeBackgroundRequest);
-
             return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
+
         }
 
 
@@ -426,7 +425,7 @@ namespace AGL.Api.Bridge_API.Services
                 }
 
                 // 1. applicableDates 생성
-                IEnumerable<string> applicableDates;
+                IEnumerable<DateTime> applicableDates;
 
                 // 날짜적용방법에 따라 조건 생성 ( 1: 기간 , 2: 특정날짜 )
                 if (request.dateApplyType == 1) // dateApplyType이 1인 경우: startDate부터 endDate까지의 날짜 생성
@@ -450,15 +449,15 @@ namespace AGL.Api.Bridge_API.Services
                     applicableDates = Enumerable.Range(0, (endDate - startDate).Days + 1)
                         .Select(offset => startDate.AddDays(offset))
                         .Where(date => (request.week.Contains((int)date.DayOfWeek) || request.effectiveDate.Contains(date.ToString("yyyy-MM-dd"))) && !request.exceptionDate.Contains(date.ToString("yyyy-MM-dd")))
-                        .Select(date => date.ToString("yyyyMMdd"))
-                        .ToList();
+                        .ToList(); // DateTime 리스트 유지
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 1로 검색");
                 }
                 else // dateApplyType이 1이 아닌 경우: effectiveDate 리스트의 날짜들 사용
                 {
                     applicableDates = request.effectiveDate
                         .Where(date => !string.IsNullOrWhiteSpace(date) && DateTime.TryParseExact(date, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
-                        .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
+                        //.Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null).ToString("yyyyMMdd"))
+                        .Select(date => DateTime.ParseExact(date, "yyyy-MM-dd", null))
                         .ToList();
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "TeeTime", "날짜적용방법 2로 검색");
                 }
@@ -466,7 +465,7 @@ namespace AGL.Api.Bridge_API.Services
                 // 1. 기존 데이터 조회 (요금 정책, 환불 정책, 날짜 슬롯, 시간 슬롯, 코스정보, 티타임 정보 등)
                 var existingTeeTimePricePolicies = await _context.TeetimePricePolicies.Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.SupplierId == supplier.SupplierId)).ToListAsync();
                 var existingTeeTimeRefundPolicies = await _context.TeetimeRefundPolicies.Where(pp => pp.TeeTimeMappings.Any(tm => tm.TeeTime.SupplierId == supplier.SupplierId)).ToListAsync();
-                var dateSlots = await _context.DateSlots.Where(ds => applicableDates.Contains(ds.PlayDate)).ToListAsync();
+                var dateSlots = await _context.DateSlots.Where(ds => applicableDates.Contains(ds.StartDate)).ToListAsync();
                 var dateSlotIds = dateSlots.Select(ds => ds.DateSlotId).ToHashSet();
                 var timeSlots = await _context.TimeSlots.ToListAsync();
                 var golfClubCourses = await _context.GolfClubs
@@ -504,7 +503,7 @@ namespace AGL.Api.Bridge_API.Services
                 //Debug.WriteLine($"[Step 2] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                 // 골프장 코스, 날짜 슬롯, 시간 슬롯, 기존 매핑을 딕셔너리로 변환하여 조회 성능 향상
                 var golfClubCourseMap = golfClubCourses.ToDictionary(gc => gc.CourseCode, gc => gc.GolfClubCourseId); // CourseCode와 GolfClubCourseId의 매핑 딕셔너리 생성
-                var dateSlotMap = dateSlots.ToDictionary(ds => ds.PlayDate, ds => ds.DateSlotId); // PlayDate와 DateSlotId의 매핑 딕셔너리 생성
+                var dateSlotMap = dateSlots.ToDictionary(ds => ds.StartDate, ds => ds.DateSlotId); // PlayDate와 DateSlotId의 매핑 딕셔너리 생성
                 var timeSlotMap = timeSlots.ToDictionary(ts => ts.StartTime, ts => ts.TimeSlotId); // StartTime과 TimeSlotId의 매핑 딕셔너리 생성
 
                 // 기존 매핑을 ConcurrentDictionary로 생성하여 중복 체크 및 업데이트 가능하게 설정

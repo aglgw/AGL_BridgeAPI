@@ -9,6 +9,8 @@ using System.Linq;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using System.Diagnostics;
+using AGL.Api.ApplicationCore.Utilities;
+using StackExchange.Redis;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -17,12 +19,14 @@ namespace AGL.Api.Bridge_API.Services
         private readonly OAPI_DbContext _context;
         private IConfiguration _configuration { get; }
         private readonly ICommonService _commonService;
+        private readonly IRedisService _redisService;
 
-        public GolfClubService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService)
+        public GolfClubService(OAPI_DbContext context, IConfiguration configuration, ICommonService commonService, IRedisService redisService)
         {
             _context = context;
             _configuration = configuration;
             _commonService = commonService;
+            _redisService = redisService;
         }
 
 
@@ -128,6 +132,26 @@ namespace AGL.Api.Bridge_API.Services
 
         private async Task<IDataResult> ProcessGolfClub(GolfClubInfo request, string supplierCode, string golfClubCode)
         {
+            var RedisStrKey = $"PGC:" + ComputeSha256.ComputeSha256RequestHash(request);
+
+            try
+            {
+                if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 중복");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
+                }
+                else
+                {
+                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
+                }
+            }
+            catch (RedisException ex)
+            {
+                Utils.UtilLogs.LogRegDay(supplierCode, golfClubCode, "GolfClub", $"골프장 Redis 실패 {ex.Message}", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            }
+
             var strategy = _context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
