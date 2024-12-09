@@ -71,6 +71,10 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
             builder.ToTable("OAPI_GolfClub");
             builder.HasKey(e => e.GolfClubId);
 
+            builder.HasOne(e => e.Supplier)
+                   .WithMany(s => s.GolfClubs)
+                   .HasForeignKey(g => g.SupplierId);
+
             builder.HasMany(e => e.GolfClubImages)
                    .WithOne(g => g.GolfClub)
                    .HasForeignKey(g => g.GolfClubId);

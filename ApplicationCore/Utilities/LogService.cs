@@ -95,7 +95,7 @@ namespace AGL.Api.ApplicationCore.Utilities
             {
                 DateTime kstTime = DateTime.UtcNow.AddHours(9);
 
-                string fullPath = Path.Combine(logBasePath, environmentName, projectName, folderName);
+                string fullPath = Path.Combine(logBasePath, projectName, environmentName, folderName);
                 string logfileName = Path.Combine(fullPath, $"{fileName}_{kstTime:yyyyMMddHH}.log");
 
                 Directory.CreateDirectory(fullPath);
@@ -141,7 +141,7 @@ namespace AGL.Api.ApplicationCore.Utilities
             {
                 DateTime kstTime = DateTime.UtcNow.AddHours(9);
 
-                string fullPath = Path.Combine(logBasePath, environmentName, projectName, folderName);
+                string fullPath = Path.Combine(logBasePath, projectName, environmentName, folderName);
                 string logfileName = Path.Combine(fullPath, $"{fileName}_{kstTime:yyyyMMdd}.log");
 
                 Directory.CreateDirectory(fullPath);
@@ -178,7 +178,7 @@ namespace AGL.Api.ApplicationCore.Utilities
         /// <param name="logName"></param>
         public static void LogDelete(string projectName, string logName, int limitDays)
         {
-            string directoryPath = Path.Combine(logBasePath , environmentName, projectName, logName);
+            string directoryPath = Path.Combine(logBasePath , projectName, environmentName, logName);
             try
             {
                 var logFiles = Directory.GetFiles(directoryPath, "*.log", SearchOption.AllDirectories);

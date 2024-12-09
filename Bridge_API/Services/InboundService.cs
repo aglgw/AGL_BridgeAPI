@@ -60,21 +60,21 @@ namespace AGL.Api.Bridge_API.Services
                     .Where(tm => tm.TeeTime.GolfClub.InboundCode == inboundCode &&
                                  tm.DateSlot.StartDate >= startDate &&
                                  tm.DateSlot.StartDate <= endDate)
-                    .OrderBy(tm => tm.DateSlot.StartDate)
-                    .ThenBy(tm => tm.TimeSlot.StartTime)
-                        .Select(tm => new
+                    .Select(tm => new
+                    {
+                        tm.DateSlot.PlayDate,
+                        tm.TimeSlot.StartTime,
+                        tm.TeeTime.MinMembers,
+                        tm.TeeTime.GolfClubCourse.CourseCode,
+                        PricePolicy = tm.TeetimePricePolicy == null ? null : new
                         {
-                            tm.DateSlot.PlayDate,
-                            tm.TimeSlot.StartTime,
-                            tm.TeeTime.MinMembers,
-                            tm.TeeTime.GolfClubCourse.CourseCode,
-                            PricePolicy = tm.TeetimePricePolicy == null ? null : new
-                            {
-                                tm.TeetimePricePolicy.UnitPrice_3,
-                                tm.TeetimePricePolicy.UnitPrice_4
-                            }
-                        })
-                        .ToListAsync();
+                            tm.TeetimePricePolicy.UnitPrice_3,
+                            tm.TeetimePricePolicy.UnitPrice_4
+                        }
+                    })
+                    .OrderBy(x => x.PlayDate)
+                    .ThenBy(x => x.StartTime)
+                    .ToListAsync();
 
                 // 응답 데이터 준비
                 var responseData = teeTimeMappingsWithPolicies.Select(tm => new InboundTeeTimeResponse
@@ -105,75 +105,61 @@ namespace AGL.Api.Bridge_API.Services
             try
             {
                 // 모든 관련 데이터를 미리 조회 골프장,이미지,환불정책,코스,홀
-                var existingGolfclubQuery = _context.GolfClubs
-                    .Include(g => g.GolfClubImages)
-                    .Include(g => g.RefundPolicies)
-                    .Include(g => g.Courses)
-                    .Include(g => g.Holes)
-                    .Where(g => true); // 검색 조건 없는 where 추가
-
-                // 골프장 코드가 있을 경우 해당 코드들에 대한 조건 추가
-                if (inboundCode != null)
-                {
-                    existingGolfclubQuery = existingGolfclubQuery.Where(g => g.InboundCode == inboundCode);
-                }
-
-                // 조건에 맞는 TeeTimePriceMappings 목록을 조회
-                var existingGolfclubs = await existingGolfclubQuery.ToListAsync();
+                var golfClubDtos = await _context.GolfClubs
+                     .Where(g => inboundCode == null || g.InboundCode == inboundCode)
+                     .Select(g => new GolfClubInfoWithInboundCode
+                     {
+                         InboundCode = g.InboundCode,
+                         golfClubName = g.GolfClubName,
+                         countryCode = g.CountryCode,
+                         currency = g.Currency,
+                         description = g.Description,
+                         address = g.Address,
+                         latitude = g.Latitude,
+                         longitude = g.Longitude,
+                         phone = g.Phone,
+                         fax = g.Fax,
+                         email = g.Email,
+                         homepage = g.Homepage,
+                         totalHoleCount = g.TotalHoleCount,
+                         totalCourseCount = g.Courses.Count,
+                         isGuestInfoRequired = g.isGuestInfoRequired,
+                         image = g.GolfClubImages.Select(img => new Images
+                         {
+                             id = img.Idx,
+                             url = img.Url,
+                             title = img.Title,
+                             description = img.ImageDescription
+                         }).ToList(),
+                         refundPolicy = g.RefundPolicies.Select(rp => new RefundPolicy
+                         {
+                             refundDate = rp.RefundDate,
+                             refundFee = rp.RefundFee,
+                             refundUnit = rp.RefundUnit,
+                         }).ToList(),
+                         course = g.Courses.Select(c => new Course
+                         {
+                             courseCode = c.CourseCode,
+                             courseName = c.CourseName,
+                             courseHoleCount = c.CourseHoleCount,
+                             startHole = c.StartHole,
+                         }).ToList(),
+                         holeInfo = g.Holes.Select(h => new HoleInfo
+                         {
+                             holeNumber = h.HoleNumber,
+                             holeName = h.HoleName,
+                             par = h.Par,
+                             distanceUnit = h.DistanceUnit,
+                             distance = h.Distance
+                         }).ToList()
+                     }).ToListAsync();
 
                 // 유효성 검사 - 조회된 골프장이 없을 경우
-                if (existingGolfclubs == null || !existingGolfclubs.Any())
+                if ( !golfClubDtos.Any())
                 {
                     Utils.UtilLogs.LogRegHour("inbound", "inbound", "GolfClub", "골프장 검색 코드 없음");
                     return await _commonService.CreateResponse<List<GolfClubInfoWithInboundCode>>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
                 }
-
-                var golfClubDtos = existingGolfclubs.Select(golfClub => new GolfClubInfoWithInboundCode
-                {
-                    InboundCode = golfClub.InboundCode,
-                    golfClubName = golfClub.GolfClubName,
-                    countryCode = golfClub.CountryCode,
-                    currency = golfClub.Currency,
-                    description = golfClub.Description,
-                    address = golfClub.Address,
-                    latitude = golfClub.Latitude?.ToString(),
-                    longitude = golfClub.Longitude?.ToString(),
-                    phone = golfClub.Phone,
-                    fax = golfClub.Fax,
-                    email = golfClub.Email,
-                    homepage = golfClub.Homepage,
-                    totalHoleCount = golfClub.TotalHoleCount,
-                    totalCourseCount = golfClub.Courses.Count,
-                    isGuestInfoRequired = golfClub.isGuestInfoRequired,
-                    image = golfClub.GolfClubImages.Select(img => new Images
-                    {
-                        id = img.Idx,
-                        url = img.Url,
-                        title = img.Title,
-                        description = img.ImageDescription
-                    }).ToList(),
-                    refundPolicy = golfClub.RefundPolicies.Select(rp => new RefundPolicy
-                    {
-                        refundDate = rp.RefundDate,
-                        refundFee = rp.RefundFee,
-                        refundUnit = rp.RefundUnit,
-                    }).ToList(),
-                    course = golfClub.Courses.Select(c => new Course
-                    {
-                        courseCode = c.CourseCode,
-                        courseName = c.CourseName,
-                        courseHoleCount = c.CourseHoleCount,
-                        startHole = c.StartHole,
-                    }).ToList(),
-                    holeInfo = golfClub.Holes.Select(h => new HoleInfo
-                    {
-                        holeNumber = h.HoleNumber,
-                        holeName = h.HoleName,
-                        par = h.Par,
-                        distanceUnit = h.DistanceUnit,
-                        distance = h.Distance
-                    }).ToList()
-                }).ToList();
 
                 Utils.UtilLogs.LogRegHour("inbound", "inbound", "GolfClub", $"골프장 검색 성공");
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);

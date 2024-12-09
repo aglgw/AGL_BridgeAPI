@@ -570,7 +570,7 @@ namespace AGL.Api.Bridge_API.Services
                 }
                 else
                 {
-                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(2)); // 비동기로 Redis 키 설정
+                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
                 }
             }
             catch (RedisException ex)
