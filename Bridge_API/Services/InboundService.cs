@@ -91,6 +91,7 @@ namespace AGL.Api.Bridge_API.Services
             }
             catch (Exception ex)
             {
+                Utils.UtilLogs.LogRegHour("inbound", "inbound", "GolfClub", $"티타임 검색 실패 {ex.Message}", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
@@ -161,7 +162,6 @@ namespace AGL.Api.Bridge_API.Services
                     return await _commonService.CreateResponse<List<GolfClubInfoWithInboundCode>>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
                 }
 
-                Utils.UtilLogs.LogRegHour("inbound", "inbound", "GolfClub", $"골프장 검색 성공");
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);
             }
             catch (Exception ex)
