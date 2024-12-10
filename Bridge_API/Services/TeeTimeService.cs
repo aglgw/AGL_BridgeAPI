@@ -184,6 +184,26 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PutTeeTimeAvailability(TeeTimeAvailabilityRequest request, string supplierCode)
         {
+            var RedisStrKey = $"PTTA:" + ComputeSha256.ComputeSha256RequestHash(request);
+
+            try
+            {
+                if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", $"티타임 상태 변경 중복");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
+                }
+                else
+                {
+                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
+                }
+            }
+            catch (RedisException ex)
+            {
+                Utils.UtilLogs.LogRegDay(supplierCode, request.golfClubCode, "TeeTime", $"티타임 상태 변경 Redis 실패 {ex.Message}", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            }
+
             var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.golfClubCode);
 
             if (golfClub == null)
