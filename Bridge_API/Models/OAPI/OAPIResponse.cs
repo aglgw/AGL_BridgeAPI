@@ -3,6 +3,8 @@ using AGL.Api.ApplicationCore.Interfaces;
 using System.Text.Json.Serialization;
 using AGL.Api.ApplicationCore.Utilities;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
+using System.ComponentModel.DataAnnotations;
 
 namespace AGL.Api.Bridge_API.Models.OAPI
 {
@@ -71,7 +73,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
         /// 취소 응답
         /// </summary>
         [DataContract]
-        public class cancelResponse
+        public class CancelResponse
         {
             /// <summary>
             /// 취소 날짜
@@ -104,6 +106,93 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// </summary>
             [DataMember]
             public List<OAPIReservationConfirm> data { get; set; }
+        }
+
+        /// <summary>
+        /// 예약 조회
+        /// </summary>
+        [DataContract]
+        public class ReservationReponse 
+        {
+            /// <summary>
+            /// 예약 ID
+            /// </summary>
+            [DataMember]
+            [Required]
+            public string reservationId { get; set; }
+            /// <summary>
+            /// 골프장 코드
+            /// </summary>
+            [DataMember]
+            [Required]
+            public string golfClubCode { get; set; }
+
+            /// <summary>
+            /// 코스 코드
+            /// </summary>
+            [DataMember]
+            [Required]
+            public string courseCode { get; set; }
+
+            /// <summary>
+            /// 예약 요청일 (YYYY-MM-DD)
+            /// </summary>
+            [DataMember]
+            public string reservationDate { get; set; }
+
+            /// <summary>
+            /// 시작 시간 (HHMM)
+            /// </summary>
+            [DataMember]
+            public string reservationStartTime { get; set; }
+
+            /// <summary>
+            /// 플레이어 수
+            /// </summary>
+            [DataMember]
+            public byte? reservationMembers { get; set; }
+
+            /// <summary>
+            /// 화폐 단위
+            /// </summary>
+            [DataMember]
+            public string currency { get; set; }
+
+            /// <summary>
+            /// 총 요금
+            /// </summary>
+            [DataMember]
+            public decimal? totalPrice { get; set; }
+
+            /// <summary>
+            /// 예약자 이름
+            /// </summary>
+            [DataMember]
+            public string? holderName { get; set; }
+
+            /// <summary>
+            /// 예약자 연락처
+            /// </summary>
+            [DataMember]
+            public string? reservationPhone { get; set; }
+
+            /// <summary>
+            /// 예약자 이메일
+            /// </summary>
+            [DataMember]
+            public string? reservationEmail { get; set; }
+
+            /// <summary>
+            /// 예약자 국적
+            /// </summary>
+            [DataMember]
+            public string? reservationCountry { get; set; }
+
+            /// <summary>
+            /// 내장객 정보 리스트
+            /// </summary>
+            [DataMember]
+            public List<GuestInfo>? guestInfo { get; set; }
         }
 
         /// <summary>

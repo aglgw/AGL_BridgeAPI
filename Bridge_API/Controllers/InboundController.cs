@@ -11,6 +11,7 @@ using static AGL.Api.Bridge_API.Models.OAPI.Inbound;
 using AGL.Api.ApplicationCore.Filters;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
+using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -23,6 +24,39 @@ namespace AGL.Api.Bridge_API.Controllers
         {
             _logger = logger;
             _InboundService = InboundService;
+        }
+
+        /// <summary>
+        /// 예약 요청
+        /// </summary>
+        /// <returns></returns>
+        [Route("inbound/reservation")]
+        [HttpPost]
+        [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
+        public async Task<IDataResult> POSTBookingRequest(
+            [FromBody] ReqBookingRequest request)
+        {
+            var result = await _InboundService.POSTInboundBookingRequest(request);
+
+            return result;
+        }
+
+        /// <summary>
+        /// 예약 취소
+        /// </summary>
+        /// <returns></returns>
+        [Route("inbound/reservation/cancel")]
+        [HttpPost]
+        [SkipAuthentication] // 인증 미들웨어 패스
+        [EnvironmentSpecific("Development")] // Development 환경에서만 표시
+        public async Task<IDataResult> PostBookingCancel(
+            [FromBody] ReservationInboundRequest Req)
+        {
+
+            var result = await _InboundService.PostInboundBookingCancel(Req);
+
+            return result;
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ namespace AGL.Api.Bridge_API.Controllers
         }
 
         /// <summary>
-        /// 골프장 등록
+        /// Registers a new golf club in the system
         /// </summary>
         /// <returns></returns>
         [Route("golfclub")]
@@ -38,7 +38,7 @@ namespace AGL.Api.Bridge_API.Controllers
         }
 
         /// <summary>
-        /// 골프장 수정
+        /// Updates information for an existing golf club
         /// </summary>
         /// <returns></returns>
         [Route("golfclub/update")]
@@ -53,7 +53,7 @@ namespace AGL.Api.Bridge_API.Controllers
         }
 
         /// <summary>
-        /// 골프장 조회
+        /// Retrieves details of a specific golf club or a list of golf clubs
         /// </summary>
         /// <returns></returns>
         [Route("golfclub/list")]

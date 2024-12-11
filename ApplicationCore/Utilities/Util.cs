@@ -236,5 +236,51 @@ namespace AGL.Api.ApplicationCore.Utilities
         {
             return new string[] { "mp4", "mov", "wmv", "webm", "mxf", "avi", "avchd", "hevc" }.Contains(ext.ToLower()) ? true : false;
         }
+
+
+        // 랜덤 GUID
+        public static string GenerateRandomGuid(int length = 20)
+        {
+            string guid = Guid.NewGuid().ToString("N"); // 32자리 고유 문자열
+            return guid.Substring(0, length);
+        }
+
+        // 랜덤 문자열
+        public static string GenerateRandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[new Random().Next(s.Length)]).ToArray());
+        }
+
+        // 랜덤 숫자
+        public static string GenerateRandomNumber(int length)
+        {
+            const string numbers = "0123456789";
+            return new string(Enumerable.Repeat(numbers, length)
+                .Select(s => s[new Random().Next(s.Length)]).ToArray());
+        }
+
+        // 랜덤 날짜
+        public static DateTime GenerateRandomDate()
+        {
+            var random = new Random();
+            return DateTime.Today.AddDays(random.Next(1, 30)); // Random date within the next 30 days
+        }
+
+        // 랜덤 시간
+        public static TimeSpan GenerateRandomTime()
+        {
+            var random = new Random();
+            return new TimeSpan(random.Next(6, 18), random.Next(0, 60), 0); // Random time between 6:00 and 18:59
+        }
+
+        // 랜덤 금액
+        public static decimal GenerateRandomAmount()
+        {
+            var random = new Random();
+            return random.Next(100, 1000) + (decimal)random.NextDouble(); // Random amount between 100 and 1000
+        }
+
     }
 }
