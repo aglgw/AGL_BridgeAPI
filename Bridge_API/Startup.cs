@@ -128,8 +128,8 @@ namespace AGL.Api.Bridge_API
 
                         if (environmentSpecificAttribute != null)
                         {
-                            // 현재 환경과 속성에서 지정한 환경이 일치하면 Swagger에 표시
-                            return environmentSpecificAttribute.Environment == environment;
+                            // 현재 환경이 허용된 환경 중 하나인지 확인
+                            return environmentSpecificAttribute.IsEnvironmentAllowed(environment);
                         }
 
                         // 속성이 없는 메서드는 모든 환경에서 보이도록 설정

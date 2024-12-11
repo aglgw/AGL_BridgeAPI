@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AGL.Api.ApplicationCore.Utilities;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
@@ -199,6 +200,28 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             [Required]
             public bool available { get; set; }
         }
+        /// <summary>
+        /// 예약 확정 요청
+        /// </summary>
+        [DataContract]
+        public class ReservationListRequest : IReservationBase
+        {
+            /// <summary>
+            /// 예약일
+            /// </summary>
+            [DataMember]
+            public string? reservationDate { get; set; }
+            /// <summary>
+            /// 예약 ID
+            /// </summary>
+            [DataMember]
+            public string? reservationId { get; set; }
+            /// <summary>
+            /// 상태
+            /// </summary>
+            [DataMember]
+            public byte? status { get; set; }
+        }
 
         /// <summary>
         /// 예약 확정 요청
@@ -347,6 +370,39 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// </summary>
             [DataMember]
             public List<GuestInfo>? guestInfo { get; set; }
+        }
+
+        /// <summary>
+        /// 취소 요청
+        /// </summary>
+        [DataContract]
+        public class cancelRequest : IReservationBase
+        {
+            /// <summary>
+            /// 예약 ID
+            /// </summary>
+            [DataMember]
+            [Required]
+            public string? reservationId { get; set; }
+
+            /// <summary>
+            /// 취소 날짜
+            /// </summary>
+            [DataMember]
+            public DateTime? cancelDate { get; set; }
+
+            /// <summary>
+            /// 취소 패널티 금액
+            /// </summary>
+            [DataMember]
+            //[JsonConverter(typeof(DecimalOrStringConverter))]
+            public decimal? cancelPenaltyAmount { get; set; }
+
+            /// <summary>
+            /// 통화
+            /// </summary>
+            [DataMember]
+            public string? currency { get; set; }
         }
 
         /// <summary>

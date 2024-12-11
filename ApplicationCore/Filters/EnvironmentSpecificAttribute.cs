@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Hosting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,11 +10,16 @@ namespace AGL.Api.ApplicationCore.Filters
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class EnvironmentSpecificAttribute : Attribute
     {
-        public string Environment { get; }
+        public string[] Environments { get; }
 
-        public EnvironmentSpecificAttribute(string environment)
+        public EnvironmentSpecificAttribute(params string[] environments)
         {
-            Environment = environment;
+            Environments = environments;
+        }
+
+        public bool IsEnvironmentAllowed(string currentEnvironment)
+        {
+            return Environments.Contains(currentEnvironment, StringComparer.OrdinalIgnoreCase);
         }
     }
 }

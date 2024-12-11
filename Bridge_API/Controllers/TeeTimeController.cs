@@ -22,7 +22,7 @@ namespace AGL.Api.Bridge_API.Controllers
         }
 
         /// <summary>
-        /// 티타임 등록
+        /// Registers a new tee time for a golf club
         /// </summary>
         /// <returns></returns>
         [Route("teetime")]
@@ -37,7 +37,7 @@ namespace AGL.Api.Bridge_API.Controllers
         }
 
         /// <summary>
-        /// 티타임 수정
+        /// Updates the details of an existing tee time
         /// </summary>
         /// <returns></returns>
         [Route("teetime/update")]
@@ -52,7 +52,7 @@ namespace AGL.Api.Bridge_API.Controllers
         }
 
         /// <summary>
-        /// 티타임 조회
+        /// Retrieves tee time information based on specified criteria
         /// </summary>
         /// <returns></returns>
         [Route("teetime/list")]
@@ -68,7 +68,7 @@ namespace AGL.Api.Bridge_API.Controllers
         }
 
         /// <summary>
-        /// 티타임 상태 수정
+        /// Changes the status of a tee time (e.g., available, reserved).
         /// </summary>
         /// <returns></returns>
         [Route("teetime/availability")]

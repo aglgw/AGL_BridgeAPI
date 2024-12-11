@@ -1,6 +1,7 @@
 ﻿using AGL.Api.ApplicationCore.Infrastructure;
 using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.ApplicationCore.Models.Enum;
+using AGL.Api.ApplicationCore.Utilities;
 using AGL.Api.Bridge_API.Interfaces;
 using AGL.Api.Domain.Entities.OAPI;
 using AGL.Api.Infrastructure.Data;
@@ -52,7 +53,7 @@ namespace AGL.Api.Bridge_API.Services
                             var supplierCode = "";
                             if (string.IsNullOrWhiteSpace(request.authCode)) // 코드가 없을시 SUP + 랜덤문자열8 자리로 생성
                             {
-                                supplierCode = "SUP" + GenerateRandomNumber(8);
+                                supplierCode = "SUP" + Util.GenerateRandomGuid(8);
                             }
                             else
                             {
@@ -81,10 +82,10 @@ namespace AGL.Api.Bridge_API.Services
                             var newAuthentication = new OAPI_Authentication
                             {
                                 SupplierId = SupplierId,
-                                TokenSupplier = GenerateRandomNumber(),
+                                TokenSupplier = Util.GenerateRandomGuid(),
                                 //TokenClient = "",
                                 AglCode = _aglCodeGenerator.GetNextAglCode(),
-                                TokenAgl = GenerateRandomNumber(),
+                                TokenAgl = Util.GenerateRandomGuid(),
                                 Deleted = false,
                                 CreatedDate = DateTime.UtcNow,
                             };
@@ -96,7 +97,7 @@ namespace AGL.Api.Bridge_API.Services
                             var ClientCode = "";
                             if (string.IsNullOrWhiteSpace(request.authCode))  // 코드가 없을시 CET + 랜덤문자열8 자리로 생성
                             {
-                                ClientCode = "CET" + GenerateRandomNumber(8);
+                                ClientCode = "CET" + Util.GenerateRandomNumber(8);
                             }
                             else
                             {
@@ -130,7 +131,7 @@ namespace AGL.Api.Bridge_API.Services
                             {
                                 SyncClientId = SyncClientId,
                                 //TokenSupplier = GenerateRandomNumber(),
-                                TokenClient = GenerateRandomNumber(),
+                                TokenClient = Util.GenerateRandomGuid(),
                                 //AglCode = "AGL0001",
                                 //TokenAgl = GenerateRandomNumber(),
                                 Deleted = false,
@@ -224,17 +225,6 @@ namespace AGL.Api.Bridge_API.Services
                 Utils.UtilLogs.LogRegHour(request.authCode, request.authCode, $"Authentication", $"인증 리스트 생성 실패 {ex.Message}", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
-        }
-
-
-        private static string GenerateRandomNumber(int length = 20)
-        {
-            string guid = Guid.NewGuid().ToString("N"); // 32자리 고유 문자열
-            return guid.Substring(0, length);
-            //Random random = new Random();
-            //string result = string.Concat(Enumerable.Range(0, length)
-            //    .Select(_ => random.Next(0, 10).ToString()));
-            //return result;
         }
 
         // AGLCODE 생성을 위한 로직

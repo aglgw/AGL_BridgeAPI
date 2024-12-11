@@ -15,5 +15,7 @@ namespace AGL.Api.ApplicationCore.Models.Enum
         CONFIRMATION = 2, //예약확정
         [Description("CANCELLATION")]
         CANCELLATION = 3, //예약취소
+        [Description("CANCELLATION REQUEST")]
+        CANCELLATIONREQUEST = 4 // 예약 취소 요청
     }
 }
