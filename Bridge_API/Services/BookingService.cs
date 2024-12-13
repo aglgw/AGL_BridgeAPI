@@ -230,25 +230,25 @@ namespace AGL.Api.Bridge_API.Services
         {
             var reservationId = request.reservationId;
 
-            //var RedisStrKey = $"PBC:{supplierCode}:{reservationId}";
+            var RedisStrKey = $"PBC:{supplierCode}:{reservationId}";
 
-            //try
-            //{
-            //    if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
-            //    {
-            //        Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", $"예약취소 중복");
-            //        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
-            //    }
-            //    else
-            //    {
-            //        await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
-            //    }
-            //}
-            //catch (RedisException ex)
-            //{
-            //    Utils.UtilLogs.LogRegDay(supplierCode, "Cancel", "Cancel", $"예약취소 Redis 실패 {ex.Message}", true);
-            //    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-            //}
+            try
+            {
+                if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", $"예약취소 중복");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
+                }
+                else
+                {
+                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
+                }
+            }
+            catch (RedisException ex)
+            {
+                Utils.UtilLogs.LogRegDay(supplierCode, "Cancel", "Cancel", $"예약취소 Redis 실패 {ex.Message}", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            }
 
             // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
