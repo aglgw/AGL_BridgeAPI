@@ -167,6 +167,23 @@ namespace AGL.Api.Bridge_API.Services
                             await _context.SaveChangesAsync();
                         }
 
+                        // 예약 요청 시 티타임 재고 정리
+                        var teeTimeMapping = await _context.TeeTimeMappings
+                            .Where(ttm => ttm.TeeTime.SupplierId == supplier.SupplierId
+                            && ttm.TeeTime.GolfClub.GolfClubCode == reservation.GolfClubCode
+                            && ttm.TeeTime.GolfClubCourse.CourseCode == reservation.CourseCode
+                            && ttm.DateSlot.PlayDate == reservation.ReservationDate
+                            && ttm.TimeSlot.StartTime == reservation.ReservationStartTime)
+                            .FirstOrDefaultAsync();
+
+                        if (teeTimeMapping != null)
+                        {
+                            teeTimeMapping.IsAvailable = false;
+                            teeTimeMapping.UpdatedDate = DateTime.UtcNow;
+
+                            await _context.SaveChangesAsync();
+                        }
+
                         // 예약 이용객 저장
                         if (Req.guestInfo != null && Req.guestInfo.Any())
                         {
