@@ -32,7 +32,7 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// <summary>
         /// 예약요청 생성 테스트
         /// </summary>
-        /// <param name="request"></param>
+        /// <param name="supplierCode"></param>
         /// <returns></returns>
         Task<OAPIDataResponse<ReservationReponse>> PostTestBookingRequest(string supplierCode);
 
@@ -46,7 +46,7 @@ namespace AGL.Api.Bridge_API.Interfaces
         /// <summary>
         /// 예약확정
         /// </summary>
-        /// <param name="request"></param>
+        /// <param name="request"></param>  
         /// <returns></returns>
         Task<IDataResult> PostBookingConfirm(ReservationRequest request, string supplierCode);
 

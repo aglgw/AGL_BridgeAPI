@@ -230,25 +230,25 @@ namespace AGL.Api.Bridge_API.Services
         {
             var reservationId = request.reservationId;
 
-            var RedisStrKey = $"PBC:{supplierCode}:{reservationId}";
+            //var RedisStrKey = $"PBC:{supplierCode}:{reservationId}";
 
-            try
-            {
-                if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", $"예약취소 중복");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
-                }
-                else
-                {
-                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
-                }
-            }
-            catch (RedisException ex)
-            {
-                Utils.UtilLogs.LogRegDay(supplierCode, "Cancel", "Cancel", $"예약취소 Redis 실패 {ex.Message}", true);
-                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-            }
+            //try
+            //{
+            //    if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
+            //    {
+            //        Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", $"예약취소 중복");
+            //        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
+            //    }
+            //    else
+            //    {
+            //        await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
+            //    }
+            //}
+            //catch (RedisException ex)
+            //{
+            //    Utils.UtilLogs.LogRegDay(supplierCode, "Cancel", "Cancel", $"예약취소 Redis 실패 {ex.Message}", true);
+            //    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            //}
 
             // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
@@ -287,6 +287,24 @@ namespace AGL.Api.Bridge_API.Services
                         reservation.cancelCurrency = request?.currency;
 
                         await _context.SaveChangesAsync();
+
+                        // 예약 취소 시 티타임 재고 정리
+                        var teeTimeMapping = await _context.TeeTimeMappings
+                            .Where(ttm => ttm.TeeTime.SupplierId == supplier.SupplierId
+                            && ttm.TeeTime.GolfClub.GolfClubCode == reservation.GolfClubCode
+                            && ttm.TeeTime.GolfClubCourse.CourseCode == reservation.CourseCode
+                            && ttm.DateSlot.PlayDate == reservation.ReservationDate
+                            && ttm.TimeSlot.StartTime == reservation.ReservationStartTime)
+                            .FirstOrDefaultAsync();
+
+                        if (teeTimeMapping != null)
+                        {
+                            teeTimeMapping.IsAvailable = false;
+                            teeTimeMapping.UpdatedDate = DateTime.UtcNow;
+
+                            await _context.SaveChangesAsync();
+                        }
+
                         await transaction.CommitAsync();
                         Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", "예약관리에 예약취소 완료");
 
@@ -585,7 +603,28 @@ namespace AGL.Api.Bridge_API.Services
                 var CourseCode = golfClub?.RandomCourse?.CourseCode ?? Util.GenerateRandomString(5) + Util.GenerateRandomNumber(3);
                 var ReservationDate = golfClub?.RandomMapping?.DateSlot?.PlayDate ?? Util.GenerateRandomDate().ToString("yyyyMMdd");
                 var ReservationStartTime = golfClub?.RandomMapping?.TimeSlot?.StartTime ?? Util.GenerateRandomTime().ToString("hhmm");
-                var TotalPrice = Math.Floor(golfClub?.RandomMapping?.Price?.UnitPrice_4 * 4 ?? Util.GenerateRandomAmount());
+                var TotalPrice = golfClub?.RandomMapping?.Price?.UnitPrice_4 * 4 ?? Math.Floor(Util.GenerateRandomAmount());
+                var PricePolicyId = golfClub?.RandomMapping?.Price?.PricePolicyId ?? null;
+
+                // 예약 요청 시 티타임 재고 정리
+                if (PricePolicyId != null)
+                {
+                    var teeTimeMapping = await _context.TeeTimeMappings
+                        .Where(ttm => ttm.TeeTime.SupplierId == supplier.SupplierId
+                        && ttm.TeeTime.GolfClub.GolfClubCode == GolfClubCode
+                        && ttm.TeeTime.GolfClubCourse.CourseCode == CourseCode
+                        && ttm.DateSlot.PlayDate == ReservationDate
+                        && ttm.TimeSlot.StartTime == ReservationStartTime)
+                        .FirstOrDefaultAsync();
+
+                    if (teeTimeMapping != null)
+                    {
+                        teeTimeMapping.IsAvailable = false;
+                        teeTimeMapping.UpdatedDate = DateTime.UtcNow;
+
+                        await _context.SaveChangesAsync();
+                    }
+                }
 
                 // 예약 저장
                 var testReservation = new OAPI_ReservationManagement
