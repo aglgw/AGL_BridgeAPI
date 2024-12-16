@@ -51,7 +51,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IActionResult> PostBookingCancel(
+        public async Task<ActionResult<IDataResult>> PostBookingCancel(
             [FromBody] ReservationInboundRequest Req)
         {
 
@@ -69,7 +69,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [DisableValidation] // 유효성 검사 패스
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IActionResult> GetInboundTeeTime(
+        public async Task<ActionResult<IDataResult>> GetInboundTeeTime(
             [FromQuery] InboundTeeTimeRequest request)
         {
             var result = await _InboundService.GetInboundTeeTime(request);
