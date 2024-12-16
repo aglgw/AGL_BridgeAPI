@@ -9,6 +9,7 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.Bridge_API.Services;
+using static AGL.Api.Bridge_API.Utils.Util;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -84,20 +85,21 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpPost]
         [EnvironmentSpecific("Development", "SandBox")]
         [DisableValidation]
-        public async Task<OAPIDataResponse<ReservationReponse>> PostTestBookingRequest(
+        public async Task<ActionResult<OAPIDataResponse<ReservationReponse>>> PostTestBookingRequest(
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             [FromServices] IWebHostEnvironment env)
         {
             // 현재 환경 확인
             if (env.EnvironmentName != "Development" && env.EnvironmentName != "SandBox")
             {
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
+                var errorResponse = await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
+                return ResponseUtil.HandleResponse(errorResponse.Value);
             }
             else
             {
                 var result = await _bookingService.PostTestBookingRequest(supplierCode);
 
-                return result;
+                return ResponseUtil.HandleResponse(result);
             }
         }
 
@@ -108,13 +110,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation/requests")]
         [HttpGet]
         [DisableValidation]
-        public async Task<OAPIDataResponse<List<ReservationReponse>>> GetBookingRequest(
+        public async Task<ActionResult<OAPIDataResponse<List<ReservationReponse>>>> GetBookingRequest(
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             [FromQuery] ReservationListRequest request)
         {
             var result = await _bookingService.GetBookingRequest(request, supplierCode);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
         /// <summary>
@@ -123,13 +125,13 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/confirm")]
         [HttpPost]
-        public async Task<IDataResult> PostBookingConfirm(
+        public async Task<IActionResult> PostBookingConfirm(
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode, 
             ReservationRequest request)
         {
             var result = await _bookingService.PostBookingConfirm(request, supplierCode);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
         /// <summary>
@@ -139,13 +141,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("reservation/cancellations")]
         [HttpGet]
         [DisableValidation]
-        public async Task<OAPIDataResponse<List<ReservationReponse>>> GetBookingCancellations(
+        public async Task<ActionResult<OAPIDataResponse<List<ReservationReponse>>>> GetBookingCancellations(
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             [FromQuery] ReservationListRequest request)
         {
             var result = await _bookingService.GetBookingCancellations(request, supplierCode);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
 
@@ -155,13 +157,13 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/cancel")]
         [HttpPost]
-        public async Task<IDataResult> PostBookingCancel(
+        public async Task<ActionResult> PostBookingCancel(
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             cancelRequest request)
         {
             var result = await _bookingService.PostBookingCancel(request, supplierCode);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
     }
 }
