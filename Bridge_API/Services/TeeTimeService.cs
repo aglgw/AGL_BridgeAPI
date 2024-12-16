@@ -549,7 +549,15 @@ namespace AGL.Api.Bridge_API.Services
                                 }
 
                                 // 기존 티타임 조회 또는 신규 티타임 추가
-                                var teeTime = teeTimes.FirstOrDefault(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId && tt.MinMembers == teeTimeInfo.minMembers && tt.MaxMembers == teeTimeInfo.maxMembers);
+                                var teeTime = teeTimes
+                                .Where(tt => tt.GolfClubCourseId == golfClubCourse.GolfClubCourseId 
+                                && tt.GolfClubId == existingGolfclub.GolfClubId
+                                && tt.MinMembers == teeTimeInfo.minMembers 
+                                && tt.MaxMembers == teeTimeInfo.maxMembers
+                                && tt.IncludeCart == teeTimeInfo.includeCart
+                                && tt.IncludeCaddie == teeTimeInfo.includeCaddie
+                                && tt.ReservationType == teeTimeInfo.reservationType)
+                                .FirstOrDefault();
                                 if (teeTime == null)
                                 {
                                     // 새로운 티타임 추가
