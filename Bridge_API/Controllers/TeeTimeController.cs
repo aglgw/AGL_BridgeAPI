@@ -28,7 +28,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("teetime")]
         [HttpPost]
-        public async Task<IActionResult> PostTeeTime(
+        public async Task<ActionResult<IDataResult>> PostTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
         {
             Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "TeeTime", "등록 처리 시작");
@@ -43,7 +43,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("teetime/update")]
         [HttpPut]
-        public async Task<IActionResult> PutTeeTime(
+        public async Task<ActionResult<IDataResult>> PutTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
         {
             Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "TeeTime", "변경 처리 시작");
@@ -74,7 +74,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("teetime/availability")]
         [HttpPut]
-        public async Task<IActionResult> PutTeeTimeAvailability(
+        public async Task<ActionResult<IDataResult>> PutTeeTimeAvailability(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeAvailabilityRequest request)
         {
             var result = await _teetimeService.PutTeeTimeAvailability(request, SupplierCode);

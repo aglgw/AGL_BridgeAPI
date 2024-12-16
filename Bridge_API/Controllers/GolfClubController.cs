@@ -29,7 +29,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("golfclub")]
         [HttpPost]
-        public async Task<IActionResult> PostGolfClub(
+        public async Task<ActionResult<IDataResult>> PostGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPI.GolfClubInfo request)
         {
             Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 등록 처리 시작");
@@ -44,7 +44,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("golfclub/update")]
         [HttpPut]
-        public async Task<IActionResult> PutGolfClub(
+        public async Task<ActionResult<IDataResult>> PutGolfClub(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPI.GolfClubInfo request)
         {
             Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 변경 처리 시작");

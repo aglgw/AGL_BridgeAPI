@@ -125,7 +125,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/confirm")]
         [HttpPost]
-        public async Task<IActionResult> PostBookingConfirm(
+        public async Task<ActionResult<IDataResult>> PostBookingConfirm(
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode, 
             ReservationRequest request)
         {
@@ -157,7 +157,7 @@ namespace AGL.Api.Bridge_API.Controllers
         /// <returns></returns>
         [Route("reservation/cancel")]
         [HttpPost]
-        public async Task<ActionResult> PostBookingCancel(
+        public async Task<ActionResult<IDataResult>> PostBookingCancel(
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             cancelRequest request)
         {

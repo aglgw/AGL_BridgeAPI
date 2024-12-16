@@ -28,7 +28,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IActionResult> PostAuthentication(
+        public async Task<ActionResult<IDataResult>> PostAuthentication(
             [FromHeader][Required] string token,
             [FromBody][Required] AuthenticationRequest request)
         {
@@ -45,7 +45,7 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IActionResult> GetAuthentication(
+        public async Task<ActionResult<IDataResult>> GetAuthentication(
             [FromHeader][Required] string token,
             [FromQuery][Required] AuthenticationRequest request)
         {
