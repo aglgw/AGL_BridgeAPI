@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using AGL.Api.ApplicationCore.Filters;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 using AGL.Api.ApplicationCore.Infrastructure;
+using static AGL.Api.Bridge_API.Utils.Util;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -27,13 +28,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IDataResult> PostAuthentication(
+        public async Task<IActionResult> PostAuthentication(
             [FromHeader][Required] string token,
             [FromBody][Required] AuthenticationRequest request)
         {
             var result = await _authenticationService.PostAuthentication(request, token);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
         /// <summary>
@@ -44,13 +45,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IDataResult> GetAuthentication(
+        public async Task<IActionResult> GetAuthentication(
             [FromHeader][Required] string token,
             [FromQuery][Required] AuthenticationRequest request)
         {
             var result = await _authenticationService.GetAuthentication(request, token);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
     }

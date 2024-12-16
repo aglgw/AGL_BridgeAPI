@@ -135,7 +135,7 @@ namespace AGL.Api.Bridge_API.Services
             }
             catch (Exception ex)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "", "Booking", "예약요청 저장 실패", true);
+                Utils.UtilLogs.LogRegHour(supplierCode, "BookingList", "Booking", "예약요청 저장 실패", true);
                 return await _commonService.CreateResponse<List<ReservationReponse>>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
@@ -574,7 +574,7 @@ namespace AGL.Api.Bridge_API.Services
                 if (supplier == null)
                 {
                     Utils.UtilLogs.LogRegHour(supplierCode, "BookingList", "BookingList", "공급사 검색 안됨");
-                    return await _commonService.CreateResponse<List<ReservationReponse>>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
+                    return await _commonService.CreateResponse<ReservationReponse>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
                 }
 
                 var golfClub = await _context.GolfClubs

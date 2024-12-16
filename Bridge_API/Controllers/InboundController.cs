@@ -12,6 +12,7 @@ using AGL.Api.ApplicationCore.Filters;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
+using static AGL.Api.Bridge_API.Utils.Util;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -34,12 +35,12 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IDataResult> POSTBookingRequest(
+        public async Task<IActionResult> POSTBookingRequest(
             [FromBody] ReqBookingRequest request)
         {
             var result = await _InboundService.POSTInboundBookingRequest(request);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
         /// <summary>
@@ -50,13 +51,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpPost]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IDataResult> PostBookingCancel(
+        public async Task<IActionResult> PostBookingCancel(
             [FromBody] ReservationInboundRequest Req)
         {
 
             var result = await _InboundService.PostInboundBookingCancel(Req);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
         /// <summary>
@@ -68,12 +69,12 @@ namespace AGL.Api.Bridge_API.Controllers
         [DisableValidation] // 유효성 검사 패스
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<IDataResult> GetInboundTeeTime(
+        public async Task<IActionResult> GetInboundTeeTime(
             [FromQuery] InboundTeeTimeRequest request)
         {
             var result = await _InboundService.GetInboundTeeTime(request);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
         /// <summary>
@@ -84,13 +85,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpGet]
         [SkipAuthentication] // 인증 미들웨어 패스
         [EnvironmentSpecific("Development")] // Development 환경에서만 표시
-        public async Task<OAPIDataResponse<List<GolfClubInfoWithInboundCode>>> GetInboundGolfClub(
+        public async Task<ActionResult<OAPIDataResponse<List<GolfClubInfoWithInboundCode>>>> GetInboundGolfClub(
             [FromHeader(Name = "token")][Required] string token,
             [FromQuery(Name = "inboundCode")] string? inboundCode)
         {
             var result = await _InboundService.GetInboundGolfClub(inboundCode, token);
 
-            return result;
+            return ResponseUtil.HandleResponse(result);
         }
 
     }
