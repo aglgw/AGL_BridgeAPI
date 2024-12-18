@@ -7,6 +7,8 @@ using System.ComponentModel.DataAnnotations;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Utils.Util;
+using Microsoft.AspNetCore.Http.Extensions;
+using Azure.Core;
 
 
 namespace AGL.Api.Bridge_API.Controllers
@@ -30,10 +32,10 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("golfclub")]
         [HttpPost]
         public async Task<ActionResult<IDataResult>> PostGolfClub(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPI.GolfClubInfo request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode, OAPI.GolfClubInfo request)
         {
-            Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 등록 처리 시작");
-            var result = await _golfService.PostGolfClub(request, SupplierCode);
+            Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "ProcessGolfClub", "골프장 등록 처리 시작");
+            var result = await _golfService.PostGolfClub(request, supplierCode);
 
             return ResponseUtil.HandleResponse(result);
         }
@@ -45,10 +47,10 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("golfclub/update")]
         [HttpPut]
         public async Task<ActionResult<IDataResult>> PutGolfClub(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, OAPI.GolfClubInfo request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode, OAPI.GolfClubInfo request)
         {
-            Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "GolfClub", "골프장 변경 처리 시작");
-            var result = await _golfService.PutGolfClub(request, SupplierCode);
+            Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "ProcessGolfClub", "골프장 변경 처리 시작");
+            var result = await _golfService.PutGolfClub(request, supplierCode);
 
             return ResponseUtil.HandleResponse(result);
         }
@@ -61,10 +63,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpGet]
         //[DisableValidation]
         public async Task<ActionResult<OAPIDataResponse<List<GolfClubInfo>>>> GetGolfClub(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
-            [FromQuery(Name = "GolfclubCode")] string? GolfclubCode)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
+            [FromQuery(Name = "GolfclubCode")] string? golfclubCode)
         {
-            var result = await _golfService.GetGolfClub(SupplierCode, GolfclubCode);
+            var currentUrl = HttpContext.Request.GetDisplayUrl();
+            Utils.UtilLogs.LogRegHour(supplierCode, golfclubCode, "GolfClubList", $"골프장 검색 URL : {currentUrl}");
+
+            var result = await _golfService.GetGolfClub(supplierCode, golfclubCode);
 
             return ResponseUtil.HandleResponse(result);
         }

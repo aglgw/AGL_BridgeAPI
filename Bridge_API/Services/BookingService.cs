@@ -67,7 +67,7 @@ namespace AGL.Api.Bridge_API.Services
                 var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
                 if (supplier == null)
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, "BookingList", "BookingList", "공급사 검색 안됨");
+                    Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "BookingList", "공급사 검색 안됨");
                     return await _commonService.CreateResponse<List<ReservationReponse>>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
                 }
 
@@ -130,12 +130,12 @@ namespace AGL.Api.Bridge_API.Services
                         guestPhone = guest.GuestPhone,
                     }).ToList() ?? new List<GuestInfo>(),
                 }).ToList();
-                Utils.UtilLogs.LogRegHour(supplierCode, "BookingList", $"BookingList", $"티타임 정보 검색 성공");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "BookingList", $"티타임 정보 검색 성공");
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "Booking List successfully", reservationDtos);
             }
             catch (Exception ex)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "BookingList", "Booking", "예약요청 저장 실패", true);
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "BookingList", "예약요청 저장 실패", true);
                 return await _commonService.CreateResponse<List<ReservationReponse>>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
@@ -157,7 +157,7 @@ namespace AGL.Api.Bridge_API.Services
             {
                 if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", $"예약확정 중복");
+                    Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Confirm", $"예약확정 중복");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
                 }
                 else
@@ -167,21 +167,21 @@ namespace AGL.Api.Bridge_API.Services
             }
             catch (RedisException ex)
             {
-                Utils.UtilLogs.LogRegDay(supplierCode, "Confirm", "Confirm", $"예약확정 Redis 실패 {ex.Message}", true);
+                Utils.UtilLogs.LogRegDay(supplierCode, "Booking", "Confirm", $"예약확정 Redis 실패 {ex.Message}", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
 
             // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", $"예약번호 또는 공급사 코드 없음 {reservationId} : {supplierCode}");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Confirm", $"예약번호 또는 공급사 코드 없음 {reservationId} : {supplierCode}");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid", null);
             }
             // 공급자 정보 조회 - supplierCode에 해당하는 공급자를 데이터베이스에서 검색
             var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
             if (supplier == null)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "공급사 검색 안됨");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Confirm", "공급사 검색 안됨");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
             }
             int supplierId = supplier.SupplierId;
@@ -190,7 +190,7 @@ namespace AGL.Api.Bridge_API.Services
             var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 1 && r.SupplierId == supplierId);
             if (reservation == null)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에서 검색 안됨");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Confirm", "예약관리에서 검색 안됨");
                 return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
             }
 
@@ -206,14 +206,14 @@ namespace AGL.Api.Bridge_API.Services
 
                         await _context.SaveChangesAsync();
                         await transaction.CommitAsync();
-                        Utils.UtilLogs.LogRegHour(supplierCode, "Confirm", "Confirm", "예약관리에 예약확정 변경 완료");
+                        Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Confirm", "예약관리에 예약확정 변경 완료");
 
                         return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation confirmed successfully", null);
                     }
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();
-                        Utils.UtilLogs.LogRegDay(supplierCode, "Confirm", "Confirm", $"예약확정 실패 {ex.Message}", true);
+                        Utils.UtilLogs.LogRegDay(supplierCode, "Booking", "Confirm", $"예약확정 실패 {ex.Message}", true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
                     }
                 }
@@ -236,7 +236,7 @@ namespace AGL.Api.Bridge_API.Services
             {
                 if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", $"예약취소 중복");
+                    Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Cancel", $"예약취소 중복");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
                 }
                 else
@@ -246,21 +246,21 @@ namespace AGL.Api.Bridge_API.Services
             }
             catch (RedisException ex)
             {
-                Utils.UtilLogs.LogRegDay(supplierCode, "Cancel", "Cancel", $"예약취소 Redis 실패 {ex.Message}", true);
+                Utils.UtilLogs.LogRegDay(supplierCode, "Booking", "Cancel", $"예약취소 Redis 실패 {ex.Message}", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
 
             // 입력 값 검증 - reservationId와 supplierCode가 비어 있는지 확인
             if (string.IsNullOrEmpty(reservationId) || string.IsNullOrEmpty(supplierCode))
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", $"예약번호 또는 공급사 코드 없음 {reservationId} : {supplierCode}");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Cancel", $"예약번호 또는 공급사 코드 없음 {reservationId} : {supplierCode}");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "reservationId or supplierCode is invalid", null);
             }
             // 공급자 정보 조회 - supplierCode에 해당하는 공급자를 데이터베이스에서 검색
             var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
             if (supplier == null)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", "공급사 검색 안됨");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Cancel", "공급사 검색 안됨");
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
             }
             int supplierId = supplier.SupplierId;
@@ -269,7 +269,7 @@ namespace AGL.Api.Bridge_API.Services
             var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 4 && r.SupplierId == supplierId);
             if (reservation == null)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", "예약관리에서 검색 안됨");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Cancel", "예약관리에서 검색 안됨");
                 return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
             }
 
@@ -306,14 +306,14 @@ namespace AGL.Api.Bridge_API.Services
                         }
 
                         await transaction.CommitAsync();
-                        Utils.UtilLogs.LogRegHour(supplierCode, "Cancel", "Cancel", "예약관리에 예약취소 완료");
+                        Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Cancel", "예약관리에 예약취소 완료");
 
                         return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "Reservation canceled successfully", null);
                     }
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();
-                        Utils.UtilLogs.LogRegDay(supplierCode, "Cancel", "Cancel", $"예약취소 실패 {ex.Message}", true);
+                        Utils.UtilLogs.LogRegDay(supplierCode, "Booking", "Cancel", $"예약취소 실패 {ex.Message}", true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
                     }
                 }
@@ -573,7 +573,7 @@ namespace AGL.Api.Bridge_API.Services
                 var supplier = await _context.Suppliers.Where(s => s.SupplierCode == supplierCode).FirstOrDefaultAsync();
                 if (supplier == null)
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, "BookingList", "BookingList", "공급사 검색 안됨");
+                    Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "TestBooking", "공급사 검색 안됨");
                     return await _commonService.CreateResponse<ReservationReponse>(false, ResultCode.INVALID_INPUT, "Supplier not found", null);
                 }
 
@@ -693,12 +693,12 @@ namespace AGL.Api.Bridge_API.Services
                     }).ToList() ?? new List<GuestInfo>(),
                 };
 
-                Utils.UtilLogs.LogRegHour(supplierCode, "TestBooking", $"TestBooking", $"예약요청 생성 테스트 성공");
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "TestBooking", $"예약요청 생성 테스트 성공");
                 return await _commonService.CreateResponse<ReservationReponse>(true, ResultCode.SUCCESS, "Reservation request creation test succeeded", reservationDtos);
             }
             catch (Exception ex)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, "TestBooking", "TestBooking", "예약요청 생성 테스트 실패", true);
+                Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "TestBooking", "예약요청 생성 테스트 실패", true);
                 return await _commonService.CreateResponse<ReservationReponse>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
