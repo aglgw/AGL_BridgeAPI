@@ -1,10 +1,12 @@
 ﻿
+using Azure.Core;
 using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 
@@ -280,6 +282,51 @@ namespace AGL.Api.ApplicationCore.Utilities
         {
             var random = new Random();
             return random.Next(100, 1000) + (decimal)random.NextDouble(); // Random amount between 100 and 1000
+        }
+
+        public static async Task<string> SaveJsonToFileAsync<T>(
+            string directoryPath,
+            string fileNameFormat,
+            T data,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // 작업 취소 확인
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+
+                // 디렉토리 생성
+                Directory.CreateDirectory(directoryPath);
+
+                // JSON 직렬화 옵션 설정
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true, // JSON 가독성을 위해 들여쓰기
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase, // camelCase 형식
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull // Null 값 제외
+                };
+
+                // 데이터 직렬화
+                var json = JsonSerializer.Serialize(data, options);
+
+                // 파일명 생성
+                var fileName = Path.Combine(directoryPath, string.Format(fileNameFormat, DateTime.UtcNow, Guid.NewGuid()));
+
+                // JSON 파일 저장
+                await File.WriteAllTextAsync(fileName, json, cancellationToken);
+
+                // 성공 시 파일 경로 반환
+                return fileName;
+            }
+            catch (Exception ex)
+            {
+                // 오류 처리: 필요시 로깅
+                Console.WriteLine($"Error writing JSON file: {ex.Message}");
+                return null;
+            }
         }
 
     }

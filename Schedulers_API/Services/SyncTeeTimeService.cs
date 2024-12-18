@@ -38,7 +38,7 @@ namespace AGL.Api.API_Schedulers.Services
             {
                 UtilLogs.LogRegHour("SyncTeeTime", $"SyncTeeTime", $"동기화 프로세스 시작", "");
                 // 동기화가 필요한 모든 클라이언트를 가져옵니다
-                var clients = await _context.SyncClients.ToListAsync();
+                var clients = await _context.SyncClients.Where(sc => sc.IsSyncEnabled == true).ToListAsync();
 
                 var tasks = clients.Select(async client =>
                 {

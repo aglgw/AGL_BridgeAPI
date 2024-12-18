@@ -240,7 +240,7 @@ namespace AGL.Api.Bridge_API.Services
 
             string goflClubCode = inboundCode.Split("_").Last();
 
-            var reservationManagement = await _context.ReservationManagements.Where(r => r.ReservationId == Req.reservationId && r.GolfClubCode == goflClubCode && r.ReservationStatus != 3).FirstOrDefaultAsync();
+            var reservationManagement = await _context.ReservationManagements.Where(r => r.ReservationId == Req.reservationId && r.GolfClubCode == goflClubCode && r.ReservationStatus != (byte)StatusCode.CANCELLATION).FirstOrDefaultAsync();
 
             if (reservationManagement == null)
             {

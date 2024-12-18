@@ -187,12 +187,17 @@ namespace AGL.Api.Bridge_API.Services
             int supplierId = supplier.SupplierId;
 
             // 예약관리 DB에서 예약 조회 - 예약 번호, 상태, 공급자 ID를 기준으로 예약 검색
-            var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 1 && r.SupplierId == supplierId);
+            var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == (byte)StatusCode.REQUEST && r.SupplierId == supplierId);
             if (reservation == null)
             {
                 Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Confirm", "예약관리에서 검색 안됨");
                 return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
             }
+
+            // JSON 으로 저장
+            var directory = Path.Combine("C:", "AGL", "JSON", "BOOKING");
+            var fileNameFormat = $"Request_Confirm_{supplierCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
+            var fileName = await Util.SaveJsonToFileAsync(directory, fileNameFormat, request);
 
             var strategy = _context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
@@ -201,7 +206,7 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     try
                     {
-                        reservation.ReservationStatus = (byte)StatusCode.CONFIRMATION; // 1 예약요청 2 예약확정 3 예약취소
+                        reservation.ReservationStatus = (byte)StatusCode.CONFIRMATION;
                         reservation.UpdatedDate = DateTime.UtcNow;
 
                         await _context.SaveChangesAsync();
@@ -266,12 +271,17 @@ namespace AGL.Api.Bridge_API.Services
             int supplierId = supplier.SupplierId;
 
             // 예약관리 DB에서 예약 조회 - 예약 번호, 상태, 공급자 ID를 기준으로 예약 검색
-            var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == 4 && r.SupplierId == supplierId);
+            var reservation = await _context.ReservationManagements.FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.ReservationStatus == (byte)StatusCode.CANCELLATIONREQUEST && r.SupplierId == supplierId);
             if (reservation == null)
             {
                 Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Cancel", "예약관리에서 검색 안됨");
                 return await _commonService.CreateResponse<object>(false, ResultCode.NOT_FOUND, "Reservation not found", null);
             }
+
+            // JSON 으로 저장
+            var directory = Path.Combine("C:", "AGL", "JSON", "BOOKING");
+            var fileNameFormat = $"Request_Cancel_{supplierCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
+            var fileName = await Util.SaveJsonToFileAsync(directory, fileNameFormat, request);
 
             var strategy = _context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
@@ -289,21 +299,16 @@ namespace AGL.Api.Bridge_API.Services
                         await _context.SaveChangesAsync();
 
                         // 예약 취소 시 티타임 재고 정리
-                        var teeTimeMapping = await _context.TeeTimeMappings
+                        var teeTimeMapping = _context.TeeTimeMappings
                             .Where(ttm => ttm.TeeTime.SupplierId == supplier.SupplierId
                             && ttm.TeeTime.GolfClub.GolfClubCode == reservation.GolfClubCode
                             && ttm.TeeTime.GolfClubCourse.CourseCode == reservation.CourseCode
                             && ttm.DateSlot.PlayDate == reservation.ReservationDate
-                            && ttm.TimeSlot.StartTime == reservation.ReservationStartTime)
-                            .FirstOrDefaultAsync();
+                            && ttm.TimeSlot.StartTime == reservation.ReservationStartTime);
 
-                        if (teeTimeMapping != null)
-                        {
-                            teeTimeMapping.IsAvailable = false;
-                            teeTimeMapping.UpdatedDate = DateTime.UtcNow;
-
-                            await _context.SaveChangesAsync();
-                        }
+                        await teeTimeMapping.ExecuteUpdateAsync(s => s
+                            .SetProperty(tm => tm.IsAvailable, false)
+                            .SetProperty(tm => tm.UpdatedDate, DateTime.UtcNow));
 
                         await transaction.CommitAsync();
                         Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "Cancel", "예약관리에 예약취소 완료");
