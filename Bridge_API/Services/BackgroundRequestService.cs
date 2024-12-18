@@ -48,12 +48,10 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue start", $"TeeTime queue start");
 
-                    var directory = "C:\\AGL\\JSON";
-                    Directory.CreateDirectory(directory);
-                    // Save request to a JSON file
-                    var json = JsonSerializer.Serialize(request);
-                    var fileName = Path.Combine(directory, $"Request_{request.supplierCode}_{request.golfClubCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}.json");
-                    await File.WriteAllTextAsync(fileName, json, stoppingToken);
+                    var directory = Path.Combine("C:", "AGL", "JSON", "TEETIME");
+                    var fileNameFormat = $"Request_{request.supplierCode}_{request.golfClubCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
+
+                    var fileName = await Util.SaveJsonToFileAsync(directory, fileNameFormat, request, stoppingToken);
 
                     Utils.UtilLogs.LogRegHour(request.supplierCode, request.golfClubCode, $"TeeTime queue json", $"json saved to file: {fileName}");
 

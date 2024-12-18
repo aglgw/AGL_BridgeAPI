@@ -24,6 +24,9 @@ namespace AGL.Api.Domain.Entities.OAPI
 
         public int? LastSyncTeeTimeMappingId { get; set; }
 
+        [Required]
+        public bool IsSyncEnabled { get; set; }
+
         [JsonIgnore]
         public virtual OAPI_Authentication Authentication { get; set; }
     }

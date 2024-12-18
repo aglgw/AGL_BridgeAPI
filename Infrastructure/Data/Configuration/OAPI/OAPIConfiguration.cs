@@ -403,6 +403,8 @@ namespace AGL.API.Infrastructure.Data.Configuration.OAPI
                    .WithOne(a => a.SyncClient)
                    .HasForeignKey<OAPI_Authentication>(a => a.SyncClientId)
                    .IsRequired(false); // 선택적 관계
+
+            builder.Property(e => e.IsSyncEnabled).HasColumnType("bit");
         }
     }
     #endregion
