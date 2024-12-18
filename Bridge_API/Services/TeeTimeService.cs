@@ -15,6 +15,9 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using System.Diagnostics;
 using AGL.Api.ApplicationCore.Utilities;
 using StackExchange.Redis;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.IdentityModel.Tokens;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -54,9 +57,12 @@ namespace AGL.Api.Bridge_API.Services
             var startDateParsed = request.startDate;
             var endDateParsed = request.endDate;
 
+            string[] formats = { "yyyy-MM-dd", "yyyyMMdd" };
+
             // 시작일과 종료일의 차이가 3개월을 초과하는지 확인
-            var startDate = DateTime.ParseExact(startDateParsed, "yyyyMMdd", null);
-            var endDate = DateTime.ParseExact(endDateParsed, "yyyyMMdd", null);
+            var startDate = DateTime.ParseExact(startDateParsed, formats, null, System.Globalization.DateTimeStyles.None);
+            var endDate = DateTime.ParseExact(endDateParsed, formats, null, System.Globalization.DateTimeStyles.None);
+
             if ((endDate - startDate).TotalDays > 90)
             {
                 return await _commonService.CreateResponse<TeeTimeData>(false, ResultCode.INVALID_INPUT, "Date range cannot exceed 3 months", null);
@@ -184,40 +190,31 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PutTeeTimeAvailability(TeeTimeAvailabilityRequest request, string supplierCode)
         {
-            var RedisStrKey = $"PTTA:" + ComputeSha256.ComputeSha256RequestHash(request);
+            //var RedisStrKey = $"PTTA:" + ComputeSha256.ComputeSha256RequestHash(request);
 
-            try
-            {
-                if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", $"티타임 상태 변경 중복");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
-                }
-                else
-                {
-                    await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
-                }
-            }
-            catch (RedisException ex)
-            {
-                Utils.UtilLogs.LogRegDay(supplierCode, request.golfClubCode, "TeeTime", $"티타임 상태 변경 Redis 실패 {ex.Message}", true);
-                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
-            }
+            //try
+            //{
+            //    if (await _redisService.KeyExistsAsync(RedisStrKey)) // Redis 키 조회 (비동기)
+            //    {
+            //        Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", $"티타임 상태 변경 중복");
+            //        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate request", null);
+            //    }
+            //    else
+            //    {
+            //        await _redisService.SetValueAsync(RedisStrKey, "", TimeSpan.FromMinutes(1)); // 비동기로 Redis 키 설정
+            //    }
+            //}
+            //catch (RedisException ex)
+            //{
+            //    Utils.UtilLogs.LogRegDay(supplierCode, request.golfClubCode, "TeeTime", $"티타임 상태 변경 Redis 실패 {ex.Message}", true);
+            //    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
+            //}
 
             var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.golfClubCode);
 
             if (golfClub == null)
             {
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
-            }
-
-            string dateFormat = "yyyy-MM-dd";
-
-            // PlayDate 유효성 검사
-            if (!DateTime.TryParseExact(request.playDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
-            {
-                Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", "시작일 없음");
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "PlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
             }
 
             var strategy = _context.Database.CreateExecutionStrategy();
@@ -229,45 +226,54 @@ namespace AGL.Api.Bridge_API.Services
                     try
                     {
                         // 요청에서 제공된 티타임 코드 목록을 가져옴
-                        var startTimes = request.time != null ? request.time.Select(t => t.startTime).ToList() : new List<string>();
-                        var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.teeTimeCode).ToList() : new List<string>();
-                        var playDate = DateTime.ParseExact(request.playDate,"yyyy-MM-dd",null);
-
                         // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
                         var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
                             .Include(tm => tm.TeeTime) // TeeTime 엔터티 포함
                                 .ThenInclude(t => t.GolfClubCourse) // GolfClubCourse 엔터티 포함 (연관관계)
                             .Include(tm => tm.DateSlot) // DateSlot 엔터티 포함 (연관관계)
                             .Include(tm => tm.TimeSlot) // TimeSlot 엔터티 포함 (연관관계)
-                            .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.golfClubCode && // 요청된 골프장 코드와 일치 확인
-                                         request.courseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode) && // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
-                                         tm.DateSlot.StartDate == playDate && // 요청된 플레이 날짜와 일치하는 DateSlot 확인
-                                         startTimes.Contains(tm.TimeSlot.StartTime.ToString()));  // 요청된 시작 시간과 일치하는지 확인
+                            .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.golfClubCode); // 요청된 골프장 코드와 일치 확인
 
+                        if (request.courseCode.Count() > 0)
+                        {
+                            existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => request.courseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode));  // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
+                        }
+
+                        if(!string.IsNullOrEmpty(request.playDate))
+                        {
+                            string dateFormat = "yyyy-MM-dd";
+
+                            // PlayDate 유효성 검사
+                            if (!DateTime.TryParseExact(request.playDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
+                            {
+                                Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", "시작일 없음");
+                                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "PlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                            }
+
+                            var playDate = DateTime.ParseExact(request.playDate, "yyyy-MM-dd", null);
+                            if (string.IsNullOrEmpty(request.playDate))
+                            {
+                                existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => tm.DateSlot.StartDate == playDate); // 요청된 플레이 날짜와 일치하는 DateSlot 확인
+                            }
+                        }
+
+                        var startTimes = request.time != null ? request.time.Select(t => t.startTime).ToList() : new List<string>();
+                        if (startTimes.Any())
+                        {
+                            existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => startTimes.Contains(tm.TimeSlot.StartTime.ToString())); // 요청된 시작 시간과 일치하는지 확인
+                        }
+
+                        var teeTimeCodes = request.time != null ? request.time.SelectMany(t => t.teeTimeCode).ToList() : new List<string>();
                         // 티타임 코드 목록이 있을 경우 해당 코드들에 대한 조건 추가
                         if (teeTimeCodes.Count != 0)
                         {
-                            existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => teeTimeCodes.Contains(tm.SupplierTeetimeCode));
+                            existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => teeTimeCodes.Contains(tm.SupplierTeetimeCode));
                         }
 
-                        // 조건에 맞는 TeeTimePriceMappings 목록을 조회
-                        var existingTeeTimeMappings = await existingTeeTimeMappingsQuery.ToListAsync();
-
-                        if (!existingTeeTimeMappings.Any() || existingTeeTimeMappings == null)
-                        {
-                            Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, $"TeeTime", $"티타임 없음으로 상태 변경 실패", true);
-                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "TeeTime not found", null);
-                        }
-
-                        // 조회된 티타임 가격 매핑에 대해 가용성 및 수정 날짜 업데이트를 벌크 업데이트로 수행
-                        existingTeeTimeMappings.ForEach(teeTimeMapping =>
-                        {
-                            teeTimeMapping.IsAvailable = request.available;
-                            teeTimeMapping.UpdatedDate = DateTime.UtcNow;
-                        });
-
-                        // 벌크 업데이트 수행
-                        await _context.BulkUpdateAsync(existingTeeTimeMappings);
+                        // ExecuteUpdateAsync를 사용하여 직접 업데이트 수행
+                        await existingTeeTimeMappingsQuery.ExecuteUpdateAsync(s => s
+                            .SetProperty(tm => tm.IsAvailable, request.available)
+                            .SetProperty(tm => tm.UpdatedDate, DateTime.UtcNow));
 
                         await transaction.CommitAsync();
 

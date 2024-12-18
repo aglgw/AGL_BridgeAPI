@@ -32,12 +32,12 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PostGolfClub(GolfClubInfo request, string supplierCode)
         {
-            return await ProcessGolfClub(request, supplierCode, request.golfClubCode);
+            return await ProcessGolfClub(request, supplierCode, request.golfClubCode, "POST");
         }
 
         public async Task<IDataResult> PutGolfClub(GolfClubInfo request, string supplierCode)
         {
-            return await ProcessGolfClub(request, supplierCode, request.golfClubCode);
+            return await ProcessGolfClub(request, supplierCode, request.golfClubCode, "PUT");
         }
 
         public async Task<OAPIDataResponse<List<GolfClubInfo>>> GetGolfClub(string supplierCode, string golfClubCode)
@@ -130,8 +130,23 @@ namespace AGL.Api.Bridge_API.Services
         }
 
 
-        private async Task<IDataResult> ProcessGolfClub(GolfClubInfo request, string supplierCode, string golfClubCode)
+        private async Task<IDataResult> ProcessGolfClub(GolfClubInfo request, string supplierCode, string golfClubCode, string method)
         {
+            var golfClub = await _context.GolfClubs.Where(g => g.GolfClubCode == golfClubCode).FirstOrDefaultAsync();
+
+            bool isPost = method.Equals("POST", StringComparison.OrdinalIgnoreCase);
+
+            if (isPost && golfClub != null) // POST: 골프장이 이미 존재하면 오류
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 중복됨", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club already registered", null);
+            }
+            else if (!isPost && golfClub == null) // PUT or other: 골프장이 존재하지 않으면 오류
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 없음", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club not found", null);
+            }
+
             //var RedisStrKey = $"PGC:" + ComputeSha256.ComputeSha256RequestHash(request);
 
             //try
