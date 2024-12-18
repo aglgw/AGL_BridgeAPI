@@ -10,6 +10,7 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using AGL.Api.ApplicationCore.Models.Enum;
 using AGL.Api.Bridge_API.Services;
 using static AGL.Api.Bridge_API.Utils.Util;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -114,6 +115,9 @@ namespace AGL.Api.Bridge_API.Controllers
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             [FromQuery] ReservationListRequest request)
         {
+            var currentUrl = HttpContext.Request.GetDisplayUrl();
+            Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "BookingList", $"예약 요청 검색 URL : {currentUrl}");
+
             var result = await _bookingService.GetBookingRequest(request, supplierCode);
 
             return ResponseUtil.HandleResponse(result);
@@ -145,6 +149,9 @@ namespace AGL.Api.Bridge_API.Controllers
             [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             [FromQuery] ReservationListRequest request)
         {
+            var currentUrl = HttpContext.Request.GetDisplayUrl();
+            Utils.UtilLogs.LogRegHour(supplierCode, "Booking", "BookingList", $"예약 취소요청 검색 URL : {currentUrl}");
+
             var result = await _bookingService.GetBookingCancellations(request, supplierCode);
 
             return ResponseUtil.HandleResponse(result);

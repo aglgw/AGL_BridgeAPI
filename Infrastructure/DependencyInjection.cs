@@ -1,5 +1,6 @@
 ﻿using AGL.Api.ApplicationCore.Interfaces;
 using AGL.Api.Infrastructure.Data;
+using AGL.API.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,9 +43,20 @@ namespace AGL.Api.Infrastructure
                           });
             }, ServiceLifetime.Scoped);
 
+            services.AddDbContext<OTADbContext>(options =>
+            {
+                options.UseLazyLoadingProxies().UseSqlServer(configuration["OAPI.Application.ConnectionString"],
+                          sqlServerOptionsAction: sqlOptions =>
+                          {
+                              sqlOptions.MigrationsAssembly(typeof(OTADbContext).GetTypeInfo().Assembly.FullName);
+                              sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                          });
+            }, ServiceLifetime.Scoped);
+
             services.AddScoped<OAPI_DbContext>();
             services.AddScoped<CmsDbContext>();
             services.AddScoped<HttDbContext>();
+            services.AddScoped<OTADbContext>();
 
             return services;
         }

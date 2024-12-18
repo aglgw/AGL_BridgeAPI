@@ -8,6 +8,7 @@ using static AGL.Api.Bridge_API.Models.OAPI.OAPIRequest;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPIResponse;
 using static AGL.Api.Bridge_API.Utils.Util;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace AGL.Api.Bridge_API.Controllers
 {
@@ -31,7 +32,7 @@ namespace AGL.Api.Bridge_API.Controllers
         public async Task<ActionResult<IDataResult>> PostTeeTime(
             [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
         {
-            Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "TeeTime", "등록 처리 시작");
+            Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "ProcessTeeTime", "등록 처리 시작");
             var result = await _teetimeService.PostTeeTime(request, SupplierCode);
 
             return ResponseUtil.HandleResponse(result);
@@ -44,10 +45,10 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("teetime/update")]
         [HttpPut]
         public async Task<ActionResult<IDataResult>> PutTeeTime(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode, TeeTimeRequest request)
         {
-            Utils.UtilLogs.LogRegHour(SupplierCode, request.golfClubCode, "TeeTime", "변경 처리 시작");
-            var result = await _teetimeService.PutTeeTime(request, SupplierCode);
+            Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "ProcessTeeTime", "변경 처리 시작");
+            var result = await _teetimeService.PutTeeTime(request, supplierCode);
 
             return ResponseUtil.HandleResponse(result);
         }
@@ -60,10 +61,13 @@ namespace AGL.Api.Bridge_API.Controllers
         [HttpGet]
         [DisableValidation]
         public async Task<ActionResult<TeeTimeResponse>> GetTeeTime(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode,
+            [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode,
             [FromQuery][Required] TeeTimeGetRequest request)
         {
-            var result = await _teetimeService.GetTeeTime(request, SupplierCode);
+            var currentUrl = HttpContext.Request.GetDisplayUrl();
+            Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTimeList", $"티타임 검색 URL : {currentUrl}");
+
+            var result = await _teetimeService.GetTeeTime(request, supplierCode);
 
             return ResponseUtil.HandleResponse(result);
         }
@@ -75,9 +79,9 @@ namespace AGL.Api.Bridge_API.Controllers
         [Route("teetime/availability")]
         [HttpPut]
         public async Task<ActionResult<IDataResult>> PutTeeTimeAvailability(
-            [FromHeader(Name = "X-Supplier-Code")][Required] string SupplierCode, TeeTimeAvailabilityRequest request)
+            [FromHeader(Name = "X-Supplier-Code")][Required] string supplierCode, TeeTimeAvailabilityRequest request)
         {
-            var result = await _teetimeService.PutTeeTimeAvailability(request, SupplierCode);
+            var result = await _teetimeService.PutTeeTimeAvailability(request, supplierCode);
 
             return ResponseUtil.HandleResponse(result);
         }

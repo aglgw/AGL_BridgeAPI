@@ -67,7 +67,7 @@ namespace AGL.Api.Bridge_API.Services
                 // 유효성 검사 - 조회된 골프장이 없을 경우
                 if (existingGolfclubs == null || !existingGolfclubs.Any())
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 검색 코드 없음");
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClubList", "골프장 검색 코드 없음");
                     return await _commonService.CreateResponse<List<GolfClubInfo>>(false, ResultCode.NOT_FOUND, "GolfClubs Not Found", null);
                 }
 
@@ -119,12 +119,12 @@ namespace AGL.Api.Bridge_API.Services
                     }).ToList() ?? new List<HoleInfo>()
                 }).ToList();
 
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 검색 성공");
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClubList", $"골프장 검색 성공");
                 return await _commonService.CreateResponse(true, ResultCode.SUCCESS, "GolfClub List successfully", golfClubDtos);
             }
             catch (Exception ex)
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 검색 실패 {ex.Message}", true);
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClubList", $"골프장 검색 실패 {ex.Message}", true);
                 return await _commonService.CreateResponse<List<GolfClubInfo>>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
         }
@@ -138,12 +138,12 @@ namespace AGL.Api.Bridge_API.Services
 
             if (isPost && golfClub != null) // POST: 골프장이 이미 존재하면 오류
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 중복됨", true);
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장 중복됨", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club already registered", null);
             }
             else if (!isPost && golfClub == null) // PUT or other: 골프장이 존재하지 않으면 오류
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 없음", true);
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장 없음", true);
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club not found", null);
             }
 
@@ -191,7 +191,7 @@ namespace AGL.Api.Bridge_API.Services
                         List<OAPI_GolfClubCourse> existingCourses = existingGolfclub?.Courses.ToList() ?? new List<OAPI_GolfClubCourse>();
                         List<OAPI_GolfClubHole> existingHoles = existingGolfclub?.Holes.ToList() ?? new List<OAPI_GolfClubHole>();
 
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", existingGolfclub != null ? "기존 골프장 정보 조회 성공" : "기존 골프장 정보 없음, 새로 생성 예정");
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", existingGolfclub != null ? "기존 골프장 정보 조회 성공" : "기존 골프장 정보 없음, 새로 생성 예정");
 
                         // 골프장 정보
                         int golfClubId;
@@ -216,7 +216,7 @@ namespace AGL.Api.Bridge_API.Services
                             existingGolfclub.TotalCourseCount = request.totalCourseCount;
                             existingGolfclub.isGuestInfoRequired = request.isGuestInfoRequired;
                             existingGolfclub.UpdatedDate = DateTime.UtcNow;
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "기존 골프장 정보 업데이트 시작");
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "기존 골프장 정보 업데이트 시작");
                         }
                         else
                         {
@@ -246,7 +246,7 @@ namespace AGL.Api.Bridge_API.Services
                             await _context.SaveChangesAsync();
                             golfClubId = newGolfClub.GolfClubId;
                             existingGolfclub = newGolfClub;
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "새 골프장 정보 생성 시작");
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "새 골프장 정보 생성 시작");
                         }
 
                         // 벌크 저장을 위한 리스트 준비
@@ -482,35 +482,35 @@ namespace AGL.Api.Bridge_API.Services
                         if (newImages.Any())
                         {
                             _context.GolfClubImages.AddRange(newImages);
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 이미지 저장");
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장 이미지 저장");
                         }
                         if (newRefundPolicies.Any())
                         {
                             _context.GolfClubRefundPolicies.AddRange(newRefundPolicies);
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 환불정책 저장");
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장 환불정책 저장");
                         }
                         if (newCourses.Any())
                         {
                             _context.GolfClubCourses.AddRange(newCourses);
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 코스 저장");
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장 코스 저장");
                         }
                         if (newHoles.Any())
                         {
                             _context.GolfClubHoles.AddRange(newHoles);
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 홀 저장");
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장 홀 저장");
                         }
 
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "벌크 저장 시작 - 이미지, 환불 정책, 코스, 홀 정보");
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "벌크 저장 시작 - 이미지, 환불 정책, 코스, 홀 정보");
                         await _context.SaveChangesAsync();
                         await transaction.CommitAsync();
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", "골프장 처리 완료");
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장 처리 완료");
 
                         return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessGolfClub successfully", null);
                     }
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "GolfClub", $"골프장 저장 실패 {ex.Message}",true);
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", $"골프장 저장 실패 {ex.Message}",true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
                     }
                 };
