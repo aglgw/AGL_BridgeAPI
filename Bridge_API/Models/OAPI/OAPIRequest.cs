@@ -177,21 +177,19 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 플레이 날짜
             /// </summary>
             [DataMember]
-            public string playDate { get; set; }
+            public string? playDate { get; set; }
 
             /// <summary>
             /// 코스 코드 리스트
             /// </summary>
             [DataMember]
-            [Required]
-            public List<string> courseCode { get; set; }
+            public List<string>? courseCode { get; set; }
 
             /// <summary>
             /// 시간 정보 리스트
             /// </summary>
             [DataMember]
-            [Required]
-            public List<TimeInfo> time { get; set; }
+            public List<TimeInfo>? time { get; set; }
 
             /// <summary>
             /// 판매 여부 (true: 판매, false: 판매 안 함)
