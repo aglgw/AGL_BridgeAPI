@@ -52,6 +52,7 @@ namespace AGL.Api.Bridge_API.Services
         {
             if (string.IsNullOrEmpty(request.startDate) && string.IsNullOrEmpty(request.endDate))
             {
+                Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTimeList", "시작일 or 종료일 없음");
                 return await _commonService.CreateResponse<TeeTimeData>(false, ResultCode.INVALID_INPUT, "startDate or EndDate is invalid", null);
             }
             var startDateParsed = request.startDate;
@@ -65,6 +66,7 @@ namespace AGL.Api.Bridge_API.Services
 
             if ((endDate - startDate).TotalDays > 90)
             {
+                Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTimeList", "3달 이상 검색함");
                 return await _commonService.CreateResponse<TeeTimeData>(false, ResultCode.INVALID_INPUT, "Date range cannot exceed 3 months", null);
             }
             //var stopwatch = Stopwatch.StartNew();
@@ -190,6 +192,13 @@ namespace AGL.Api.Bridge_API.Services
 
         public async Task<IDataResult> PutTeeTimeAvailability(TeeTimeAvailabilityRequest request, string supplierCode)
         {
+            var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.golfClubCode);
+
+            if (golfClub == null)
+            {
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
+            }
+
             //var RedisStrKey = $"PTTA:" + ComputeSha256.ComputeSha256RequestHash(request);
 
             //try
@@ -209,13 +218,6 @@ namespace AGL.Api.Bridge_API.Services
             //    Utils.UtilLogs.LogRegDay(supplierCode, request.golfClubCode, "TeeTime", $"티타임 상태 변경 Redis 실패 {ex.Message}", true);
             //    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             //}
-
-            var golfClub = await _context.GolfClubs.FirstOrDefaultAsync(g => g.Supplier.SupplierCode == supplierCode && g.GolfClubCode == request.golfClubCode);
-
-            if (golfClub == null)
-            {
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
-            }
 
             var strategy = _context.Database.CreateExecutionStrategy();
 

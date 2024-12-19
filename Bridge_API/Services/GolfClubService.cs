@@ -147,6 +147,10 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club not found", null);
             }
 
+            var directory = Path.Combine("C:", "AGL", "JSON", "GOLFCLUB");
+            var fileNameFormat = $"Request_{supplierCode}_{golfClubCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
+
+            var fileName = await Util.SaveJsonToFileAsync(directory, fileNameFormat, request);
             //var RedisStrKey = $"PGC:" + ComputeSha256.ComputeSha256RequestHash(request);
 
             //try

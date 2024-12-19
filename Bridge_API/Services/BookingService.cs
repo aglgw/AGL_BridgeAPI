@@ -196,7 +196,7 @@ namespace AGL.Api.Bridge_API.Services
 
             // JSON 으로 저장
             var directory = Path.Combine("C:", "AGL", "JSON", "BOOKING");
-            var fileNameFormat = $"Request_Confirm_{supplierCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
+            var fileNameFormat = $"Response_Confirm_{supplierCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
             var fileName = await Util.SaveJsonToFileAsync(directory, fileNameFormat, request);
 
             var strategy = _context.Database.CreateExecutionStrategy();
@@ -280,7 +280,7 @@ namespace AGL.Api.Bridge_API.Services
 
             // JSON 으로 저장
             var directory = Path.Combine("C:", "AGL", "JSON", "BOOKING");
-            var fileNameFormat = $"Request_Cancel_{supplierCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
+            var fileNameFormat = $"Rsponse_Cancel_{supplierCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
             var fileName = await Util.SaveJsonToFileAsync(directory, fileNameFormat, request);
 
             var strategy = _context.Database.CreateExecutionStrategy();
