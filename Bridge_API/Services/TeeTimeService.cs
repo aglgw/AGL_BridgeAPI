@@ -335,9 +335,23 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club or courses not found", null);
             }
 
+            // 티타임 유효성 
+            if (!request.teeTimeInfo.Any())
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "teeTimeInfo 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "teeTimeInfo not found", null);
+            }
+
             // 코스 코드 유효성 
             foreach (var teeTimeInfo in request.teeTimeInfo)
             {
+                var playerCounts = teeTimeInfo.price.Select(p => p.playerCount).ToList();
+                if (playerCounts.Count != playerCounts.Distinct().Count())
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "playerCount 중복됨", true);
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate playerCount found in price list", null);
+                }
+
                 foreach (var courseCode in teeTimeInfo.courseCode)
                 {
                     // 골프장 코스 조회
@@ -347,17 +361,6 @@ namespace AGL.Api.Bridge_API.Services
                         Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "코스 코드 없음", true);
                         return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
                     }
-                }
-            }
-
-            // playerCount 중복 체크
-            foreach (var teeTimeInfo in request.teeTimeInfo)
-            {
-                var playerCounts = teeTimeInfo.price.Select(p => p.playerCount).ToList();
-                if (playerCounts.Count != playerCounts.Distinct().Count())
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "playerCount 중복됨", true);
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate playerCount found in price list", null);
                 }
             }
 
@@ -407,12 +410,6 @@ namespace AGL.Api.Bridge_API.Services
                     Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "적용일 없음");
                     return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "effectiveDate not found", null);
                 }
-            }
-
-            if(!request.teeTimeInfo.Any())
-            {
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "teeTimeInfo 없음");
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "teeTimeInfo not found", null);
             }
 
             Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "queue 로 진행");
