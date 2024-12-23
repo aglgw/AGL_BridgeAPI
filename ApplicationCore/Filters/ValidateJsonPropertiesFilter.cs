@@ -21,7 +21,16 @@ namespace AGL.Api.ApplicationCore.Filters
                 return;
             }
 
-            var dtoArgument = context.ActionArguments.Values.FirstOrDefault(arg => arg != null && !arg.GetType().IsPrimitive && !(arg is string));
+            var excludedTypes = new Type[]
+            {
+                typeof(string),
+                typeof(int),
+                typeof(double),
+                typeof(bool)
+            };
+
+            //var dtoArgument = context.ActionArguments.Values.FirstOrDefault(arg => arg != null && !arg.GetType().IsPrimitive && !(arg is string));
+            var dtoArgument = context.ActionArguments.Values.FirstOrDefault(arg => arg != null && !excludedTypes.Contains(arg.GetType()));
             if (dtoArgument == null)
             {
                 // DTO가 없으면 필터를 종료

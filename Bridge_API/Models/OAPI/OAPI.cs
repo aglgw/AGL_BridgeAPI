@@ -27,13 +27,13 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// </summary>
             [DataMember]
             [Required(ErrorMessage = "MinMembers is required")]
-            public int minMembers { get; set; }
+            public int? minMembers { get; set; }
             /// <summary>
             /// 최대인원
             /// </summary>
             [DataMember]
             [Required(ErrorMessage = "MaxMembers is required")]
-            public int maxMembers { get; set; }
+            public int? maxMembers { get; set; }
             /// <summary>
             /// 카트 포함 여부 ( true  포함, false  불포함 )
             /// </summary>
@@ -51,7 +51,7 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// </summary>
             [DataMember]
             [Required(ErrorMessage = "ReservationType is required")]
-            public int reservationType { get; set; }
+            public int? reservationType { get; set; }
 
             /// <summary>
             /// 티타임 정보 리스트
