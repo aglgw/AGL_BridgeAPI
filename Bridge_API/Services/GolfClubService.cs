@@ -147,6 +147,12 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club not found", null);
             }
 
+            if(!request.course.Any() || request.course == null)
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessGolfClub", "골프장코스 없음", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golf club course already registered", null);
+            }
+
             var directory = Path.Combine("C:", "AGL", "JSON", "GOLFCLUB");
             var fileNameFormat = $"Request_{supplierCode}_{golfClubCode}_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}_{Guid.NewGuid()}.json";
 
