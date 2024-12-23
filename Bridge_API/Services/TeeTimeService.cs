@@ -409,6 +409,12 @@ namespace AGL.Api.Bridge_API.Services
                 }
             }
 
+            if(!request.teeTimeInfo.Any())
+            {
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "teeTimeInfo 없음");
+                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "teeTimeInfo not found", null);
+            }
+
             Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "queue 로 진행");
 
             // TeeTimeBackgroundRequest 객체 생성 및 SupplierCode 설정
