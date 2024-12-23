@@ -318,143 +318,153 @@ namespace AGL.Api.Bridge_API.Services
             //    return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             //}
 
-            var supplier = await _context.Suppliers
-            .Include(s => s.GolfClubs)
-                .ThenInclude(gc => gc.Courses)
-            .FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
-
-            // 골프장 코드 유효성
-            if (string.IsNullOrEmpty(golfClubCode) || !supplier.GolfClubs.Any(gc => gc.GolfClubCode == golfClubCode))
+            try
             {
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "골프장 코드 없음", true);
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golfclub Code not found", null);
-            }
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessTeeTime", "유효성 처리 시작 ", true);
 
-            // 골프장 코스 유효성
-            var golfClub = supplier.GolfClubs.FirstOrDefault(gc => gc.GolfClubCode == golfClubCode);
-            if (golfClub.Courses == null || !golfClub.Courses.Any())
-            {
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "골프장 코스 없음", true);
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golfclub Curses not found", null);
-            }
+                var supplier = await _context.Suppliers
+                .Include(s => s.GolfClubs)
+                    .ThenInclude(gc => gc.Courses)
+                .FirstOrDefaultAsync(s => s.SupplierCode == supplierCode);
 
-            // 티타임 유효성 
-            if (!request.teeTimeInfo.Any())
-            {
-                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "teeTimeInfo 없음");
-                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "TeeTimeInfo not found", null);
-            }
-
-            // 코스 코드 유효성 
-            foreach (var teeTimeInfo in request.teeTimeInfo)
-            {
-                var playerCounts = teeTimeInfo.price.Select(p => p.playerCount).ToList();
-                if (playerCounts.Count != playerCounts.Distinct().Count())
+                // 골프장 코드 유효성
+                if (string.IsNullOrEmpty(golfClubCode) || !supplier.GolfClubs.Any(gc => gc.GolfClubCode == golfClubCode))
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "playerCount 중복됨", true);
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate playerCount found in price list", null);
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "골프장 코드 없음", true);
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golfclub Code not found", null);
                 }
 
-                // 최소,최대 인원 대비 price의 인원수 별 금액이 맞는지 확인
-                var validPlayerCounts = Enumerable.Range((int)teeTimeInfo.minMembers, (int)teeTimeInfo.maxMembers - (int)teeTimeInfo.minMembers + 1);
-                var providedPlayerCounts = teeTimeInfo.price.Select(p => p.playerCount);
-                var missingPlayerCounts = validPlayerCounts.Where(count => !providedPlayerCounts.Contains(count)).ToList();
-                //var isValid = validPlayerCounts.All(count => providedPlayerCounts.Contains(count));
-
-                if (missingPlayerCounts.Any())
+                // 골프장 코스 유효성
+                var golfClub = supplier.GolfClubs.FirstOrDefault(gc => gc.GolfClubCode == golfClubCode);
+                if (golfClub.Courses == null || !golfClub.Courses.Any())
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", $"playerCount 일치하지 않음 {string.Join(", ", missingPlayerCounts)}", true);
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, $"playerCount is invalid. Missing counts: {string.Join(", ", missingPlayerCounts)}", null);
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "골프장 코스 없음", true);
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Golfclub Curses not found", null);
                 }
 
-                if (!teeTimeInfo.courseCode.Any())
+                // 티타임 유효성 
+                if (!request.teeTimeInfo.Any())
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "코스 코드 없음", true);
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "teeTimeInfo 없음");
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "TeeTimeInfo not found", null);
                 }
 
-                foreach (var courseCode in teeTimeInfo.courseCode)
+                // 코스 코드 유효성 
+                foreach (var teeTimeInfo in request.teeTimeInfo)
                 {
-                    // 골프장 코스 조회
-                    var golfClubCourse = golfClub.Courses.FirstOrDefault(gc => gc.CourseCode == courseCode);
-                    if (golfClubCourse == null) //골프장 코스 없을시
+                    var playerCounts = teeTimeInfo.price.Select(p => p.playerCount).ToList();
+                    if (playerCounts.Count != playerCounts.Distinct().Count())
                     {
-                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "골프장에 코스 코드 없음", true);
-                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "The golf course does not have a course code", null);
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "playerCount 중복됨", true);
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Duplicate playerCount found in price list", null);
+                    }
+
+                    // 최소,최대 인원 대비 price의 인원수 별 금액이 맞는지 확인
+                    var validPlayerCounts = Enumerable.Range((int)teeTimeInfo.minMembers, (int)teeTimeInfo.maxMembers - (int)teeTimeInfo.minMembers + 1);
+                    var providedPlayerCounts = teeTimeInfo.price.Select(p => p.playerCount);
+                    var missingPlayerCounts = validPlayerCounts.Where(count => !providedPlayerCounts.Contains(count)).ToList();
+                    //var isValid = validPlayerCounts.All(count => providedPlayerCounts.Contains(count));
+
+                    if (missingPlayerCounts.Any())
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", $"playerCount 일치하지 않음 {string.Join(", ", missingPlayerCounts)}", true);
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, $"playerCount is invalid. Missing counts: {string.Join(", ", missingPlayerCounts)}", null);
+                    }
+
+                    if (!teeTimeInfo.courseCode.Any())
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "코스 코드 없음", true);
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "golfClubCourse is invalid", null);
+                    }
+
+                    foreach (var courseCode in teeTimeInfo.courseCode)
+                    {
+                        // 골프장 코스 조회
+                        var golfClubCourse = golfClub.Courses.FirstOrDefault(gc => gc.CourseCode == courseCode);
+                        if (golfClubCourse == null) //골프장 코스 없을시
+                        {
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "골프장에 코스 코드 없음", true);
+                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "The golf course does not have a course code", null);
+                        }
                     }
                 }
-            }
 
-            string dateFormat = "yyyy-MM-dd";
+                string dateFormat = "yyyy-MM-dd";
 
-            if (request.dateApplyType == 1) // 날짜적용방법이 1번 일때 시작일과 종료일이 있어야 함
-            {
-                // StartPlayDate와 EndPlayDate 필수 확인
-                if (string.IsNullOrEmpty(request.startPlayDate) || string.IsNullOrEmpty(request.endPlayDate))
+                if (request.dateApplyType == 1) // 날짜적용방법이 1번 일때 시작일과 종료일이 있어야 함
                 {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작일 또는 종료일 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Both StartPlayDate and EndPlayDate are required", null);
-                }
+                    // StartPlayDate와 EndPlayDate 필수 확인
+                    if (string.IsNullOrEmpty(request.startPlayDate) || string.IsNullOrEmpty(request.endPlayDate))
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작일 또는 종료일 없음");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Both StartPlayDate and EndPlayDate are required", null);
+                    }
 
-                // StartPlayDate 유효성 검사
-                if (!DateTime.TryParseExact(request.startPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작일 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
-                }
+                    // StartPlayDate 유효성 검사
+                    if (!DateTime.TryParseExact(request.startPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime startDate))
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작일 없음");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                    }
 
-                // EndPlayDate 유효성 검사
-                if (!DateTime.TryParseExact(request.endPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "종료일 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EndPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
-                }
+                    // EndPlayDate 유효성 검사
+                    if (!DateTime.TryParseExact(request.endPlayDate, dateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime endDate))
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "종료일 없음");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "EndPlayDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                    }
 
-                // StartPlayDate가 EndPlayDate보다 빠른 날짜인지 확인
-                if (startDate > endDate)
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작일이 종료일보다 빠른 날짜임");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate cannot be later than EndPlayDate", null);
-                }
+                    // StartPlayDate가 EndPlayDate보다 빠른 날짜인지 확인
+                    if (startDate > endDate)
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작일이 종료일보다 빠른 날짜임");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "StartPlayDate cannot be later than EndPlayDate", null);
+                    }
 
-                // week 유효성 검사 (0 ~ 6 사이에 최소 1개의 값이 있어야 함)
-                if (request.week == null || !request.week.Any() || request.week.Any(w => w < 0 || w > 6))
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "week 배열 유효하지 않음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Week array must contain at least one value between 0 and 6", null);
-                }
+                    // week 유효성 검사 (0 ~ 6 사이에 최소 1개의 값이 있어야 함)
+                    if (request.week == null || !request.week.Any() || request.week.Any(w => w < 0 || w > 6))
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "week 배열 유효하지 않음");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Week array must contain at least one value between 0 and 6", null);
+                    }
                 
-                if (request.exceptionDate.Any()) // Assuming EffectiveDate is StartPlayDate
-                {
-                    foreach (var exceptionDate in request.exceptionDate)
+                    if (request.exceptionDate.Any()) // Assuming EffectiveDate is StartPlayDate
                     {
-                        if (!DateTime.TryParseExact(exceptionDate, dateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                        foreach (var exceptionDate in request.exceptionDate)
                         {
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "예외일 없음");
-                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "exceptionDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                            if (!DateTime.TryParseExact(exceptionDate, dateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                            {
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "예외일 없음");
+                                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "exceptionDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                            }
+                        }
+                    }
+                }
+                else if (request.dateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
+                {
+                    if (request.effectiveDate == null || !request.effectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "적용일 없음");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "effectiveDate not found", null);
+                    }
+                    else
+                    {
+                        // effectiveDate 날짜 유효성 검사
+                        foreach (var effectiveDate in request.effectiveDate)
+                        {
+                            if (!DateTime.TryParseExact(effectiveDate, dateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                            {
+                                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "적용일 없음");
+                                return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "effectiveDate is not in the correct format. Expected format is yyyy-MM-dd", null);
+                            }
                         }
                     }
                 }
             }
-            else if (request.dateApplyType == 2) // 날짜적용방법이 2번 일때 EffectiveDate이 있어야 함
+            catch (Exception ex)
             {
-                if (request.effectiveDate == null || !request.effectiveDate.Any()) // Assuming EffectiveDate is StartPlayDate
-                {
-                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "적용일 없음");
-                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "effectiveDate not found", null);
-                }
-                else
-                {
-                    // effectiveDate 날짜 유효성 검사
-                    foreach (var effectiveDate in request.effectiveDate)
-                    {
-                        if (!DateTime.TryParseExact(effectiveDate, dateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
-                        {
-                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "적용일 없음");
-                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "effectiveDate is not in the correct format. Expected format is yyyy-MM-dd", null);
-                        }
-                    }
-                }
+                Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessTeeTime", $"유효성 처리 실패 {ex.Message}", true);
+                return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
 
             Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "queue 로 진행");
