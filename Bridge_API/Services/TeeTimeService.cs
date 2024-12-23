@@ -119,7 +119,13 @@ namespace AGL.Api.Bridge_API.Services
                     })
                     .ToListAsync();
 
-//Debug.WriteLine($"[Step 2] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+                if (!teeTimeMappings.Any())
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTimeList", "티타임 검색 내용 없음");
+                    return await _commonService.CreateResponse<TeeTimeData>(false, ResultCode.NOT_FOUND, "The requested tee times are not available.", null);
+                }
+
+                //Debug.WriteLine($"[Step 2] Execution Time: {stopwatch.ElapsedMilliseconds} ms");
                 // 특정 속성들(최소/최대 인원, 가격 정책, 환불 정책)으로 티타임 그룹화
                 var groupedTeeTimes = teeTimeMappings
                     .GroupBy(tm => new { tm.TeeTime.MinMembers, tm.TeeTime.MaxMembers, tm.PricePolicyId, tm.RefundPolicyId })
