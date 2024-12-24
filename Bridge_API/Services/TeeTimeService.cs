@@ -21,6 +21,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.VisualBasic;
+using AGL.Api.ApplicationCore.Helpers;
 
 namespace AGL.Api.Bridge_API.Services
 {
@@ -208,6 +209,33 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "GolfClub not found", null);
             }
 
+            if(request.time.Any()) // time 유효성
+            {
+                foreach (var time in request.time)
+                {
+                    time.startTime = int.Parse(time.startTime).ToString("D4"); // startTime 4자리로 변환
+                    var startTime = time.startTime;
+                    // 4자리 숫자인지 확인
+                    if (string.IsNullOrEmpty(startTime) || startTime.Length != 4 || !int.TryParse(startTime, out _))
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", "시작시간 형식 틀림");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "The startTime value is invalid. It must be a 4-digit string in HHmm format.", null);
+                    }
+
+                    // 시간 값 추출
+                    var hour = int.Parse(startTime.Substring(0, 2)); // 앞 2자리: 시(hour)
+                    var minute = int.Parse(startTime.Substring(2, 2)); // 뒤 2자리: 분(minute)
+
+                    // 유효한 시간 범위 확인
+                    if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
+                    {
+                        Utils.UtilLogs.LogRegHour(supplierCode, request.golfClubCode, "TeeTime", "시작 시간이 유효한 범위 벗어남");
+                        return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "The startTime value is out of valid range. It must represent a valid time between 0000 and 2359.", null);
+                    }
+                }
+            }
+
+
             //var RedisStrKey = $"PTTA:" + ComputeSha256.ComputeSha256RequestHash(request);
 
             //try
@@ -236,6 +264,8 @@ namespace AGL.Api.Bridge_API.Services
                 {
                     try
                     {
+                        var courseCodes = (request.courseCode as List<string>) ?? ObjectToListConverter.ConvertToListOfStrings(request.courseCode, "courseCode");
+
                         // 요청에서 제공된 티타임 코드 목록을 가져옴
                         // TeeTimeMappings 테이블에서 조건에 맞는 항목을 조회 (연관된 TeeTime, GolfClubCourse, DateSlot을 포함)
                         var existingTeeTimeMappingsQuery = _context.TeeTimeMappings
@@ -245,9 +275,9 @@ namespace AGL.Api.Bridge_API.Services
                             .Include(tm => tm.TimeSlot) // TimeSlot 엔터티 포함 (연관관계)
                             .Where(tm => tm.TeeTime.GolfClubCourse.GolfClub.GolfClubCode == request.golfClubCode); // 요청된 골프장 코드와 일치 확인
 
-                        if (request.courseCode.Count() > 0)
+                        if (courseCodes.Count() > 0)
                         {
-                            existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => request.courseCode.Contains(tm.TeeTime.GolfClubCourse.CourseCode));  // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
+                            existingTeeTimeMappingsQuery = existingTeeTimeMappingsQuery.Where(tm => courseCodes.Contains(tm.TeeTime.GolfClubCourse.CourseCode));  // 요청된 코스 코드가 TeeTime의 GolfClubCourse와 일치하는지 확인
                         }
 
                         if(!string.IsNullOrEmpty(request.playDate))

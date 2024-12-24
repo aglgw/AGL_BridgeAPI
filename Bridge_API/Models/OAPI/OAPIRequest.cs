@@ -1,7 +1,9 @@
-﻿using AGL.Api.ApplicationCore.Utilities;
+﻿using AGL.Api.ApplicationCore.Helpers;
+using AGL.Api.ApplicationCore.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using static AGL.Api.Bridge_API.Models.OAPI.OAPI;
 
 namespace AGL.Api.Bridge_API.Models.OAPI
@@ -183,7 +185,8 @@ namespace AGL.Api.Bridge_API.Models.OAPI
             /// 코스 코드 리스트
             /// </summary>
             [DataMember]
-            public List<string>? courseCode { get; set; }
+            [JsonConverter(typeof(ObjectToListConverter))]
+            public object? courseCode { get; set; }
 
             /// <summary>
             /// 시간 정보 리스트
