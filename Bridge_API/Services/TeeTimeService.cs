@@ -543,12 +543,12 @@ namespace AGL.Api.Bridge_API.Services
                 return await _commonService.CreateResponse<object>(false, ResultCode.SERVER_ERROR, ex.Message, null);
             }
 
-            if(mode == "POST")
-            {
-                return await ProcessTeeTime(request, supplierCode, request.golfClubCode);
-            }
-            else
-            {
+            //if(mode == "POST")
+            //{
+            //    return await ProcessTeeTime(request, supplierCode, request.golfClubCode);
+            //}
+            //else
+            //{
                 Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "queue 로 진행");
                 // TeeTimeBackgroundRequest 객체 생성 및 SupplierCode 설정
                 TeeTimeBackgroundRequest teeTimeBackgroundRequest = new TeeTimeBackgroundRequest
@@ -563,7 +563,7 @@ namespace AGL.Api.Bridge_API.Services
                 }
 
                 _queue.Enqueue(teeTimeBackgroundRequest);
-            }
+            //}
 
             return await _commonService.CreateResponse<object>(true, ResultCode.SUCCESS, "ProcessTeeTime successfully", null);
 
