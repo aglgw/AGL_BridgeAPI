@@ -358,6 +358,14 @@ namespace AGL.Api.Bridge_API.Services
             {
                 Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ProcessTeeTime", "유효성 처리 시작 ", true);
 
+                // GolfClub 미등록 인 경우 처리
+                var hasGolfClubs = await _context.Suppliers.AnyAsync(s => s.SupplierCode == supplierCode && s.GolfClubs.Any());
+                if (!hasGolfClubs) 
+                {
+                    Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "골프장 등록 안됨", true);
+                    return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "Please register the golf club before use", null);
+                }
+
                 var supplier = await _context.Suppliers
                 .Include(s => s.GolfClubs)
                     .ThenInclude(gc => gc.Courses)
