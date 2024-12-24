@@ -440,10 +440,27 @@ namespace AGL.Api.Bridge_API.Services
                         }
                     }
 
-                    // startTime 4자리로 변환
                     foreach (var time in teeTime.time)
                     {
-                        time.startTime = int.Parse(time.startTime).ToString("D4");
+                        time.startTime = int.Parse(time.startTime).ToString("D4"); // startTime 4자리로 변환
+                        var startTime = time.startTime;
+                        // 4자리 숫자인지 확인
+                        if (string.IsNullOrEmpty(startTime) || startTime.Length != 4 || !int.TryParse(startTime, out _))
+                        {
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작시간 형식 틀림");
+                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "The startTime value is invalid. It must be a 4-digit string in HHmm format.", null);
+                        }
+
+                        // 시간 값 추출
+                        var hour = int.Parse(startTime.Substring(0, 2)); // 앞 2자리: 시(hour)
+                        var minute = int.Parse(startTime.Substring(2, 2)); // 뒤 2자리: 분(minute)
+
+                        // 유효한 시간 범위 확인
+                        if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
+                        {
+                            Utils.UtilLogs.LogRegHour(supplierCode, golfClubCode, "ValidateTeeTime", "시작 시간이 유효한 범위 벗어남");
+                            return await _commonService.CreateResponse<object>(false, ResultCode.INVALID_INPUT, "The startTime value is out of valid range. It must represent a valid time between 0000 and 2359.", null);
+                        }
                     }
                 }
 
